@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "strnstr.c"
+
 struct Parser;
 
 typedef void (*CaptureFn)(struct Parser *, const char *, const char *, size_t, void *);
@@ -38,10 +40,6 @@ void
 on_mismatch(struct Parser *parser, const char *rule, void *userdata)
 {
 	printf("mismatch %s\n", rule);
-	// for (size_t i = 0; i < array_len(parser->captures); i++) {
-	// 	free(array_get(parser->captures, i));
-	// }
-	// array_truncate(parser->captures);
 }
 
 #define __CHECK(x, t, e)	if (x) { t; } else { e; }
@@ -75,7 +73,7 @@ on_mismatch(struct Parser *parser, const char *rule, void *userdata)
 static void
 parser_capture(struct Parser *parser, const char *rule, size_t len)
 {
-	assert((parser->pos + len) < parser->len);
+	assert((parser->pos + len) <= parser->len);
 	if (parser->on_capture) {
 		parser->on_capture(parser, rule, parser->buf + parser->pos, len, parser->userdata);
 	}
@@ -195,27 +193,30 @@ parser_match_rule(struct Parser *parser, const char *rule, RuleFn rulefn)
 }
 
 static int
-parser_match_thruto(struct Parser *parser, const char *rule, char c, int thru)
+parser_match_thruto(struct Parser *parser, const char *rule, const char *needle, int thru)
 {
 	if (!parser_match_init(parser, rule)) {
 		return 0;
 	}
-	int ok = 0;
-	size_t i = parser->pos;
-	for (; i < parser->len; i++) {
-		if (parser->buf[i] == c) {
-			ok = 1;
-			break;
-		}
-	}
-	if (!ok) {
+	if (strcmp(needle, "") == 0) {
 		return parser_mismatch(parser, rule);
-	} else {
-		if (parser->on_capture) {
-			parser_capture(parser, rule, i + thru - parser->pos);
-		}
-		parser->pos = i + thru;
 	}
+
+	char *ptr = strnstr(parser->buf + parser->pos, needle, parser->len);
+	if (ptr == NULL) {
+		return parser_mismatch(parser, rule);
+	}
+
+	size_t offset = 0;
+	if (thru) {
+		offset = strlen(needle);
+	}
+	size_t len = ptr - (parser->buf + parser->pos) + offset;
+	if (parser->on_capture) {
+		parser_capture(parser, rule, len);
+	}
+	parser->pos += len;
+
 	return parser_match_ok(parser);
 }
 
@@ -241,7 +242,7 @@ RULE(foobar) { // (+ 'f' 'g')
 }
 
 RULE(comment) {
-	CHAR('#', 1); THRU('\n');
+	CHAR('#', 1); THRU("\n");
 }
 
 RULE(date) {
@@ -250,7 +251,7 @@ RULE(date) {
 
 
 RULE(entry) {
-	TO('|'); CHAR('|', 1); TO('|'); CHAR('|', 1); MATCH(date); CHAR('|', 1); TO('\n'); CHAR('\n', 1);
+	TO("|"); CHAR('|', 1); TO("|"); CHAR('|', 1); MATCH(date); CHAR('|', 1); TO("\n"); CHAR('\n', 1);
 }
 
 RULE(entry_comment) { // (+ :comment :entry)
@@ -263,9 +264,8 @@ RULE(moved_grammar) {
 	EOS();
 }
 
-RULE(foo) { // (* (some :foobar) -1)
-	MATCH(foobar);
-	MATCH(foobar);
+RULE(foo) {
+	THRU("foo");
 	EOS();
 }
 
@@ -279,6 +279,7 @@ main(int argc, char *argv[])
 
 	//const char *buf = "2008-08-08\n";
 	//const char *buf = "audio/polypaudio|audio/pulseaudio|2008-01-01|Project renamed\n";
+	//const char *buf = "alsdjflasdjflas@foo";
 	struct Parser *parser = parser_new(buf, strlen(buf));
 	moved_grammar(parser);
 	printf("parser state: %d [%c]\n", parser->state, parser->buf[parser->pos]);
