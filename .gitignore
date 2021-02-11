@@ -9,5 +9,5 @@ config.h.old
 config.log
 config.log.old
 Makefile.configure
-/peg-test-*
+/tests/*/*.test
 TODO

@@ -203,7 +203,7 @@ sort(void *base, size_t nmemb, size_t size, CompareFn compar, void *userdata)
 // c.f. https://reviews.freebsd.org/D17083
 
 struct SortWrapper {
-	CompareFn compar;
+	CompareFn compare;
 	void *userdata;
 };
 
@@ -211,13 +211,13 @@ static int
 qsort_r_compare_wrapper(void *userdata, const void *a, const void *b)
 {
 	const struct SortWrapper *wrapper = userdata;
-	return wrapper->compar(a, b, wrapper->userdata);
+	return wrapper->compare(a, b, wrapper->userdata);
 }
 
 void
-sort(void *base, size_t nmemb, size_t size, CompareFn compar, void *userdata)
+sort(void *base, size_t nmemb, size_t size, CompareFn compare, void *userdata)
 {
-	struct SortWrapper wrapper = { compar, userdata };
+	struct SortWrapper wrapper = { compare, userdata };
 	qsort_r(base, nmemb, size, &wrapper, qsort_r_compare_wrapper);
 }
 

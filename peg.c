@@ -246,14 +246,14 @@ peg_match_to(struct PEG *peg, const char *rule, const char *needle)
 struct PEG *
 peg_new(const char *const buf, size_t len, CaptureFn on_capture, MismatchFn on_mismatch)
 {
-	struct PEG apeg = {
+	struct PEG proto = {
 		.buf = buf,
 		.len = len,
 		.on_capture = on_capture,
 		.on_mismatch = on_mismatch
 	};
 	struct PEG *peg = xmalloc(sizeof(struct PEG));
-	memcpy(peg, &apeg, sizeof(*peg));
+	memcpy(peg, &proto, sizeof(*peg));
 	return peg;
 }
 
