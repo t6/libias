@@ -28,44 +28,38 @@ struct Parser {
 	void *userdata;
 };
 
-void
-on_capture(struct Parser *parser, const char *rule, const char *buf, size_t len, void *userdata)
-{
-	char *s = strndup(buf, len);
-	printf("captured in %s: %s\n", rule, s);
-	free(s);
-}
-
-void
-on_mismatch(struct Parser *parser, const char *rule, void *userdata)
-{
-	printf("mismatch %s\n", rule);
-}
-
 #define __CHECK(x, t, e)	if (x) { t; } else { e; }
-#define __ATLEAST(r, n, t, e)	__CHECK(parser_match_atleast(parser, __func__, r, n), t, e)
+#define __BETWEEN(r, a, b, t, e)__CHECK(parser_match_between(parser, __func__, r, a, b), t, e)
 #define __CHAR(c, n, t, e)	__CHECK(parser_match_char(parser, __func__, c, n), t, e)
 #define __CHARF(f, n, t, e)	__CHECK(parser_match_char_f(parser, __func__, f, n), t, e)
 #define __EOS(t, e)		__CHECK(parser_match_eos(parser, __func__), t, e)
+#define __RANGE(a, b, t, e)	__CHECK(parser_match_range(parser, __func__, a, b), t, e)
 #define __MATCH(r, t, e)	__CHECK(parser_match_rule(parser, __func__, r), t, e)
+#define __STRING(s, t, e)	__CHECK(parser_match_string(parser, __func__, s), t, e)
 #define __THRU(c, t, e)		__CHECK(parser_match_thruto(parser, __func__, c, 1), t, e)
 #define __TO(c, t, e)		__CHECK(parser_match_thruto(parser, __func__, c, 0), t, e)
 #define ANY(r)			ATLEAST(r, 0)
-#define ATLEAST(c, n)		__ATLEAST(c, n, , return)
+#define ATLEAST(r, n)		__BETWEEN(r, n, n, , return)
+#define BETWEEN(r, a, b)	__BETWEEN(r, a, b, , return)
 #define CHAR(c, n)		__CHAR(c, n, , return)
 #define CHARF(f, n)		__CHARF(f, n, , return)
 #define EOS()			__EOS(, return)
 #define MATCH(r)		__MATCH(r, , return)
+#define RANGE(a, b)		__RANGE(a, b, , return)
 #define SOME(rule)		ATLEAST(rule, 1)
+#define STRING(s)		__STRING(s, , return)
 #define THRU(c)			__THRU(c, , return)
 #define TO(c)			__TO(c, , return)
 #define TRY_ANY(r)		TRY_ATLEAST(c, 0)
-#define TRY_ATLEAST(c, n)	__ATLEAST(c, n, return, )
+#define TRY_ATLEAST(r, n)	__BETWEEN(r, n, n, return, )
+#define TRY_BETWEEN(r, a, b)	__BETWEEN(r, a, b, return, )
 #define TRY_CHAR(c, n)		__CHAR(c, n, return, )
 #define TRY_CHARF(f, n)		__CHARF(f, n, return, )
 #define TRY_EOS()		__EOS(return, )
 #define TRY_MATCH(r)		__MATCH(r, return, )
+#define TRY_RANGE(a, b)		__RANGE(a, b, return, )
 #define TRY_SOME(r)		TRY_ATLEAST(rule, 1)
+#define TRY_STRING(s)		__STRING(s, return, )
 #define TRY_THRU(c)		__THRU(c, return, )
 #define TRY_TO(c)		__TO(c, return, )
 #define RULE(name)		void name(struct Parser *parser)
@@ -106,7 +100,7 @@ parser_match_init(struct Parser *parser, const char *rule)
 }
 
 static int
-parser_match_atleast(struct Parser *parser, const char *rule, RuleFn rulefn, int n)
+parser_match_between(struct Parser *parser, const char *rule, RuleFn rulefn, int a, int b)
 {
 	if (!parser_match_init(parser, rule)) {
 		return 0;
@@ -120,7 +114,7 @@ parser_match_atleast(struct Parser *parser, const char *rule, RuleFn rulefn, int
 		}
 		i++;
 	}
-	if (i < n) {
+	if (i < a || i > b) {
 		parser->pos = pos;
 		return parser_mismatch(parser, rule);
 	}
@@ -180,6 +174,23 @@ parser_match_eos(struct Parser *parser, const char *rule)
 }
 
 static int
+parser_match_range(struct Parser *parser, const char *rule, char a, char b)
+{
+	if (!parser_match_init(parser, rule)) {
+		return 0;
+	}
+	if ((parser->len - parser->pos) < 1) {
+		return parser_mismatch(parser, rule);
+	}
+	char c = parser->buf[parser->pos];
+	if (a > c || c > b) {
+		printf("%c %c %c\n", a, b, c);
+		return parser_mismatch(parser, rule);
+	}
+	parser->pos++;
+	return parser_match_ok(parser);
+}
+static int
 parser_match_rule(struct Parser *parser, const char *rule, RuleFn rulefn)
 {
 	if (!parser_match_init(parser, rule)) {
@@ -189,6 +200,21 @@ parser_match_rule(struct Parser *parser, const char *rule, RuleFn rulefn)
 	if (parser->state == PARSER_MISMATCH) {
 		return parser_mismatch(parser, rule);
 	}
+	return parser_match_ok(parser);
+}
+
+static int
+parser_match_string(struct Parser *parser, const char *rule, const char *needle)
+{
+	if (!parser_match_init(parser, rule)) {
+		return 0;
+	}
+	size_t len = strlen(needle);
+	if ((parser->len - parser->pos) < len ||
+	    strncmp(parser->buf + parser->pos, needle, len) != 0) {
+		return parser_mismatch(parser, rule);
+	}
+	parser->pos += len;
 	return parser_match_ok(parser);
 }
 
@@ -221,24 +247,18 @@ parser_match_thruto(struct Parser *parser, const char *rule, const char *needle,
 }
 
 struct Parser *
-parser_new(const char *buf, size_t len)
+parser_new(const char *buf, size_t len, CaptureFn on_capture, MismatchFn on_mismatch)
 {
 	struct Parser *parser = malloc(sizeof(struct Parser));
 	if (parser == NULL) {
 		return NULL;
 	}
-
 	memset(parser, sizeof(parser), 0);
 	parser->buf = buf;
 	parser->len = len;
 	parser->state = PARSER_OK;
 	parser->on_capture = on_capture;
 	parser->on_mismatch = on_mismatch;
-}
-
-RULE(foobar) { // (+ 'f' 'g')
-	TRY_CHAR('f', 1);
-	CHAR('g', 1);
 }
 
 RULE(comment) {
@@ -264,24 +284,40 @@ RULE(moved_grammar) {
 	EOS();
 }
 
+void
+on_capture(struct Parser *parser, const char *rule, const char *buf, size_t len, void *userdata)
+{
+	char *s = strndup(buf, len);
+	printf("captured in %s: %s\n", rule, s);
+	free(s);
+}
+
+void
+on_mismatch(struct Parser *parser, const char *rule, void *userdata)
+{
+	printf("mismatch %s\n", rule);
+}
+
+#include "ipv4.c"
+
 RULE(foo) {
-	THRU("foo");
+	MATCH(byte);
+	printf("here\n");
 	EOS();
 }
 
 int
 main(int argc, char *argv[])
 {
-//     :main (* (any (+ :comment :entry)) -1)})
 	const char *buf = "#\naudio/polypaudio|audio/pulseaudio|2008-01-01|Project renamed\n# asdjflasdk\n"
 	"audio/akode-plugins-polypaudio||2008-01-01|Polypaudio is obsolete in favor of Pulseaudio\n"
 "audio/akode-plugins-polypaudio||2008-01-01|Polypaudio is obsolete in favor of Pulseaudio\n";
-
-	//const char *buf = "2008-08-08\n";
-	//const char *buf = "audio/polypaudio|audio/pulseaudio|2008-01-01|Project renamed\n";
-	//const char *buf = "alsdjflasdjflas@foo";
-	struct Parser *parser = parser_new(buf, strlen(buf));
-	moved_grammar(parser);
-	printf("parser state: %d [%c]\n", parser->state, parser->buf[parser->pos]);
+	struct Parser *parser = parser_new(buf, strlen(buf), on_capture, on_mismatch);
+	//moved_grammar(parser);
+	printf("parser state: %d\n", parser->state);
+	buf = "256";
+	parser = parser_new(buf, strlen(buf), on_capture, on_mismatch);
+	foo(parser);
+	printf("parser state: %d\n", parser->state);
 	return 0;
 }
