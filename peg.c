@@ -107,8 +107,7 @@ peg_match_char(struct PEG *peg, const char *rule, char c)
 	if (!peg_match_init(peg, rule)) {
 		return 0;
 	}
-	size_t len = peg->len - peg->pos;
-	if (len < 1) {
+	if (peg->pos >= peg->len) {
 		return 0;
 	}
 	if (peg->buf[peg->pos] == c) {
@@ -125,8 +124,7 @@ peg_match_char_f(struct PEG *peg, const char *rule, int (*f)(int))
 	if (!peg_match_init(peg, rule)) {
 		return 0;
 	}
-	size_t len = peg->len - peg->pos;
-	if (len < 1) {
+	if (peg->pos >= peg->len) {
 		return 0;
 	}
 	if (f(peg->buf[peg->pos])) {
@@ -149,7 +147,7 @@ peg_match_range(struct PEG *peg, const char *rule, char a, char b)
 	if (!peg_match_init(peg, rule)) {
 		return 0;
 	}
-	if ((peg->len - peg->pos) < 1) {
+	if (peg->pos >= peg->len) {
 		return 0;
 	}
 	char c = peg->buf[peg->pos];
