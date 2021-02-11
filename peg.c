@@ -1,47 +1,48 @@
+/*-
+ * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
+ *
+ * Copyright (c) 2021 Tobias Kortkamp <tobik@FreeBSD.org>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+#include "config.h"
+
 #include <assert.h>
-#include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
+#include <string.h>
 
-#include "strnstr.c"
-
-struct PEG;
-
-typedef void (*CaptureFn)(struct PEG *, const char *, const char *, size_t, void *);
-typedef void (*MismatchFn)(struct PEG *, const char *, void *);
-typedef int (*RuleFn)(struct PEG *);
-
-enum PEGState {
-	PARSER_OK,
-	PARSER_MISMATCH,
-};
+#include "peg.h"
+#include "util.h"
 
 struct PEG {
-	const char *buf;
+	const char *const buf;
+	const size_t len;
 	size_t pos;
-	size_t len;
-	enum PEGState state;
 
 	CaptureFn on_capture;
 	MismatchFn on_mismatch;
 	void *userdata;
 };
-
-#define ANY(r)			ATLEAST(r, 0)
-#define ATLEAST(r, n)		peg_match_atleast(peg, __func__, r, n)
-#define BETWEEN(r, a, b)	peg_match_between(peg, __func__, r, a, b)
-#define CHAR(c)			peg_match_char(peg, __func__, c)
-#define CHARF(f)		peg_match_char_f(peg, __func__, f)
-#define EOS()			peg_match_eos(peg, __func__)
-#define MATCH(r)		peg_match_rule(peg, __func__, r)
-#define RANGE(a, b)		peg_match_range(peg, __func__, a, b)
-#define REPEAT(r, n)		peg_match_repeat(peg, __func__, r, n)
-#define SOME(rule)		ATLEAST(rule, 1)
-#define STRING(s)		peg_match_string(peg, __func__, s)
-#define THRU(c)			peg_match_thruto(peg, __func__, c, 1)
-#define TO(c)			peg_match_thruto(peg, __func__, c, 0)
-#define RULE(name)		int name(struct PEG *peg)
 
 static void
 peg_capture(struct PEG *peg, const char *rule, size_t len)
@@ -58,7 +59,7 @@ peg_match_init(struct PEG *peg, const char *rule)
 	return peg->pos <= peg->len;
 }
 
-static int
+int
 peg_match_atleast(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
 {
 	if (!peg_match_init(peg, rule)) {
@@ -67,7 +68,7 @@ peg_match_atleast(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
 	size_t pos = peg->pos;
 	int i = 0;
 	while (1) {
-		if (!rulefn(peg)) {
+		if (!rulefn(peg, rule)) {
 			break;
 		}
 		i++;
@@ -79,7 +80,7 @@ peg_match_atleast(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
 	return 1;
 }
 
-static int
+int
 peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b)
 {
 	if (!peg_match_init(peg, rule)) {
@@ -88,7 +89,7 @@ peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b
 	size_t pos = peg->pos;
 	int i = 0;
 	while (1) {
-		if (!rulefn(peg)) {
+		if (!rulefn(peg, rule)) {
 			break;
 		}
 		i++;
@@ -101,7 +102,7 @@ peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b
 	}
 }
 
-static int
+int
 peg_match_char(struct PEG *peg, const char *rule, char c)
 {
 	if (!peg_match_init(peg, rule)) {
@@ -119,7 +120,7 @@ peg_match_char(struct PEG *peg, const char *rule, char c)
 	}
 }
 
-static int
+int
 peg_match_char_f(struct PEG *peg, const char *rule, int (*f)(int))
 {
 	if (!peg_match_init(peg, rule)) {
@@ -137,13 +138,13 @@ peg_match_char_f(struct PEG *peg, const char *rule, int (*f)(int))
 	}
 }
 
-static int
+int
 peg_match_eos(struct PEG *peg, const char *rule)
 {
 	return peg_match_init(peg, rule) && peg->pos == peg->len;
 }
 
-static int
+int
 peg_match_range(struct PEG *peg, const char *rule, char a, char b)
 {
 	if (!peg_match_init(peg, rule)) {
@@ -160,7 +161,7 @@ peg_match_range(struct PEG *peg, const char *rule, char a, char b)
 	return 1;
 }
 
-static int
+int
 peg_match_repeat(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
 {
 	if (!peg_match_init(peg, rule)) {
@@ -168,7 +169,7 @@ peg_match_repeat(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
 	}
 	size_t pos = peg->pos;
 	for (int i = 0; i < n; i++) {
-		if (!rulefn(peg)) {
+		if (!rulefn(peg, rule)) {
 			peg->pos = pos;
 			return 0;
 		}
@@ -176,28 +177,30 @@ peg_match_repeat(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
 	return 1;
 }
 
-static int
+int
 peg_match_rule(struct PEG *peg, const char *rule, RuleFn rulefn)
 {
 	if (!peg_match_init(peg, rule)) {
 		return 0;
 	}
-	return rulefn(peg);
+	return rulefn(peg, rule);
 }
 
-static int
+int
 peg_match_string(struct PEG *peg, const char *rule, const char *needle)
 {
 	if (!peg_match_init(peg, rule)) {
 		return 0;
 	}
+
 	size_t len = strlen(needle);
-	if ((peg->len - peg->pos) < len ||
-	    strncmp(peg->buf + peg->pos, needle, len) != 0) {
+	if ((peg->len - peg->pos) >= len &&
+	    strncmp(peg->buf + peg->pos, needle, len) == 0) {
+		peg->pos += len;
+		return 1;
+	} else {
 		return 0;
 	}
-	peg->pos += len;
-	return 1;
 }
 
 static int
@@ -228,104 +231,35 @@ peg_match_thruto(struct PEG *peg, const char *rule, const char *needle, int thru
 	return 1;
 }
 
-struct PEG *
-peg_new(const char *buf, size_t len, CaptureFn on_capture, MismatchFn on_mismatch)
+int
+peg_match_thru(struct PEG *peg, const char *rule, const char *needle)
 {
-	struct PEG *peg = xmalloc(sizeof(struct PEG));
-	peg->buf = buf;
-	peg->len = len;
-	peg->state = PARSER_OK;
-	peg->on_capture = on_capture;
-	peg->on_mismatch = on_mismatch;
-	return peg;
-}
-
-RULE(comment) {
-	if (CHAR('#'))
-	if (THRU("\n"))
-	return 1;
-	return 0;
-}
-
-RULE(digit) {
-	return CHARF(isdigit);
-}
-
-RULE(date) {
-	if (REPEAT(digit, 4))
-	if (CHAR('-'))
-	if (REPEAT(digit, 2))
-	if (CHAR('-'))
-	if (REPEAT(digit, 2))
-	return 1;
-	return 0;
-}
-
-RULE(entry) {
-	if (TO("|"))
-	if (CHAR('|'))
-	if (TO("|"))
-	if (CHAR('|'))
-	if (MATCH(date))
-	if (CHAR('|'))
-	if (TO("\n"))
-	if (CHAR('\n'))
-	return 1;
-	return 0;
-}
-
-RULE(entry_comment) { // (+ :comment :entry)
-	if (!MATCH(comment))
-	if (!MATCH(entry))
-	return 0;
-	return 1;
-}
-
-RULE(moved_grammar) {
-	if (ANY(entry_comment))
-	if (EOS())
-	return 1;
-	return 0;
-}
-
-void
-on_capture(struct PEG *peg, const char *rule, const char *buf, size_t len, void *userdata)
-{
-	char *s = strndup(buf, len);
-	printf("captured in %s: %s\n", rule, s);
-	free(s);
-}
-
-void
-on_mismatch(struct PEG *peg, const char *rule, void *userdata)
-{
-	printf("mismatch %s\n", rule);
-}
-
-#include "ipv4.c"
-RULE(foobar) {
-	if (MATCH(byte))
-	if (EOS())
-	return 1;
-	return 0;
+	return peg_match_thruto(peg, rule, needle, 1);
 }
 
 int
-main(int argc, char *argv[])
+peg_match_to(struct PEG *peg, const char *rule, const char *needle)
 {
-	const char *buf;
-	int state;
-	//= "#\naudio/polypaudio|audio/pulseaudio|2008-01-01|Project renamed\n# asdjflasdk\n"
-// 	"audio/akode-plugins-polypaudio||2008-01-01|Polypaudio is obsolete in favor of Pulseaudio\n"
-// "audio/akode-plugins-polypaudio||2008-01-01|Polypaudio is obsolete in favor of Pulseaudio\n";
-	buf = "# asfdsa\naudio/akode-plugins-polypaudio||2008-01-01|Polypaudio is obsolete in favor of Pulseaudio\n";
-	struct PEG *peg = peg_new(buf, strlen(buf), on_capture, on_mismatch);
-	state = moved_grammar(peg);
-	printf("peg state: %s\n", state ? "matched" : "mismatch");
-
-	buf = "256";
-	peg = peg_new(buf, strlen(buf), on_capture, on_mismatch);
-	state = foobar(peg);
-	printf("peg state: %s\n", state ? "matched" : "mismatch");
-	return 0;
+	return peg_match_thruto(peg, rule, needle, 0);
 }
+
+struct PEG *
+peg_new(const char *const buf, size_t len, CaptureFn on_capture, MismatchFn on_mismatch)
+{
+	struct PEG apeg = {
+		.buf = buf,
+		.len = len,
+		.on_capture = on_capture,
+		.on_mismatch = on_mismatch
+	};
+	struct PEG *peg = xmalloc(sizeof(struct PEG));
+	memcpy(peg, &apeg, sizeof(*peg));
+	return peg;
+}
+
+void
+peg_free(struct PEG *peg)
+{
+	free(peg);
+}
+

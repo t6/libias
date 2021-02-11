@@ -1,0 +1,13 @@
+.ccls-cache
+*.core
+*.a
+*.dylib
+*.o
+*.so
+config.h
+config.h.old
+config.log
+config.log.old
+Makefile.configure
+/peg-test-*
+TODO
