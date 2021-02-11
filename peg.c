@@ -87,14 +87,13 @@ peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b
 		return 0;
 	}
 	size_t pos = peg->pos;
-	int i = 0;
-	while (1) {
+	int i;
+	for (i = 0; i <= b; i++) {
 		if (!rulefn(peg, rule)) {
 			break;
 		}
-		i++;
 	}
-	if (i >= a && i < b) {
+	if (i >= a && i <= b) {
 		return 1;
 	} else {
 		peg->pos = pos;
@@ -183,7 +182,13 @@ peg_match_rule(struct PEG *peg, const char *rule, RuleFn rulefn)
 	if (!peg_match_init(peg, rule)) {
 		return 0;
 	}
-	return rulefn(peg, rule);
+	size_t pos = peg->pos;
+	if (rulefn(peg, rule)) {
+		return 1;
+	} else {
+		peg->pos = pos;
+		return 0;
+	}
 }
 
 int
