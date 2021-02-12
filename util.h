@@ -59,8 +59,8 @@ int str_endswith(const char *, const char *);
 char *str_join(struct Array *, const char *);
 char *str_repeat(const char *, const size_t);
 int str_startswith(const char *, const char *);
-char *str_strip_dup(const char *);
-char *str_substr_dup(const char *, size_t, size_t);
+char *str_strip(const char *);
+char *str_substr(const char *, const size_t, const size_t);
 char *str_trim(const char *);
 
 void sort(void *, size_t, size_t, CompareFn, void *);

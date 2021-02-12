@@ -168,7 +168,7 @@ str_startswith(const char *s, const char *start)
 }
 
 char *
-str_strip_dup(const char *s)
+str_strip(const char *s)
 {
 	const char *sp = s;
 	for (; *sp && isspace(*sp); ++sp);
@@ -176,11 +176,10 @@ str_strip_dup(const char *s)
 }
 
 char *
-str_substr_dup(const char *s, size_t start, size_t end)
+str_substr(const char *s, const size_t a, const size_t b)
 {
-	assert (start <= end);
-	end = MIN(strlen(s), end);
-	return xstrndup(s + start, end - start);
+	assert(a <= b);
+	return xstrndup(s + a, MIN(strlen(s), b) - a);
 }
 
 char *
