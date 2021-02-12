@@ -136,20 +136,26 @@ str_endswith(const char *s, const char *end)
 char *
 str_join(struct Array *array, const char *sep)
 {
-	size_t sz = array_len(array) + 1;
-	ARRAY_FOREACH(array, const char *, s) {
-		sz += strlen(s);
-	}
+	size_t seplen = strlen(sep);
+	size_t lastindex = array_len(array) - 1;
 
-	char *buf = xmalloc(sz);
+	size_t sz = 1;
 	size_t i = 0;
 	ARRAY_FOREACH(array, const char *, s) {
-		xstrlcat(buf, s, sz);
-		if (i++ != array_len(array) - 1) {
-			xstrlcat(buf, sep, sz);
+		sz += strlen(s);
+		if (i++ != lastindex) {
+			sz += seplen;
 		}
 	}
 
+	char *buf = xmalloc(sz);
+	i = 0;
+	ARRAY_FOREACH(array, const char *, s) {
+		xstrlcat(buf, s, sz);
+		if (i++ != lastindex) {
+			xstrlcat(buf, sep, sz);
+		}
+	}
 	return buf;
 }
 

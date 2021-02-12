@@ -8,8 +8,10 @@ CFLAGS+=	-std=gnu99 -I.
 OBJS=		array.o compats.o diff.o diffutil.o map.o peg.o set.o util.o
 TESTS=		tests/peg/IPv4.test \
 		tests/peg/MOVED.test \
-		tests/peg/range.test
+		tests/peg/range.test \
+		tests/util/str.test
 TESTS_PEG!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/peg/' | sed 's,\.test$$,.o,'
+TESTS_UTIL!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/util/' | sed 's,\.test$$,.o,'
 
 all: libias.a
 
@@ -37,6 +39,7 @@ peg.o: config.h peg.h util.h
 set.o: config.h array.h map.h set.h util.h
 util.o: config.h array.h util.h
 ${TESTS_PEG}: config.h array.h peg.h peg-macros.h test.h tests/peg/common.h util.h
+${TESTS_UTIL}: config.h array.h test.h util.h
 
 clean:
 	@find . -name '*.o' | xargs rm -f
