@@ -44,6 +44,15 @@ struct PEG {
 	void *userdata;
 };
 
+#define MATCHER_INIT() do { \
+		if (peg->pos > peg->len) { \
+			MATCHER_RETURN(0); \
+		} \
+	} while (0)
+#define MATCHER_RETURN(x) do { \
+		return (x); \
+	} while (0)
+
 static void
 peg_capture(struct PEG *peg, const char *rule, size_t len)
 {
@@ -53,18 +62,10 @@ peg_capture(struct PEG *peg, const char *rule, size_t len)
 	}
 }
 
-static int
-peg_match_init(struct PEG *peg, const char *rule)
-{
-	return peg->pos <= peg->len;
-}
-
 int
 peg_match_atleast(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
 {
-	if (!peg_match_init(peg, rule)) {
-		return 0;
-	}
+	MATCHER_INIT();
 	size_t pos = peg->pos;
 	int i = 0;
 	while (1) {
@@ -75,17 +76,15 @@ peg_match_atleast(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
 	}
 	if (i < n) {
 		peg->pos = pos;
-		return 0;
+		MATCHER_RETURN(0);
 	}
-	return 1;
+	MATCHER_RETURN(1);
 }
 
 int
 peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b)
 {
-	if (!peg_match_init(peg, rule)) {
-		return 0;
-	}
+	MATCHER_INIT();
 	size_t pos = peg->pos;
 	int i;
 	for (i = 0; i <= b; i++) {
@@ -94,131 +93,117 @@ peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b
 		}
 	}
 	if (i >= a && i <= b) {
-		return 1;
+		MATCHER_RETURN(1);
 	} else {
 		peg->pos = pos;
-		return 0;
+		MATCHER_RETURN(0);
 	}
 }
 
 int
 peg_match_char(struct PEG *peg, const char *rule, char c)
 {
-	if (!peg_match_init(peg, rule)) {
-		return 0;
-	}
+	MATCHER_INIT();
 	if (peg->pos >= peg->len) {
-		return 0;
+		MATCHER_RETURN(0);
 	}
 	if (peg->buf[peg->pos] == c) {
 		peg->pos++;
-		return 1;
+		MATCHER_RETURN(1);
 	} else {
-		return 0;
+		MATCHER_RETURN(0);
 	}
 }
 
 int
 peg_match_char_f(struct PEG *peg, const char *rule, int (*f)(int))
 {
-	if (!peg_match_init(peg, rule)) {
-		return 0;
-	}
+	MATCHER_INIT();
 	if (peg->pos >= peg->len) {
-		return 0;
+		MATCHER_RETURN(0);
 	}
 	if (f(peg->buf[peg->pos])) {
 		peg->pos++;
-		return 1;
+		MATCHER_RETURN(1);
 	} else {
-		return 0;
+		MATCHER_RETURN(0);
 	}
 }
 
 int
 peg_match_eos(struct PEG *peg, const char *rule)
 {
-	return peg_match_init(peg, rule) && peg->pos == peg->len;
+	MATCHER_INIT();
+	MATCHER_RETURN(peg->pos == peg->len);
 }
 
 int
 peg_match_range(struct PEG *peg, const char *rule, char a, char b)
 {
-	if (!peg_match_init(peg, rule)) {
-		return 0;
-	}
+	MATCHER_INIT();
 	if (peg->pos >= peg->len) {
-		return 0;
+		MATCHER_RETURN(0);
 	}
 	char c = peg->buf[peg->pos];
 	if (a > c || c > b) {
-		return 0;
+		MATCHER_RETURN(0);
 	}
 	peg->pos++;
-	return 1;
+	MATCHER_RETURN(1);
 }
 
 int
 peg_match_repeat(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
 {
-	if (!peg_match_init(peg, rule)) {
-		return 0;
-	}
+	MATCHER_INIT();
 	size_t pos = peg->pos;
 	for (int i = 0; i < n; i++) {
 		if (!rulefn(peg, rule)) {
 			peg->pos = pos;
-			return 0;
+			MATCHER_RETURN(0);
 		}
 	}
-	return 1;
+	MATCHER_RETURN(1);
 }
 
 int
 peg_match_rule(struct PEG *peg, const char *rule, RuleFn rulefn)
 {
-	if (!peg_match_init(peg, rule)) {
-		return 0;
-	}
+	MATCHER_INIT();
 	size_t pos = peg->pos;
 	if (rulefn(peg, rule)) {
-		return 1;
+		MATCHER_RETURN(1);
 	} else {
 		peg->pos = pos;
-		return 0;
+		MATCHER_RETURN(0);
 	}
 }
 
 int
 peg_match_string(struct PEG *peg, const char *rule, const char *needle)
 {
-	if (!peg_match_init(peg, rule)) {
-		return 0;
-	}
-
+	MATCHER_INIT();
 	size_t len = strlen(needle);
 	if ((peg->len - peg->pos) >= len &&
 	    strncmp(peg->buf + peg->pos, needle, len) == 0) {
 		peg->pos += len;
-		return 1;
+		MATCHER_RETURN(1);
 	} else {
-		return 0;
+		MATCHER_RETURN(0);
 	}
 }
 
 static int
 peg_match_thruto(struct PEG *peg, const char *rule, const char *needle, int thru)
 {
-	if (!peg_match_init(peg, rule)) {
-		return 0;
-	}
+	MATCHER_INIT();
 	if (strcmp(needle, "") == 0) {
-		return 0;
+		MATCHER_RETURN(0);
 	}
 
 	char *ptr = strnstr(peg->buf + peg->pos, needle, peg->len);
 	if (ptr == NULL) {
-		return 0;
+		MATCHER_RETURN(0);
 	}
 
 	size_t offset = 0;
@@ -231,7 +216,7 @@ peg_match_thruto(struct PEG *peg, const char *rule, const char *needle, int thru
 	}
 	peg->pos += len;
 
-	return 1;
+	MATCHER_RETURN(1);
 }
 
 int
