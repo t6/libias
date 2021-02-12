@@ -86,16 +86,14 @@ update_symlink(int dir, const char *path1, const char *path2, char **prev)
 }
 
 char *
-repeat(char c, size_t n)
+str_repeat(const char *s, const size_t n)
 {
-	char *buf = xmalloc(n + 1);
+	const size_t sz = strlen(s) * n + 1;
+	char *buf = xmalloc(sz);
 	if (n > 0) {
 		for (size_t i = 0; i < n; i++) {
-			buf[i] = c;
+			xstrlcat(buf, s, sz);
 		}
-		buf[n] = '\0';
-	} else {
-		buf[0] = '\0';
 	}
 	return buf;
 }

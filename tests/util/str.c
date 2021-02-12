@@ -53,4 +53,9 @@ TESTS() {
 	array_append(array, xstrdup("3"));
 	TEST(strcmp(str_join(array, ","), "1,2,3") == 0);
 	TEST(strcmp(str_join(array, "foobar"), "1foobar2foobar3") == 0);
+
+	TEST(strcmp(str_repeat("foo", 0), "") == 0);
+	TEST(strcmp(str_repeat("foo", 1), "foo") == 0);
+	TEST(strcmp(str_repeat("foo", 3), "foofoofoo") == 0);
+	TEST(strcmp(str_repeat("a", 10), "aaaaaaaaaa") == 0);
 }

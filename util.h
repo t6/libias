@@ -53,12 +53,11 @@ typedef int (*CompareFn)(const void *, const void *, void *);
 char *read_symlink(int, const char *);
 int update_symlink(int, const char *, const char *, char **);
 
-char *repeat(char, size_t);
-
 char *str_common_prefix(const char *, const char *);
 int str_compare(const void *, const void *, void *);
 int str_endswith(const char *, const char *);
 char *str_join(struct Array *, const char *);
+char *str_repeat(const char *, const size_t);
 int str_startswith(const char *, const char *);
 char *str_strip_dup(const char *);
 char *str_substr_dup(const char *, size_t, size_t);
