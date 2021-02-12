@@ -67,12 +67,11 @@ peg_match_atleast(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
 {
 	MATCHER_INIT();
 	size_t pos = peg->pos;
-	int i = 0;
-	while (1) {
+	int i;
+	for (i = 0; ; i++) {
 		if (!rulefn(peg, rule)) {
 			break;
 		}
-		i++;
 	}
 	if (i < n) {
 		peg->pos = pos;
