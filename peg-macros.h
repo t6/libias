@@ -29,6 +29,7 @@
 
 #define ANY(r)			ATLEAST((r), 0)
 #define ATLEAST(r, n)		peg_match_atleast(peg, __func__, (r), (n))
+#define ATMOST(r, n)		peg_match_between(peg, __func__, (r), 0, (n))
 #define BETWEEN(r, a, b)	peg_match_between(peg, __func__, (r), (a), (b))
 #define CHAR(c)			peg_match_char(peg, __func__, (c))
 #define CHARF(f)		peg_match_char_f(peg, __func__, (f))
