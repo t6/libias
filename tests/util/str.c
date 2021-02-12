@@ -37,6 +37,14 @@
 #include "util.h"
 
 TESTS() {
+	TEST(str_endswith("foo", "o"));
+	TEST(str_endswith("foobarverylong", "verylong"));
+	TEST(!str_endswith("foobarverylong", "foobar"));
+	TEST(str_endswith("foo", ""));
+	TEST(!str_endswith("", "o"));
+	TEST(!str_endswith("", "verylong"));
+	TEST(str_endswith("", ""));
+
 	struct Array *array = array_new();
 	TEST(strcmp(str_join(array, ","), "") == 0);
 	array_append(array, xstrdup("1"));
