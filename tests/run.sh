@@ -6,9 +6,9 @@ tests_failed=0
 tests_run=0
 
 cd "${ROOT}"
-for test in $(find tests -name '*.test' | sort); do
+for test in $(find tests -name '*.test' | sed 's,^tests/,,' | sort); do
 	echo -n "${test%*.test}: "
-	if ! "${test}"; then
+	if ! "tests/${test}"; then
 		tests_run=$((tests_run + 1))
 		tests_failed=$((tests_failed + 1))
 		continue
