@@ -28,6 +28,9 @@
 #include "config.h"
 
 #include <assert.h>
+#if HAVE_ERR
+# include <err.h>
+#endif
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +41,7 @@
 #include "utf8.h"
 #include "util.h"
 
-#define MAX_CAPTURES 128
+#define INITIAL_CAPTURE_STACK_CAP 64
 
 struct PEG {
 	const char *const buf;
@@ -46,8 +49,9 @@ struct PEG {
 	size_t pos;
 
 	struct Map *captures;
-	int capture;
-	size_t capture_stack[MAX_CAPTURES];
+	size_t capture;
+	size_t *capture_stack;
+	size_t capture_stack_cap;
 
 	MismatchFn on_mismatch;
 	void *userdata;
@@ -109,8 +113,14 @@ peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b
 int
 peg_match_capture_start(struct PEG *peg)
 {
-	if (peg->capture >= MAX_CAPTURES) {
-		abort();
+	if (peg->capture >= peg->capture_stack_cap) {
+		size_t new_cap = peg->capture_stack_cap + INITIAL_CAPTURE_STACK_CAP;
+		assert(new_cap > peg->capture_stack_cap);
+		peg->capture_stack = recallocarray(peg->capture_stack, peg->capture_stack_cap, new_cap, sizeof(size_t));
+		if (peg->capture_stack == NULL) {
+			warn("recallocarray");
+			abort();
+		}
 	}
 	peg->capture_stack[peg->capture++] = peg->pos;
 	return 1;
@@ -119,7 +129,7 @@ peg_match_capture_start(struct PEG *peg)
 int
 peg_match_capture_end(struct PEG *peg, int tag, int retval)
 {
-	if (peg->capture) {
+	if (peg->capture > 0) {
 		peg->capture--;
 		if (retval) {
 			struct PEGCapture *capture = xmalloc(sizeof(struct PEGCapture));
@@ -282,6 +292,12 @@ peg_new(const char *const buf, size_t len, MismatchFn on_mismatch)
 	struct PEG *peg = xmalloc(sizeof(struct PEG));
 	memcpy(peg, &proto, sizeof(*peg));
 	peg->captures = map_new(NULL, NULL, NULL, peg_capture_free);
+	peg->capture_stack_cap = INITIAL_CAPTURE_STACK_CAP;
+	peg->capture_stack = recallocarray(NULL, 0, peg->capture_stack_cap, sizeof(size_t));
+	if (peg->capture_stack == NULL) {
+		warn("recallocarray");
+		abort();
+	}
 	return peg;
 }
 
@@ -289,6 +305,7 @@ void
 peg_free(struct PEG *peg)
 {
 	map_free(peg->captures);
+	free(peg->capture_stack);
 	free(peg);
 }
 
