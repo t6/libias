@@ -137,16 +137,15 @@ char *
 str_join(struct Array *array, const char *sep)
 {
 	size_t sz = array_len(array) + 1;
-	for (size_t i = 0; i < array_len(array); i++) {
-		char *s = array_get(array, i);
+	ARRAY_FOREACH(array, const char *, s) {
 		sz += strlen(s);
 	}
 
 	char *buf = xmalloc(sz);
-	for (size_t i = 0; i < array_len(array); i++) {
-		char *s = array_get(array, i);
+	size_t i = 0;
+	ARRAY_FOREACH(array, const char *, s) {
 		xstrlcat(buf, s, sz);
-		if (i != array_len(array) - 1) {
+		if (i++ != array_len(array) - 1) {
 			xstrlcat(buf, sep, sz);
 		}
 	}

@@ -28,6 +28,7 @@
 #pragma once
 
 struct Array;
+struct ArrayIterator;
 struct diff;
 typedef int (*ArrayCompareFn)(const void *, const void *, void *);
 
@@ -42,3 +43,11 @@ void *array_pop(struct Array *);
 void array_set(struct Array *, size_t, void *);
 void array_sort(struct Array *, ArrayCompareFn, void *);
 void array_truncate(struct Array *);
+
+struct ArrayIterator *array_iterator(struct Array *);
+void array_iterator_free(struct ArrayIterator **);
+void *array_iterator_next(struct ArrayIterator **);
+
+#define ARRAY_FOREACH(ARRAY, TYPE, VAR) \
+	for (struct ArrayIterator *__##VAR##_iter __attribute__((cleanup(array_iterator_free))) = array_iterator(ARRAY); __##VAR##_iter != NULL; array_iterator_free(&__##VAR##_iter)) \
+	for (TYPE VAR = array_iterator_next(&__##VAR##_iter); VAR != NULL; VAR = array_iterator_next(&__##VAR##_iter))

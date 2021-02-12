@@ -44,11 +44,9 @@
 		failures = array_new(); \
 		run_tests(); \
 		printf("\n"); \
-		for (size_t i = 0; i < array_len(failures); i++) { \
-			char *err = array_get(failures, i); \
+		ARRAY_FOREACH(failures, const char *, err) { \
 			printf("\tFAIL: %s\n", err); \
 		} \
 		return array_len(failures) != 0; \
 	} \
 	void run_tests()
-
