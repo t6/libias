@@ -33,6 +33,8 @@
 #include "peg-macros.h"
 #include "util.h"
 
+// See https://tools.ietf.org/html/rfc7159
+
 static int ishexdigit(int c)
 {
 	c = tolower(c);
@@ -191,8 +193,8 @@ RULE(number) {
 }
 
 RULE(unescaped) {
-	if (!CHAR('\x20'))
-	if (!CHAR('\x21'))
+	if (!CHAR(0x20))
+	if (!CHAR(0x21))
 	if (!RANGE(0x23, 0x5b))
 	if (!RANGE(0x5d, 0x10ffff))
 	return 0;
@@ -201,15 +203,15 @@ RULE(unescaped) {
 
 RULE(escaped) {
 	if (MATCH(escape)) {
-		if (!CHAR('\x22'))
-		if (!CHAR('\x5c'))
-		if (!CHAR('\x2f'))
-		if (!CHAR('\x62'))
-		if (!CHAR('\x66'))
-		if (!CHAR('\x6e'))
-		if (!CHAR('\x72'))
-		if (!CHAR('\x74')) {
-			if (CHAR('\x75'))
+		if (!CHAR(0x22))
+		if (!CHAR(0x5c))
+		if (!CHAR(0x2f))
+		if (!CHAR(0x62))
+		if (!CHAR(0x66))
+		if (!CHAR(0x6e))
+		if (!CHAR(0x72))
+		if (!CHAR(0x74)) {
+			if (CHAR(0x75))
 			if (REPEAT(hexdigit, 4))
 			return 1;
 			return 0;
