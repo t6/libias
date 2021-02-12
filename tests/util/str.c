@@ -58,4 +58,13 @@ TESTS() {
 	TEST_STREQ(str_repeat("foo", 1), "foo");
 	TEST_STREQ(str_repeat("foo", 3), "foofoofoo");
 	TEST_STREQ(str_repeat("a", 10), "aaaaaaaaaa");
+
+	TEST_STREQ(str_substr("a", 0, 1), "a");
+	TEST_STREQ(str_substr("a", 0, 2), "a");
+	TEST_STREQ(str_substr("foo", 0, 2), "fo");
+	TEST_STREQ(str_substr("foo", 1, 2), "o");
+	TEST_STREQ(str_substr("foo", 2, 1), "");
+	TEST_STREQ(str_substr("foo", 1, 3), "oo");
+	TEST_STREQ(str_substr("foo", 1, 1000), "oo");
+	TEST_STREQ(str_substr("foo", 1000, 1000), "");
 }

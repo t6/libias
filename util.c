@@ -178,8 +178,14 @@ str_strip(const char *s)
 char *
 str_substr(const char *s, const size_t a, const size_t b)
 {
-	assert(a <= b);
-	return xstrndup(s + a, MIN(strlen(s), b) - a);
+	if (a > b) {
+		return xstrdup("");
+	} else {
+		size_t len = strlen(s);
+		size_t start = MIN(len, a);
+		size_t end = MIN(len, b);
+		return xstrndup(s + start, end - start);
+	}
 }
 
 char *
