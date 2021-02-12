@@ -18,10 +18,10 @@ TESTS_UTIL!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/util/' | sed 's,\.test$$
 all: libias.a
 
 lint:
-	@${SH} tests/lint.sh
+	@/bin/sh tests/lint.sh
 
 test: ${TESTS}
-	@${SH} tests/run.sh
+	@/bin/sh tests/run.sh
 
 .c.o:
 	${CC} ${CPPFLAGS} ${CFLAGS} -o $@ -c $<

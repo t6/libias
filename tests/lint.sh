@@ -10,7 +10,7 @@ lint_run=0
 cd "${ROOT}"
 if type ${CPPCHECK} >/dev/null 2>&1; then
 lint_run=$((lint_run + 1))
-srcs="$(find . -name '*.c' -and -not -name 'lint.c')"
+srcs="$(find . -name '*.c' -and -not -name 'tests.c')"
 if ! ${CPPCHECK} --error-exitcode=1 --library=posix --quiet --force --inconclusive ${srcs}; then
 	lint_failed=$((lint_failed + 1))
 fi
