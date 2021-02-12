@@ -37,6 +37,22 @@
 		fflush(stdout); \
 	} while(0)
 
+#define TEST_STR(cmp, a, b) do { \
+		const char *s1 = (a); \
+		const char *s2 = (b); \
+		if (strcmp(s1, s2) cmp 0) { \
+			putchar('.'); \
+		} else { \
+			char *buf; \
+			xasprintf(&buf, ""#a" "#cmp" "#b" => \"%s\" "#cmp" \"%s\"", s1, s2); \
+			array_append(failures, buf); \
+			putchar('X'); \
+		} \
+		fflush(stdout); \
+	} while(0)
+#define TEST_STREQ(a, b) TEST_STR(==, a, b)
+#define TEST_STRNEQ(a, b) TEST_STR(!=, a, b)
+
 #define TESTS() \
 	static struct Array *failures; \
 	static void run_tests(void); \

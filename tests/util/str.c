@@ -46,16 +46,16 @@ TESTS() {
 	TEST(str_endswith("", ""));
 
 	struct Array *array = array_new();
-	TEST(strcmp(str_join(array, ","), "") == 0);
+	TEST_STREQ(str_join(array, ","), "");
 	array_append(array, xstrdup("1"));
-	TEST(strcmp(str_join(array, ","), "1") == 0);
+	TEST_STREQ(str_join(array, ","), "1");
 	array_append(array, xstrdup("2"));
 	array_append(array, xstrdup("3"));
-	TEST(strcmp(str_join(array, ","), "1,2,3") == 0);
-	TEST(strcmp(str_join(array, "foobar"), "1foobar2foobar3") == 0);
+	TEST_STREQ(str_join(array, ","), "1,2,3");
+	TEST_STREQ(str_join(array, "foobar"), "1foobar2foobar3");
 
-	TEST(strcmp(str_repeat("foo", 0), "") == 0);
-	TEST(strcmp(str_repeat("foo", 1), "foo") == 0);
-	TEST(strcmp(str_repeat("foo", 3), "foofoofoo") == 0);
-	TEST(strcmp(str_repeat("a", 10), "aaaaaaaaaa") == 0);
+	TEST_STREQ(str_repeat("foo", 0), "");
+	TEST_STREQ(str_repeat("foo", 1), "foo");
+	TEST_STREQ(str_repeat("foo", 3), "foofoofoo");
+	TEST_STREQ(str_repeat("a", 10), "aaaaaaaaaa");
 }
