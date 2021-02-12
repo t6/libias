@@ -202,10 +202,12 @@ array_iterator_next(struct ArrayIterator **iter_)
 {
 	struct ArrayIterator *iter = *iter_;
 	void *element = array_get(iter->array, iter->i);
-	if (element == NULL) {
+	if (element) {
+		iter->i++;
+		return element;
+	} else {
 		array_iterator_free(iter_);
 		*iter_ = NULL;
+		return NULL;
 	}
-	iter->i++;
-	return element;
 }
