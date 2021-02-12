@@ -67,4 +67,16 @@ TESTS() {
 	TEST_STREQ(str_substr("foo", 1, 3), "oo");
 	TEST_STREQ(str_substr("foo", 1, 1000), "oo");
 	TEST_STREQ(str_substr("foo", 1000, 1000), "");
+
+	TEST_STREQ(str_trim("foo"), "foo");
+	TEST_STREQ(str_trim("   foo  "), "foo");
+	TEST_STREQ(str_trim(" \tfoo  "), "foo");
+
+	TEST_STREQ(str_triml("foo"), "foo");
+	TEST_STREQ(str_triml("   foo  "), "foo  ");
+	TEST_STREQ(str_triml(" \tfoo  "), "foo  ");
+
+	TEST_STREQ(str_trimr("foo"), "foo");
+	TEST_STREQ(str_trimr("   foo  "), "   foo");
+	TEST_STREQ(str_trimr(" \tfoo  "), " \tfoo");
 }

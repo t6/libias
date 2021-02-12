@@ -167,13 +167,6 @@ str_startswith(const char *s, const char *start)
 	return strncmp(s, start, len) == 0;
 }
 
-char *
-str_strip(const char *s)
-{
-	const char *sp = s;
-	for (; *sp && isspace(*sp); ++sp);
-	return str_trim(sp);
-}
 
 char *
 str_substr(const char *s, const size_t a, const size_t b)
@@ -190,6 +183,22 @@ str_substr(const char *s, const size_t a, const size_t b)
 
 char *
 str_trim(const char *s)
+{
+	const char *sp = s;
+	for (; *sp && isspace(*sp); ++sp);
+	return str_trimr(sp);
+}
+
+char *
+str_triml(const char *s)
+{
+	const char *sp = s;
+	for (; *sp && isspace(*sp); ++sp);
+	return xstrdup(sp);
+}
+
+char *
+str_trimr(const char *s)
 {
 	size_t len = strlen(s);
 	while (len > 0 && isspace(s[len - 1])) {

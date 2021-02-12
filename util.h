@@ -59,9 +59,10 @@ int str_endswith(const char *, const char *);
 char *str_join(struct Array *, const char *);
 char *str_repeat(const char *, const size_t);
 int str_startswith(const char *, const char *);
-char *str_strip(const char *);
 char *str_substr(const char *, const size_t, const size_t);
 char *str_trim(const char *);
+char *str_triml(const char *);
+char *str_trimr(const char *);
 
 void sort(void *, size_t, size_t, CompareFn, void *);
 int xasprintf(char **, const char *, ...) __printflike(2, 3);
