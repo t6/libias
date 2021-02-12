@@ -158,20 +158,6 @@ peg_match_range(struct PEG *peg, const char *rule, uint32_t a, uint32_t b)
 }
 
 int
-peg_match_repeat(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
-{
-	MATCHER_INIT();
-	size_t pos = peg->pos;
-	for (int i = 0; i < n; i++) {
-		if (!rulefn(peg, rule)) {
-			peg->pos = pos;
-			MATCHER_RETURN(0);
-		}
-	}
-	MATCHER_RETURN(1);
-}
-
-int
 peg_match_rule(struct PEG *peg, const char *rule, RuleFn rulefn)
 {
 	MATCHER_INIT();

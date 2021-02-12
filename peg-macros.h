@@ -36,7 +36,7 @@
 #define EOS()			peg_match_eos(peg, __func__)
 #define MATCH(r)		peg_match_rule(peg, __func__, (r))
 #define RANGE(a, b)		peg_match_range(peg, __func__, (a), (b))
-#define REPEAT(r, n)		peg_match_repeat(peg, __func__, (r), (n))
+#define REPEAT(r, n)		peg_match_between(peg, __func__, (r), (n), (n))
 #define SOME(rule)		ATLEAST((rule), 1)
 #define STRING(s)		peg_match_string(peg, __func__, (s))
 #define THRU(c)			peg_match_thru(peg, __func__, (c))
