@@ -36,7 +36,7 @@ map.o: config.h array.h map.h util.h
 peg.o: config.h peg.h util.h
 set.o: config.h array.h map.h set.h util.h
 util.o: config.h array.h util.h
-${TESTS_PEG}: config.h array.h peg.h test.h tests/peg/common.h util.h
+${TESTS_PEG}: config.h array.h peg.h peg-macros.h test.h tests/peg/common.h util.h
 
 clean:
 	@find . -name '*.o' | xargs rm -f

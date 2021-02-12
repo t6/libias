@@ -47,18 +47,3 @@ int peg_match_rule(struct PEG *, const char *, RuleFn);
 int peg_match_string(struct PEG *, const char *, const char *);
 int peg_match_thru(struct PEG *, const char *, const char *);
 int peg_match_to(struct PEG *, const char *, const char *);
-
-#define ANY(r)			ATLEAST(r, 0)
-#define ATLEAST(r, n)		peg_match_atleast(peg, __func__, r, n)
-#define BETWEEN(r, a, b)	peg_match_between(peg, __func__, r, a, b)
-#define CHAR(c)			peg_match_char(peg, __func__, c)
-#define CHARF(f)		peg_match_char_f(peg, __func__, f)
-#define EOS()			peg_match_eos(peg, __func__)
-#define MATCH(r)		peg_match_rule(peg, __func__, r)
-#define RANGE(a, b)		peg_match_range(peg, __func__, a, b)
-#define REPEAT(r, n)		peg_match_repeat(peg, __func__, r, n)
-#define SOME(rule)		ATLEAST(rule, 1)
-#define STRING(s)		peg_match_string(peg, __func__, s)
-#define THRU(c)			peg_match_thru(peg, __func__, c)
-#define TO(c)			peg_match_to(peg, __func__, c)
-#define RULE(name)		static int name(struct PEG *peg, __unused const char *__rule_name)

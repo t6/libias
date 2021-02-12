@@ -27,22 +27,17 @@
  */
 #pragma once
 
-#include "config.h"
-#include <assert.h> 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "array.h"
-#include "peg.h"
-#include "peg-macros.h"
-#include "test.h"
-#include "util.h"
-
-static int
-check_match(RuleFn rule, const char *s, int expected)
-{
-	struct PEG *peg = peg_new(s, strlen(s), NULL, NULL);
-	int result = peg_match_rule(peg, s, rule);
-	free(peg);
-	return result == expected;
-}
+#define ANY(r)			ATLEAST((r), 0)
+#define ATLEAST(r, n)		peg_match_atleast(peg, __func__, (r), (n))
+#define BETWEEN(r, a, b)	peg_match_between(peg, __func__, (r), (a), (b))
+#define CHAR(c)			peg_match_char(peg, __func__, (c))
+#define CHARF(f)		peg_match_char_f(peg, __func__, (f))
+#define EOS()			peg_match_eos(peg, __func__)
+#define MATCH(r)		peg_match_rule(peg, __func__, (r))
+#define RANGE(a, b)		peg_match_range(peg, __func__, (a), (b))
+#define REPEAT(r, n)		peg_match_repeat(peg, __func__, (r), (n))
+#define SOME(rule)		ATLEAST((rule), 1)
+#define STRING(s)		peg_match_string(peg, __func__, (s))
+#define THRU(c)			peg_match_thru(peg, __func__, (c))
+#define TO(c)			peg_match_to(peg, __func__, (c))
+#define RULE(name)		static int name(struct PEG *peg, __unused const char *__rule_name)
