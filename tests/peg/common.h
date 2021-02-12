@@ -38,11 +38,27 @@
 #include "test.h"
 #include "util.h"
 
-static int
+static inline char *
+check_captures(RuleFn rule, const char *s, int tag, const char *sep)
+{
+	struct PEG *peg = peg_new(s, strlen(s), NULL);
+	int result = peg_match_rule(peg, s, rule);
+	if (result && peg_captures(peg, tag)) {
+		struct Array *caps = array_new();
+		ARRAY_FOREACH(peg_captures(peg, tag), struct PEGCapture *, cap) {
+			array_append(caps, cap->buf);
+		}
+		return str_join(caps, sep);
+	}
+	peg_free(peg);
+	return NULL;
+}
+
+static inline int
 check_match(RuleFn rule, const char *s, int expected)
 {
-	struct PEG *peg = peg_new(s, strlen(s), NULL, NULL);
+	struct PEG *peg = peg_new(s, strlen(s), NULL);
 	int result = peg_match_rule(peg, s, rule);
-	free(peg);
+	peg_free(peg);
 	return result == expected;
 }

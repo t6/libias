@@ -36,7 +36,7 @@
 RULE(dig) { return RANGE('0', '9'); }
 RULE(num0_4) { return RANGE('0', '4'); }
 RULE(num0_5) { return RANGE('0', '5'); }
-RULE(byte_1) { if (STRING("25")) if (MATCH(num0_5)) return 1; return 0; }
+RULE(byte_1) { if (CAPTURE(STRING("25"), 2)) if (MATCH(num0_5)) return 1; return 0; }
 RULE(byte_2) { if (CHAR('2')) if (MATCH(num0_4)) if (MATCH(dig)) return 1; return 0; }
 RULE(byte_3) { if (CHAR('1')) if (MATCH(dig)) if (MATCH(dig)) return 1; return 0; }
 RULE(byte) {
@@ -47,22 +47,28 @@ RULE(byte) {
 	return 0;
 	return 1;
 }
+
 RULE(ipv4) {
-	if (MATCH(byte))
+	if (CAPTURE(MATCH(byte), 0))
 	if (CHAR('.'))
-	if (MATCH(byte))
+	if (CAPTURE(MATCH(byte), 0))
 	if (CHAR('.'))
-	if (MATCH(byte))
+	if (CAPTURE(MATCH(byte), 0))
 	if (CHAR('.'))
-	if (MATCH(byte))
+	if (CAPTURE(MATCH(byte), 0))
 	if (EOS())
 	return 1;
 	return 0;
 }
 
+RULE(ipv4_capture) { return CAPTURE(MATCH(ipv4), 1); }
+
 TESTS() {
 	TEST(check_match(ipv4, "10.240.250.250", 1));
-	TEST(check_match(ipv4, "0.0.0.0", 1));
+	TEST_STREQ(check_captures(ipv4_capture, "10.240.250.250", 0, "@"), "10@240@250@250");
+	TEST_STREQ(check_captures(ipv4_capture, "10.240.250.250", 1, "@"), "10.240.250.250");
+	TEST_STREQ(check_captures(ipv4_capture, "10.240.250.250", 2, "@"), "25@25");
+	TEST_STREQ(check_captures(ipv4_capture, "0.0.0.0", 1, "@"), "0.0.0.0");
 	TEST(check_match(ipv4, "1.2.3.4", 1));
 	TEST(check_match(ipv4, "256.0.0.0", 0));
 	TEST(check_match(ipv4, "256.2.3.4", 0));

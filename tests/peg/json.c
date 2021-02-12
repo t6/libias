@@ -44,5 +44,4 @@ TESTS() {
 	TEST(check_match(json_decode, "{\"\":null,\"\":null}", 1));
 	TEST(check_match(json_decode, "{\"foo\":null}", 1));
 	TEST(check_match(json_decode, "[\"Да Му Еба Майката\"]", 1));
-
 }

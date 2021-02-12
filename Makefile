@@ -38,7 +38,7 @@ diff.o: config.h diff.h
 diffutil.o: config.h array.h diff.h diffutil.h util.h
 json.o: config.h peg.h peg-macros.h
 map.o: config.h array.h map.h util.h
-peg.o: config.h peg.h utf8.h util.h
+peg.o: config.h array.h map.h peg.h utf8.h util.h
 set.o: config.h array.h map.h set.h util.h
 utf8.o: config.h utf8.h
 util.o: config.h array.h util.h

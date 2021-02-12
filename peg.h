@@ -28,16 +28,27 @@
 #pragma once
 
 struct PEG;
+struct Array;
 
-typedef void (*CaptureFn)(struct PEG *, const char *, const char *, size_t, void *);
+struct PEGCapture {
+	char *buf;
+	int tag;
+	size_t start;
+	size_t len;
+};
+
 typedef void (*MismatchFn)(struct PEG *, const char *, void *);
 typedef int (*RuleFn)(struct PEG *, const char *);
 
-struct PEG *peg_new(const char *, size_t, CaptureFn, MismatchFn);
+struct PEG *peg_new(const char *, size_t, MismatchFn);
 void peg_free(struct PEG *);
+
+struct Array *peg_captures(struct PEG *, int);
 
 int peg_match_atleast(struct PEG *, const char *, RuleFn, int);
 int peg_match_between(struct PEG *, const char *, RuleFn, int, int);
+int peg_match_capture_start(struct PEG *);
+int peg_match_capture_end(struct PEG *, int, int);
 int peg_match_char(struct PEG *, const char *, uint32_t);
 int peg_match_char_f(struct PEG *, const char *, int (*)(int));
 int peg_match_eos(struct PEG *, const char *);

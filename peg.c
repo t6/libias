@@ -28,22 +28,31 @@
 #include "config.h"
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "array.h"
+#include "map.h"
 #include "peg.h"
 #include "utf8.h"
 #include "util.h"
+
+#define MAX_CAPTURES 128
 
 struct PEG {
 	const char *const buf;
 	const size_t len;
 	size_t pos;
 
-	CaptureFn on_capture;
+	struct Map *captures;
+	int capture;
+	size_t capture_stack[MAX_CAPTURES];
+
 	MismatchFn on_mismatch;
 	void *userdata;
 };
+
 
 #define MATCHER_INIT() do { \
 		if (peg->pos > peg->len) { \
@@ -54,13 +63,10 @@ struct PEG {
 		return (x); \
 	} while (0)
 
-static void
-peg_capture(struct PEG *peg, const char *rule, size_t len)
+struct Array *
+peg_captures(struct PEG *peg, int tag)
 {
-	assert((peg->pos + len) <= peg->len);
-	if (peg->on_capture) {
-		peg->on_capture(peg, rule, peg->buf + peg->pos, len, peg->userdata);
-	}
+	return map_get(peg->captures, (void*)(uintptr_t)tag);
 }
 
 int
@@ -99,6 +105,41 @@ peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b
 		MATCHER_RETURN(0);
 	}
 }
+
+int
+peg_match_capture_start(struct PEG *peg)
+{
+	if (peg->capture >= MAX_CAPTURES) {
+		abort();
+	}
+	peg->capture_stack[peg->capture++] = peg->pos;
+	return 1;
+}
+
+int
+peg_match_capture_end(struct PEG *peg, int tag, int retval)
+{
+	if (peg->capture) {
+		peg->capture--;
+		if (retval) {
+			struct PEGCapture *capture = xmalloc(sizeof(struct PEGCapture));
+			size_t start = peg->capture_stack[peg->capture];
+			size_t len = peg->pos - start;
+			capture->buf = xstrndup(peg->buf + start, len);
+			capture->start = start;
+			capture->len = len;
+			capture->tag = tag;
+			struct Array *captures = map_get(peg->captures, (void*)(uintptr_t)tag);
+			if (!captures) {
+				captures = array_new();
+				map_add(peg->captures, (void*)(uintptr_t)tag, captures);
+			}
+			array_append(captures, capture);
+		}
+	}
+	return retval;
+}
+
 
 int
 peg_match_char(struct PEG *peg, const char *rule, uint32_t c)
@@ -202,9 +243,6 @@ peg_match_thruto(struct PEG *peg, const char *rule, const char *needle, int thru
 		offset = strlen(needle);
 	}
 	size_t len = ptr - (peg->buf + peg->pos) + offset;
-	if (peg->on_capture) {
-		peg_capture(peg, rule, len);
-	}
 	peg->pos += len;
 
 	MATCHER_RETURN(1);
@@ -222,23 +260,35 @@ peg_match_to(struct PEG *peg, const char *rule, const char *needle)
 	return peg_match_thruto(peg, rule, needle, 0);
 }
 
+static void
+peg_capture_free(void *ap)
+{
+	struct Array *captures = ap;
+	ARRAY_FOREACH(captures, struct PEGCapture *, capture) {
+		free(capture->buf);
+		free(capture);
+	}
+	array_free(captures);
+}
+
 struct PEG *
-peg_new(const char *const buf, size_t len, CaptureFn on_capture, MismatchFn on_mismatch)
+peg_new(const char *const buf, size_t len, MismatchFn on_mismatch)
 {
 	struct PEG proto = {
 		.buf = buf,
 		.len = len,
-		.on_capture = on_capture,
 		.on_mismatch = on_mismatch
 	};
 	struct PEG *peg = xmalloc(sizeof(struct PEG));
 	memcpy(peg, &proto, sizeof(*peg));
+	peg->captures = map_new(NULL, NULL, NULL, peg_capture_free);
 	return peg;
 }
 
 void
 peg_free(struct PEG *peg)
 {
+	map_free(peg->captures);
 	free(peg);
 }
 
