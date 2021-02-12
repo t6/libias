@@ -5,9 +5,11 @@ include Makefile.configure
 
 CFLAGS+=	-std=gnu99 -I.
 
-OBJS=		array.o compats.o diff.o diffutil.o map.o peg.o set.o util.o
+OBJS=		array.o compats.o diff.o diffutil.o json.o map.o peg.o set.o \
+		util.o
 TESTS=		tests/peg/IPv4.test \
 		tests/peg/MOVED.test \
+		tests/peg/json.test \
 		tests/peg/range.test \
 		tests/util/str.test
 TESTS_PEG!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/peg/' | sed 's,\.test$$,.o,'
@@ -34,6 +36,7 @@ libias.a: ${OBJS}
 array.o: config.h array.h diff.h util.h
 diff.o: config.h diff.h
 diffutil.o: config.h array.h diff.h diffutil.h util.h
+json.o: config.h peg.h peg-macros.h
 map.o: config.h array.h map.h util.h
 peg.o: config.h peg.h util.h
 set.o: config.h array.h map.h set.h util.h
