@@ -39,13 +39,6 @@ static int ishexdigit(int c)
 	return isdigit(c) || (c >= 'a' && c <= 'f');
 }
 
-static int
-isunescaped(int c)
-{
-	// XXX: This is probably wrong or missing something...
-	return c == '\x20' || c == '\x21' || (c >= '\x23' && c <= '\x5B') || c >= '\x5D';
-}
-
 RULE(array);
 RULE(member);
 RULE(number);
@@ -197,7 +190,14 @@ RULE(number) {
 	return 0;
 }
 
-RULE(unescaped) { return CHARF(isunescaped); }
+RULE(unescaped) {
+	if (!CHAR('\x20'))
+	if (!CHAR('\x21'))
+	if (!RANGE(0x23, 0x5b))
+	if (!RANGE(0x5d, 0x10ffff))
+	return 0;
+	return 1;
+}
 
 RULE(escaped) {
 	if (MATCH(escape)) {
@@ -210,7 +210,7 @@ RULE(escaped) {
 		if (!CHAR('\x72'))
 		if (!CHAR('\x74')) {
 			if (CHAR('\x75'))
-			if (BETWEEN(hexdigit, 4, 4))
+			if (REPEAT(hexdigit, 4))
 			return 1;
 			return 0;
 		}

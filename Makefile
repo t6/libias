@@ -6,7 +6,7 @@ include Makefile.configure
 CFLAGS+=	-std=gnu99 -I.
 
 OBJS=		array.o compats.o diff.o diffutil.o json.o map.o peg.o set.o \
-		util.o
+		utf8.o util.o
 TESTS=		tests/peg/IPv4.test \
 		tests/peg/MOVED.test \
 		tests/peg/json.test \
@@ -38,8 +38,9 @@ diff.o: config.h diff.h
 diffutil.o: config.h array.h diff.h diffutil.h util.h
 json.o: config.h peg.h peg-macros.h
 map.o: config.h array.h map.h util.h
-peg.o: config.h peg.h util.h
+peg.o: config.h peg.h utf8.h util.h
 set.o: config.h array.h map.h set.h util.h
+utf8.o: config.h utf8.h
 util.o: config.h array.h util.h
 ${TESTS_PEG}: config.h array.h peg.h peg-macros.h test.h tests/peg/common.h util.h
 ${TESTS_UTIL}: config.h array.h test.h util.h

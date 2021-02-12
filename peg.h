@@ -38,10 +38,10 @@ void peg_free(struct PEG *);
 
 int peg_match_atleast(struct PEG *, const char *, RuleFn, int);
 int peg_match_between(struct PEG *, const char *, RuleFn, int, int);
-int peg_match_char(struct PEG *, const char *, char);
+int peg_match_char(struct PEG *, const char *, uint32_t);
 int peg_match_char_f(struct PEG *, const char *, int (*)(int));
 int peg_match_eos(struct PEG *, const char *);
-int peg_match_range(struct PEG *, const char *, char, char);
+int peg_match_range(struct PEG *, const char *, uint32_t, uint32_t);
 int peg_match_repeat(struct PEG *, const char *, RuleFn, int);
 int peg_match_rule(struct PEG *, const char *, RuleFn);
 int peg_match_string(struct PEG *, const char *, const char *);

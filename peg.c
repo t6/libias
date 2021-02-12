@@ -32,6 +32,7 @@
 #include <string.h>
 
 #include "peg.h"
+#include "utf8.h"
 #include "util.h"
 
 struct PEG {
@@ -100,14 +101,17 @@ peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b
 }
 
 int
-peg_match_char(struct PEG *peg, const char *rule, char c)
+peg_match_char(struct PEG *peg, const char *rule, uint32_t c)
 {
 	MATCHER_INIT();
-	if (peg->pos >= peg->len) {
+	char needle[UTF_SIZE + 1];
+	if (!utf8_encode(c, needle)) {
 		MATCHER_RETURN(0);
 	}
-	if (peg->buf[peg->pos] == c) {
-		peg->pos++;
+	size_t len = strlen(needle);
+	if ((peg->len - peg->pos) >= len &&
+	    strncmp(peg->buf + peg->pos, needle, len) == 0) {
+		peg->pos += len;
 		MATCHER_RETURN(1);
 	} else {
 		MATCHER_RETURN(0);
@@ -137,17 +141,19 @@ peg_match_eos(struct PEG *peg, const char *rule)
 }
 
 int
-peg_match_range(struct PEG *peg, const char *rule, char a, char b)
+peg_match_range(struct PEG *peg, const char *rule, uint32_t a, uint32_t b)
 {
 	MATCHER_INIT();
 	if (peg->pos >= peg->len) {
 		MATCHER_RETURN(0);
 	}
-	char c = peg->buf[peg->pos];
-	if (a > c || c > b) {
+
+	uint32_t c;
+	size_t clen = utf8_decode(peg->buf + peg->pos, peg->len - peg->pos, &c);
+	if (UTF_INVALID == clen || a > c || c > b) {
 		MATCHER_RETURN(0);
 	}
-	peg->pos++;
+	peg->pos += clen;
 	MATCHER_RETURN(1);
 }
 
