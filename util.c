@@ -55,6 +55,39 @@ read_symlink(int dir, const char *path)
 	return NULL;
 }
 
+char *
+slurp(int fd)
+{
+#define SLURP_BUF_SIZE	4096
+	size_t bufsize = SLURP_BUF_SIZE + 1;
+	char *buf = xmalloc(bufsize);
+	size_t left = SLURP_BUF_SIZE;
+	ssize_t bytes;
+	size_t pos = 0;
+	while ((bytes = read(fd, buf + pos, left)) != 0) {
+		if (bytes < 0) {
+			if (errno == EAGAIN) {
+				continue;
+			}
+			free(buf);
+			return NULL;
+		}
+		left -= bytes;
+		pos += bytes;
+		if (left == 0) {
+			size_t oldsize = bufsize;
+			bufsize += SLURP_BUF_SIZE;
+			left = SLURP_BUF_SIZE;
+			buf = recallocarray(buf, oldsize, bufsize, 1);
+			if (buf == NULL) {
+				abort();
+			}
+		}
+	}
+
+	return buf;
+}
+
 int
 update_symlink(int dir, const char *path1, const char *path2, char **prev)
 {
