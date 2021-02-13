@@ -27,6 +27,10 @@
  */
 #pragma once
 
+#ifndef nitems
+#define	nitems(x)	(sizeof((x)) / sizeof((x)[0]))
+#endif
+
 #define ANY(r)			ATLEAST((r), 0)
 #define ATLEAST(r, n)		peg_match_atleast(peg, __func__, (r), (n))
 #define ATMOST(r, n)		peg_match_between(peg, __func__, (r), 0, (n))
@@ -38,6 +42,7 @@
 #define MATCH(r)		peg_match_rule(peg, __func__, (r))
 #define RANGE(a, b)		peg_match_range(peg, __func__, (a), (b))
 #define REPEAT(r, n)		peg_match_between(peg, __func__, (r), (n), (n))
+#define SET(...)		peg_match_chars(peg, __func__, (uint32_t[]){__VA_ARGS__}, nitems(((uint32_t[]){__VA_ARGS__})))
 #define SOME(rule)		ATLEAST((rule), 1)
 #define STRING(s)		peg_match_string(peg, __func__, (s))
 #define THRU(c)			peg_match_thru(peg, __func__, (c))

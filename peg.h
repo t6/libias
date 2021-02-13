@@ -51,6 +51,7 @@ int peg_match_capture_start(struct PEG *);
 int peg_match_capture_end(struct PEG *, int, int);
 int peg_match_char(struct PEG *, const char *, uint32_t);
 int peg_match_char_f(struct PEG *, const char *, int (*)(int));
+int peg_match_chars(struct PEG *, const char *, uint32_t[], size_t);
 int peg_match_eos(struct PEG *, const char *);
 int peg_match_range(struct PEG *, const char *, uint32_t, uint32_t);
 int peg_match_rule(struct PEG *, const char *, RuleFn);

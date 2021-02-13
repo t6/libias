@@ -203,14 +203,7 @@ RULE(unescaped) {
 
 RULE(escaped) {
 	if (MATCH(escape)) {
-		if (!CHAR(0x22))
-		if (!CHAR(0x5c))
-		if (!CHAR(0x2f))
-		if (!CHAR(0x62))
-		if (!CHAR(0x66))
-		if (!CHAR(0x6e))
-		if (!CHAR(0x72))
-		if (!CHAR(0x74)) {
+		if (!SET(0x22, 0x5c, 0x2f, 0x62, 0x66, 0x6e, 0x72, 0x74)) {
 			if (CHAR(0x75))
 			if (REPEAT(hexdigit, 4))
 			return 1;

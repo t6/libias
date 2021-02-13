@@ -188,6 +188,25 @@ peg_match_char_f(struct PEG *peg, const char *rule, int (*f)(int))
 }
 
 int
+peg_match_chars(struct PEG *peg, const char *rule, uint32_t chars[], size_t len)
+{
+	MATCHER_INIT();
+	for (size_t i = 0; i < len; i++) {
+		char needle[UTF_SIZE + 1];
+		if (!utf8_encode(chars[i], needle)) {
+			MATCHER_RETURN(0);
+		}
+		size_t len = strlen(needle);
+		if ((peg->len - peg->pos) >= len &&
+		    strncmp(peg->buf + peg->pos, needle, len) == 0) {
+			peg->pos += len;
+			MATCHER_RETURN(1);
+		}
+	}
+	MATCHER_RETURN(0);
+}
+
+int
 peg_match_eos(struct PEG *peg, const char *rule)
 {
 	MATCHER_INIT();
