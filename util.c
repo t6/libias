@@ -58,7 +58,7 @@ read_symlink(int dir, const char *path)
 char *
 slurp(int fd)
 {
-#define SLURP_BUF_SIZE	4096
+#define SLURP_BUF_SIZE	(8*1024*1024)
 	size_t bufsize = SLURP_BUF_SIZE + 1;
 	char *buf = xmalloc(bufsize);
 	size_t left = SLURP_BUF_SIZE;
