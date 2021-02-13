@@ -289,6 +289,10 @@ peg_new(const char *const buf, size_t len, MismatchFn on_mismatch)
 void
 peg_free(struct PEG *peg)
 {
+	if (peg == NULL) {
+		return;
+	}
+
 	for (size_t i = 0; i < MAX_CAPTURE_TAGS; i++) {
 		for (size_t j = 0; j < peg->captures.tags[i].n; j++) {
 			free(peg->captures.tags[i].captures[j].buf);
