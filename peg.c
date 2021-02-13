@@ -41,17 +41,23 @@
 #include "utf8.h"
 #include "util.h"
 
-#define INITIAL_CAPTURE_STACK_CAP 64
+#define MAX_CAPTURE_TAGS		64
+#define MAX_CAPTURES_PER_TAG		128
+#define CAPTURE_STACK_SIZE		(MAX_CAPTURE_TAGS * MAX_CAPTURES_PER_TAG)
 
 struct PEG {
 	const char *const buf;
 	const size_t len;
 	size_t pos;
 
-	struct Map *captures;
-	size_t capture;
-	size_t *capture_stack;
-	size_t capture_stack_cap;
+	struct {
+		struct {
+			struct PEGCapture captures[MAX_CAPTURES_PER_TAG];
+			size_t n;
+		} tags[MAX_CAPTURE_TAGS];
+		size_t stack[CAPTURE_STACK_SIZE];
+		size_t n;
+	} captures;
 
 	MismatchFn on_mismatch;
 	void *userdata;
@@ -70,7 +76,16 @@ struct PEG {
 struct Array *
 peg_captures(struct PEG *peg, int tag)
 {
-	return map_get(peg->captures, (void*)(uintptr_t)tag);
+	if (tag >= MAX_CAPTURE_TAGS) {
+		return NULL;
+	}
+
+	struct Array *a = array_new();
+	for (size_t i = 0; i < peg->captures.tags[tag].n; i++) {
+		array_append(a, &peg->captures.tags[tag].captures[i]);
+	}
+
+	return a;
 }
 
 int
@@ -113,39 +128,31 @@ peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b
 int
 peg_match_capture_start(struct PEG *peg)
 {
-	if (peg->capture >= peg->capture_stack_cap) {
-		size_t new_cap = peg->capture_stack_cap + INITIAL_CAPTURE_STACK_CAP;
-		assert(new_cap > peg->capture_stack_cap);
-		peg->capture_stack = xrecallocarray(peg->capture_stack, peg->capture_stack_cap, new_cap, sizeof(size_t));
+	if (peg->captures.n >= CAPTURE_STACK_SIZE) {
+		return 0;
 	}
-	peg->capture_stack[peg->capture++] = peg->pos;
+	peg->captures.stack[peg->captures.n++] = peg->pos;
 	return 1;
 }
 
 int
 peg_match_capture_end(struct PEG *peg, int tag, int retval)
 {
-	if (peg->capture > 0) {
-		peg->capture--;
-		if (retval) {
-			struct PEGCapture *capture = xmalloc(sizeof(struct PEGCapture));
-			size_t start = peg->capture_stack[peg->capture];
+	if (peg->captures.n > 0) {
+		peg->captures.n--;
+		if (retval && tag < MAX_CAPTURE_TAGS &&
+		    peg->captures.tags[tag].n < MAX_CAPTURES_PER_TAG) {
+			struct PEGCapture *capture = &peg->captures.tags[tag].captures[peg->captures.tags[tag].n++];
+			size_t start = peg->captures.stack[peg->captures.n];
 			size_t len = peg->pos - start;
 			capture->buf = xstrndup(peg->buf + start, len);
 			capture->start = start;
 			capture->len = len;
 			capture->tag = tag;
-			struct Array *captures = map_get(peg->captures, (void*)(uintptr_t)tag);
-			if (!captures) {
-				captures = array_new();
-				map_add(peg->captures, (void*)(uintptr_t)tag, captures);
-			}
-			array_append(captures, capture);
 		}
 	}
 	return retval;
 }
-
 
 int
 peg_match_char(struct PEG *peg, const char *rule, uint32_t c)
@@ -266,17 +273,6 @@ peg_match_to(struct PEG *peg, const char *rule, const char *needle)
 	return peg_match_thruto(peg, rule, needle, 0);
 }
 
-static void
-peg_capture_free(void *ap)
-{
-	struct Array *captures = ap;
-	ARRAY_FOREACH(captures, struct PEGCapture *, capture) {
-		free(capture->buf);
-		free(capture);
-	}
-	array_free(captures);
-}
-
 struct PEG *
 peg_new(const char *const buf, size_t len, MismatchFn on_mismatch)
 {
@@ -287,21 +283,17 @@ peg_new(const char *const buf, size_t len, MismatchFn on_mismatch)
 	};
 	struct PEG *peg = xmalloc(sizeof(struct PEG));
 	memcpy(peg, &proto, sizeof(*peg));
-	peg->captures = map_new(NULL, NULL, NULL, peg_capture_free);
-	peg->capture_stack_cap = INITIAL_CAPTURE_STACK_CAP;
-	peg->capture_stack = recallocarray(NULL, 0, peg->capture_stack_cap, sizeof(size_t));
-	if (peg->capture_stack == NULL) {
-		warn("recallocarray");
-		abort();
-	}
 	return peg;
 }
 
 void
 peg_free(struct PEG *peg)
 {
-	map_free(peg->captures);
-	free(peg->capture_stack);
+	for (size_t i = 0; i < MAX_CAPTURE_TAGS; i++) {
+		for (size_t j = 0; j < peg->captures.tags[i].n; j++) {
+			free(peg->captures.tags[i].captures[j].buf);
+		}
+	}
 	free(peg);
 }
 
