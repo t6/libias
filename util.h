@@ -68,6 +68,7 @@ char *str_trimr(const char *);
 void sort(void *, size_t, size_t, CompareFn, void *);
 int xasprintf(char **, const char *, ...) __printflike(2, 3);
 void *xmalloc(size_t);
+void *xrecallocarray(void *, size_t, size_t, size_t);
 char *xstrdup(const char *);
 char *xstrndup(const char *, size_t);
 size_t xstrlcat(char *, const char *, size_t);

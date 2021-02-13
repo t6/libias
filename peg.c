@@ -116,11 +116,7 @@ peg_match_capture_start(struct PEG *peg)
 	if (peg->capture >= peg->capture_stack_cap) {
 		size_t new_cap = peg->capture_stack_cap + INITIAL_CAPTURE_STACK_CAP;
 		assert(new_cap > peg->capture_stack_cap);
-		peg->capture_stack = recallocarray(peg->capture_stack, peg->capture_stack_cap, new_cap, sizeof(size_t));
-		if (peg->capture_stack == NULL) {
-			warn("recallocarray");
-			abort();
-		}
+		peg->capture_stack = xrecallocarray(peg->capture_stack, peg->capture_stack_cap, new_cap, sizeof(size_t));
 	}
 	peg->capture_stack[peg->capture++] = peg->pos;
 	return 1;

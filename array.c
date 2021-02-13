@@ -62,12 +62,7 @@ array_new(void)
 	array->cap = INITIAL_ARRAY_CAP;
 	array->len = 0;
 	array->value_size = sizeof(void *);
-
-	array->buf = recallocarray(NULL, 0, array->cap, array->value_size);
-	if (array->buf == NULL) {
-		warn("recallocarray");
-		abort();
-	}
+	array->buf = xrecallocarray(NULL, 0, array->cap, array->value_size);
 
 	return array;
 }

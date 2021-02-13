@@ -301,6 +301,17 @@ xmalloc(size_t size)
 	return x;
 }
 
+void *
+xrecallocarray(void *ptr, size_t old, size_t nmemb, size_t size)
+{
+	ptr = recallocarray(ptr, old, nmemb, size);
+	if (ptr == NULL) {
+		warn("recallocarray");
+		abort();
+	}
+	return ptr;
+}
+
 char *
 xstrdup(const char *s)
 {
