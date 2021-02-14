@@ -5,8 +5,8 @@ include Makefile.configure
 
 CFLAGS+=	-std=gnu99 -I.
 
-OBJS=		array.o compats.o diff.o diffutil.o json.o map.o peg.o set.o \
-		utf8.o util.o
+OBJS=		array.o compats.o diff.o diffutil.o map.o peg.o peg/clang.o \
+		peg/json.o set.o utf8.o util.o
 TESTS=		tests/array/array.test \
 		tests/peg/IPv4.test \
 		tests/peg/MOVED.test \
