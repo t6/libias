@@ -32,8 +32,8 @@ struct Array;
 
 struct PEGCapture {
 	char *buf;
-	int tag;
-	size_t start;
+	unsigned int tag;
+	size_t pos;
 	size_t len;
 };
 
@@ -43,12 +43,12 @@ typedef int (*RuleFn)(struct PEG *, const char *);
 struct PEG *peg_new(const char *, size_t, MismatchFn);
 void peg_free(struct PEG *);
 
-struct Array *peg_captures(struct PEG *, int);
+struct Array *peg_captures(struct PEG *, unsigned int);
 
 int peg_match_atleast(struct PEG *, const char *, RuleFn, int);
 int peg_match_between(struct PEG *, const char *, RuleFn, int, int);
 int peg_match_capture_start(struct PEG *);
-int peg_match_capture_end(struct PEG *, int, int);
+int peg_match_capture_end(struct PEG *, unsigned int, int);
 int peg_match_char(struct PEG *, const char *, uint32_t);
 int peg_match_char_f(struct PEG *, const char *, int (*)(int));
 int peg_match_chars(struct PEG *, const char *, uint32_t[], size_t);

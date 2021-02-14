@@ -74,7 +74,7 @@ struct PEG {
 	} while (0)
 
 struct Array *
-peg_captures(struct PEG *peg, int tag)
+peg_captures(struct PEG *peg, unsigned int tag)
 {
 	if (tag >= MAX_CAPTURE_TAGS) {
 		return NULL;
@@ -136,7 +136,7 @@ peg_match_capture_start(struct PEG *peg)
 }
 
 int
-peg_match_capture_end(struct PEG *peg, int tag, int retval)
+peg_match_capture_end(struct PEG *peg, unsigned int tag, int retval)
 {
 	if (peg->captures.n > 0) {
 		peg->captures.n--;
@@ -146,9 +146,9 @@ peg_match_capture_end(struct PEG *peg, int tag, int retval)
 			size_t start = peg->captures.stack[peg->captures.n];
 			size_t len = peg->pos - start;
 			capture->buf = xstrndup(peg->buf + start, len);
-			capture->start = start;
-			capture->len = len;
 			capture->tag = tag;
+			capture->pos = start;
+			capture->len = len;
 		}
 	}
 	return retval;
