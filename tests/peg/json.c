@@ -40,6 +40,10 @@ TESTS() {
 	TEST(check_match(json_decode, "[null]", 1));
 	TEST(check_match(json_decode, "[null,null]", 1));
 	TEST(check_match(json_decode, "[]", 1));
+	TEST(check_match(json_decode, "[  ]", 1));
+	TEST(check_match(json_decode, "{}", 1));
+	TEST(check_match(json_decode, "{ }", 1));
+	TEST(check_match(json_decode, "1", 1));
 	TEST(check_match(json_decode, "[1, 1.0, 2.3333, 1e+10, 1e-10, 1e10]", 1));
 	TEST(check_match(json_decode, "{\"\":null,\"\":null}", 1));
 	TEST(check_match(json_decode, "{\"foo\":null}", 1));

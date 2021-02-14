@@ -95,20 +95,30 @@ RULE(object_members) {
 	return 0;
 }
 
-RULE(object) {
+RULE(object_0) {
 	if (MATCH(begin_object))
-	if (ANY(ws)) {
-	if (MATCH(member)) {
-		if (ANY(object_members))
-		if (ANY(ws))
-		if (MATCH(end_object))
-		return 1;
-	} else {
-		if (ANY(ws))
-		if (MATCH(end_object))
-		return 1;
-	} }
+	if (ANY(ws))
+	if (MATCH(member))
+	if (ANY(object_members))
+	if (ANY(ws))
+	if (MATCH(end_object))
+	return 1;
 	return 0;
+}
+
+RULE(object_1) {
+	if (MATCH(begin_object))
+	if (ANY(ws))
+	if (MATCH(end_object))
+	return 1;
+	return 0;
+}
+
+RULE(object) {
+	if (!MATCH(object_0))
+	if (!MATCH(object_1))
+	return 0;
+	return 1;
 }
 
 RULE(member) {
@@ -128,20 +138,30 @@ RULE(array_values) {
 	return 0;
 }
 
-RULE(array) {
+RULE(array_0) {
 	if (MATCH(begin_array))
-	if (ANY(ws)) {
-	if (MATCH(value)) {
-		if (ANY(array_values))
-		if (ANY(ws))
-		if (MATCH(end_array))
-		return 1;
-	} else {
-		if (ANY(ws))
-		if (MATCH(end_array))
-		return 1;
-	} }
+	if (ANY(ws))
+	if (MATCH(value))
+	if (ANY(array_values))
+	if (ANY(ws))
+	if (MATCH(end_array))
+	return 1;
 	return 0;
+}
+
+RULE(array_1) {
+	if (MATCH(begin_array))
+	if (ANY(ws))
+	if (MATCH(end_array))
+	return 1;
+	return 0;
+}
+
+RULE(array) {
+	if (!MATCH(array_0))
+	if (!MATCH(array_1))
+	return 0;
+	return 1;
 }
 
 RULE(integer) {
@@ -167,11 +187,10 @@ RULE(minus_plus) {
 }
 
 RULE(exp) {
-	if (MATCH(e)) {
-		MATCH(minus_plus);
-		if (SOME(digit))
-		return 1;
-	}
+	if (MATCH(e))
+	if (OPT(MATCH(minus_plus)))
+	if (SOME(digit))
+	return 1;
 	return 0;
 }
 
@@ -183,12 +202,11 @@ RULE(frac) {
 }
 
 RULE(number) {
-	int negative = MATCH(minus);
-	if (MATCH(integer)) {
-		int fraction = MATCH(frac);
-		int exponent = MATCH(exp);
-		return 1;
-	}
+	if (OPT(MATCH(minus)))
+	if (MATCH(integer))
+	if (OPT(MATCH(frac)))
+	if (OPT(MATCH(exp)))
+	return 1;
 	return 0;
 }
 
@@ -201,16 +219,24 @@ RULE(unescaped) {
 	return 1;
 }
 
+RULE(escaped_1) {
+	if (CHAR(0x75))
+	if (REPEAT(hexdigit, 4))
+	return 1;
+	return 0;
+}
+
+RULE(escaped_0) {
+	if (!SET(0x22, 0x5c, 0x2f, 0x62, 0x66, 0x6e, 0x72, 0x74))
+	if (!MATCH(escaped_1))
+	return 0;
+	return 1;
+}
+
 RULE(escaped) {
-	if (MATCH(escape)) {
-		if (!SET(0x22, 0x5c, 0x2f, 0x62, 0x66, 0x6e, 0x72, 0x74)) {
-			if (CHAR(0x75))
-			if (REPEAT(hexdigit, 4))
-			return 1;
-			return 0;
-		}
-		return 1;
-	}
+	if (MATCH(escape))
+	if (MATCH(escaped_0))
+	return 1;
 	return 0;
 }
 

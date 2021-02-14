@@ -40,6 +40,7 @@
 #define CHARF(f)		peg_match_char_f(peg, __func__, (f))
 #define EOS()			peg_match_eos(peg, __func__)
 #define MATCH(r)		peg_match_rule(peg, __func__, (r))
+#define OPT(r)			((r) || 1)
 #define RANGE(a, b)		peg_match_range(peg, __func__, (a), (b))
 #define REPEAT(r, n)		peg_match_between(peg, __func__, (r), (n), (n))
 #define SET(...)		peg_match_chars(peg, __func__, (uint32_t[]){__VA_ARGS__}, nitems(((uint32_t[]){__VA_ARGS__})))
