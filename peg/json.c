@@ -81,8 +81,8 @@ static int ishexdigit(int c)
 	return isdigit(c) || (c >= 'a' && c <= 'f');
 }
 
-CAPTURE_MACHINE(got_number, struct JSONCaptureMachineData) {
-	switch ((enum JSONCaptureState)capture->state) {
+CAPTURE_MACHINE(enum JSONCaptureState, struct JSONCaptureMachineData) {
+	switch (state) {
 	case NUMBER_EXPONENT:
 		data->num.exponent = capture->buf;
 		break;

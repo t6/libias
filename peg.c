@@ -165,19 +165,19 @@ peg_match_capture_end(struct PEG *peg, unsigned int tag, unsigned int state, Cap
 			capture->state = state;
 			capture->pos = start;
 			capture->len = len;
-			if (f) {
-				if (peg->capture_userdata == NULL) {
-					peg->capture_userdata = xmalloc(size);
-				}
-				switch (f(peg, capture, peg->capture_userdata)) {
-				case PEG_CAPTURE_DISCARD:
-					free(capture->buf);
-					capture->buf = NULL;
-					peg->captures.tags[tag].n--;
-					break;
-				case PEG_CAPTURE_KEEP:
-					break;
-				}
+			capture->peg = peg;
+			if (peg->capture_userdata == NULL) {
+				peg->capture_userdata = xmalloc(size);
+			}
+			capture->userdata = peg->capture_userdata;
+			switch (f(capture)) {
+			case PEG_CAPTURE_DISCARD:
+				free(capture->buf);
+				capture->buf = NULL;
+				peg->captures.tags[tag].n--;
+				break;
+			case PEG_CAPTURE_KEEP:
+				break;
 			}
 		}
 	}

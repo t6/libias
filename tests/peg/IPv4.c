@@ -60,8 +60,8 @@ enum IPv4CaptureState {
 	FULL,
 };
 
-CAPTURE_MACHINE(ipv4_capture, struct IPv4Capture) {
-	switch ((enum IPv4CaptureState)capture->state) {
+CAPTURE_MACHINE(enum IPv4CaptureState, struct IPv4Capture) {
+	switch (state) {
 	case BYTE1:
 	case BYTE2:
 	case BYTE3:
