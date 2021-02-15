@@ -48,7 +48,7 @@ RULE(byte) {
 	return 1;
 }
 
-RULE(ipv4) {
+RULE(ipv4_address) {
 	if (CAPTURE(MATCH(byte), 0))
 	if (CHAR('.'))
 	if (CAPTURE(MATCH(byte), 0))
@@ -61,7 +61,8 @@ RULE(ipv4) {
 	return 0;
 }
 
-RULE(ipv4_capture) { return CAPTURE(MATCH(ipv4), 1); }
+MAIN_RULE(ipv4) { return MATCH(ipv4_address); }
+MAIN_RULE(ipv4_capture) { return CAPTURE(MATCH(ipv4_address), 1); }
 
 TESTS() {
 	TEST(check_match(ipv4, "10.240.250.250", 1));

@@ -38,12 +38,13 @@ struct PEGCapture {
 };
 
 typedef void (*MismatchFn)(struct PEG *, const char *, void *);
-typedef int (*RuleFn)(struct PEG *, const char *);
+typedef int (*RuleFn)(struct PEG *);
 
 struct PEG *peg_new(const char *, size_t, MismatchFn);
 void peg_free(struct PEG *);
 
 struct Array *peg_captures(struct PEG *, unsigned int);
+int peg_match(struct PEG *, RuleFn);
 
 int peg_match_atleast(struct PEG *, const char *, RuleFn, int);
 int peg_match_between(struct PEG *, const char *, RuleFn, int, int);

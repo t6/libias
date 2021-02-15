@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern int json_decode(struct PEG *peg, const char *rule);
+extern int json_decode(struct PEG *peg);
 
 TESTS() {
 	TEST(check_match(json_decode, "\"\\\"foo\"", 1));

@@ -255,10 +255,7 @@ RULE(string) {
 	return 0;
 }
 
-
-int json_decode(struct PEG *peg, const char *rule);
-int json_decode(struct PEG *peg, const char *rule)
-{
+MAIN_RULE(json_decode) {
 	if (MATCH(JSON))
 	if (EOS())
 	return 1;

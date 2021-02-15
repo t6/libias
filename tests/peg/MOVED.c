@@ -74,7 +74,7 @@ RULE(entry_comment) { // (+ :comment :entry)
 	return 1;
 }
 
-RULE(MOVED) {
+MAIN_RULE(MOVED) {
 	if (ANY(entry_comment))
 	if (EOS())
 	return 1;

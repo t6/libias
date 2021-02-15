@@ -39,6 +39,7 @@
 #define CHAR(c)			peg_match_char(peg, __func__, (c))
 #define CHARF(f)		peg_match_char_f(peg, __func__, (f))
 #define EOS()			peg_match_eos(peg, __func__)
+#define MAIN_RULE(name)		int name(struct PEG *); int name(struct PEG *peg)
 #define MATCH(r)		peg_match_rule(peg, __func__, (r))
 #define OPT(r)			((r) || 1)
 #define RANGE(a, b)		peg_match_range(peg, __func__, (a), (b))
@@ -48,4 +49,4 @@
 #define STRING(s)		peg_match_string(peg, __func__, (s))
 #define THRU(c)			peg_match_thru(peg, __func__, (c))
 #define TO(c)			peg_match_to(peg, __func__, (c))
-#define RULE(name)		static int name(struct PEG *peg, __unused const char *__rule_name)
+#define RULE(name)		static int name(struct PEG *peg)

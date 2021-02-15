@@ -34,7 +34,7 @@ RULE(az) {
 	return 1;
 }
 
-RULE(range) {
+MAIN_RULE(range) {
 	if (SOME(az))
 	if (EOS())
 	return 1;

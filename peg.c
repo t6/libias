@@ -89,13 +89,26 @@ peg_captures(struct PEG *peg, unsigned int tag)
 }
 
 int
+peg_match(struct PEG *peg, RuleFn rulefn)
+{
+	MATCHER_INIT();
+	size_t pos = peg->pos;
+	if (rulefn(peg)) {
+		MATCHER_RETURN(1);
+	} else {
+		peg->pos = pos;
+		MATCHER_RETURN(0);
+	}
+}
+
+int
 peg_match_atleast(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
 {
 	MATCHER_INIT();
 	size_t pos = peg->pos;
 	int i;
 	for (i = 0; ; i++) {
-		if (!rulefn(peg, rule)) {
+		if (!rulefn(peg)) {
 			break;
 		}
 	}
@@ -113,7 +126,7 @@ peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b
 	size_t pos = peg->pos;
 	int i;
 	for (i = 0; i <= b; i++) {
-		if (!rulefn(peg, rule)) {
+		if (!rulefn(peg)) {
 			break;
 		}
 	}
@@ -235,7 +248,7 @@ peg_match_rule(struct PEG *peg, const char *rule, RuleFn rulefn)
 {
 	MATCHER_INIT();
 	size_t pos = peg->pos;
-	if (rulefn(peg, rule)) {
+	if (rulefn(peg)) {
 		MATCHER_RETURN(1);
 	} else {
 		peg->pos = pos;
