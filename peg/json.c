@@ -35,19 +35,52 @@
 
 // See https://tools.ietf.org/html/rfc7159
 
+static RULE(array_0);
+static RULE(array_1);
+static RULE(array_values);
+static RULE(array);
+static RULE(begin_array);
+static RULE(begin_object);
+static RULE(character);
+static RULE(decimal_point);
+static RULE(digit);
+static RULE(e);
+static RULE(end_array);
+static RULE(end_object);
+static RULE(escape);
+static RULE(escaped_0);
+static RULE(escaped_1);
+static RULE(escaped);
+static RULE(exp);
+static RULE(frac);
+static RULE(hexdigit);
+static RULE(integer);
+static RULE(JSON);
+static RULE(member);
+static RULE(minus_plus);
+static RULE(minus);
+static RULE(name_separator);
+static RULE(number);
+static RULE(object_0);
+static RULE(object_1);
+static RULE(object_members);
+static RULE(object);
+static RULE(plus);
+static RULE(quotation_mark);
+static RULE(string);
+static RULE(unescaped);
+static RULE(value_separator);
+static RULE(value);
+static RULE(ws);
+static RULE(zero);
+
+RULE(json_decode);
+
 static int ishexdigit(int c)
 {
 	c = tolower(c);
 	return isdigit(c) || (c >= 'a' && c <= 'f');
 }
-
-RULE(array);
-RULE(member);
-RULE(number);
-RULE(object);
-RULE(string);
-RULE(value);
-RULE(ws);
 
 RULE(JSON) {
 	if (ANY(ws))
@@ -255,7 +288,7 @@ RULE(string) {
 	return 0;
 }
 
-MAIN_RULE(json_decode) {
+RULE(json_decode) {
 	if (MATCH(JSON))
 	if (EOS())
 	return 1;

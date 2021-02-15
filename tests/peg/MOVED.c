@@ -33,6 +33,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+static RULE(comment);
+static RULE(digit);
+static RULE(date);
+static RULE(entry);
+static RULE(entry_comment);
+static RULE(MOVED);
+
 RULE(comment) {
 	if (CHAR('#'))
 	if (THRU("\n"))
@@ -74,7 +81,7 @@ RULE(entry_comment) { // (+ :comment :entry)
 	return 1;
 }
 
-MAIN_RULE(MOVED) {
+RULE(MOVED) {
 	if (ANY(entry_comment))
 	if (EOS())
 	return 1;

@@ -91,14 +91,7 @@ peg_captures(struct PEG *peg, unsigned int tag)
 int
 peg_match(struct PEG *peg, RuleFn rulefn)
 {
-	MATCHER_INIT();
-	size_t pos = peg->pos;
-	if (rulefn(peg)) {
-		MATCHER_RETURN(1);
-	} else {
-		peg->pos = pos;
-		MATCHER_RETURN(0);
-	}
+	return peg_match_rule(peg, ":main", rulefn);
 }
 
 int

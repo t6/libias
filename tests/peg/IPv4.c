@@ -33,6 +33,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+static RULE(byte_1);
+static RULE(byte_2);
+static RULE(byte_3);
+static RULE(byte);
+static RULE(dig);
+static RULE(ipv4_capture);
+static RULE(ipv4);
+static RULE(num0_4);
+static RULE(num0_5);
+
 RULE(dig) { return RANGE('0', '9'); }
 RULE(num0_4) { return RANGE('0', '4'); }
 RULE(num0_5) { return RANGE('0', '5'); }
@@ -48,7 +58,7 @@ RULE(byte) {
 	return 1;
 }
 
-RULE(ipv4_address) {
+RULE(ipv4) {
 	if (CAPTURE(MATCH(byte), 0))
 	if (CHAR('.'))
 	if (CAPTURE(MATCH(byte), 0))
@@ -61,8 +71,7 @@ RULE(ipv4_address) {
 	return 0;
 }
 
-MAIN_RULE(ipv4) { return MATCH(ipv4_address); }
-MAIN_RULE(ipv4_capture) { return CAPTURE(MATCH(ipv4_address), 1); }
+RULE(ipv4_capture) { return CAPTURE(MATCH(ipv4), 1); }
 
 TESTS() {
 	TEST(check_match(ipv4, "10.240.250.250", 1));

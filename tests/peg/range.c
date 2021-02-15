@@ -27,6 +27,9 @@
  */
 #include "tests/peg/common.h"
 
+static RULE(az);
+static RULE(range);
+
 RULE(az) {
 	if (!RANGE('a', 'z'))
 	if (!RANGE('A', 'Z'))
@@ -34,7 +37,7 @@ RULE(az) {
 	return 1;
 }
 
-MAIN_RULE(range) {
+RULE(range) {
 	if (SOME(az))
 	if (EOS())
 	return 1;
