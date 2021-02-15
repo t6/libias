@@ -193,15 +193,14 @@ array_iterator_free(struct ArrayIterator **iter_)
 }
 
 void *
-array_iterator_next(struct ArrayIterator **iter_)
+array_iterator_next(struct ArrayIterator **iter_, int *sentinel)
 {
 	struct ArrayIterator *iter = *iter_;
-	void *element = array_get(iter->array, iter->i);
-	if (element) {
-		iter->i++;
-		return element;
+	if (iter->i < iter->array->len) {
+		return iter->array->buf[iter->i++];
 	} else {
 		array_iterator_free(iter_);
+		*sentinel = 0;
 		*iter_ = NULL;
 		return NULL;
 	}

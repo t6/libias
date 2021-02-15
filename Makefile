@@ -13,6 +13,7 @@ TESTS=		tests/array/array.test \
 		tests/peg/json.test \
 		tests/peg/range.test \
 		tests/util/str.test
+TESTS_ARRAY!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/array/' | sed 's,\.test$$,.o,'
 TESTS_PEG!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/peg/' | sed 's,\.test$$,.o,'
 TESTS_UTIL!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/util/' | sed 's,\.test$$,.o,'
 
@@ -44,6 +45,7 @@ peg/json.o: config.h peg.h peg/macros.h
 set.o: config.h array.h map.h set.h util.h
 utf8.o: config.h utf8.h
 util.o: config.h array.h util.h
+${TESTS_ARRAY}: config.h array.h test.h util.h
 ${TESTS_PEG}: config.h array.h peg.h peg/macros.h test.h tests/peg/common.h util.h
 ${TESTS_UTIL}: config.h array.h test.h util.h
 

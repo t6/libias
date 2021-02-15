@@ -50,4 +50,14 @@ TESTS() {
 		}
 	}
 	TEST(i == 3);
+
+	// Check that ARRAY_FOREACH works with NULL values
+	array = array_new();
+	array_append(array, NULL);
+	array_append(array, NULL);
+	i = 0;
+	ARRAY_FOREACH(array, char *, s) {
+		i++;
+	}
+	TEST(i == 2);
 }

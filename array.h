@@ -46,8 +46,9 @@ void array_truncate(struct Array *);
 
 struct ArrayIterator *array_iterator(struct Array *);
 void array_iterator_free(struct ArrayIterator **);
-void *array_iterator_next(struct ArrayIterator **);
+void *array_iterator_next(struct ArrayIterator **, int *);
 
 #define ARRAY_FOREACH(ARRAY, TYPE, VAR) \
 	for (struct ArrayIterator *__##VAR##_iter __attribute__((cleanup(array_iterator_free))) = array_iterator(ARRAY); __##VAR##_iter != NULL; array_iterator_free(&__##VAR##_iter)) \
-	for (TYPE VAR = array_iterator_next(&__##VAR##_iter); VAR != NULL; VAR = array_iterator_next(&__##VAR##_iter))
+	for (int __##VAR##_sentinel = 1; __##VAR##_sentinel;) \
+	for (TYPE VAR = array_iterator_next(&__##VAR##_iter, &__##VAR##_sentinel); __##VAR##_sentinel; VAR = array_iterator_next(&__##VAR##_iter, &__##VAR##_sentinel))
