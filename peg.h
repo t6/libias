@@ -33,23 +33,29 @@ struct Array;
 struct PEGCapture {
 	char *buf;
 	unsigned int tag;
+	unsigned int state;
 	size_t pos;
 	size_t len;
 };
 
-typedef void (*MismatchFn)(struct PEG *, const char *, void *);
+enum PEGCaptureFlag {
+	PEG_CAPTURE_DISCARD,
+	PEG_CAPTURE_KEEP,
+};
+
+typedef enum PEGCaptureFlag (*CaptureFn)(struct PEG *, struct PEGCapture *, void *);
 typedef int (*RuleFn)(struct PEG *);
 
-struct PEG *peg_new(const char *, size_t, MismatchFn);
+struct PEG *peg_new(const char *, size_t);
 void peg_free(struct PEG *);
 
 struct Array *peg_captures(struct PEG *, unsigned int);
-int peg_match(struct PEG *, RuleFn);
+int peg_match(struct PEG *, RuleFn, void **);
 
 int peg_match_atleast(struct PEG *, const char *, RuleFn, int);
 int peg_match_between(struct PEG *, const char *, RuleFn, int, int);
 int peg_match_capture_start(struct PEG *);
-int peg_match_capture_end(struct PEG *, unsigned int, int);
+int peg_match_capture_end(struct PEG *, unsigned int, unsigned int, CaptureFn, size_t, int);
 int peg_match_char(struct PEG *, const char *, uint32_t);
 int peg_match_char_f(struct PEG *, const char *, int (*)(int));
 int peg_match_chars(struct PEG *, const char *, uint32_t[], size_t);

@@ -30,6 +30,7 @@
 #include <ctype.h>
 
 #include "peg.h"
+#include "peg/json.h"
 #include "peg/macros.h"
 #include "util.h"
 
@@ -52,7 +53,7 @@ static RULE(escaped_0);
 static RULE(escaped_1);
 static RULE(escaped);
 static RULE(exponent);
-static RULE(frac);
+static RULE(fraction);
 static RULE(hexdigit);
 static RULE(integer);
 static RULE(JSON);
@@ -74,12 +75,32 @@ static RULE(value);
 static RULE(ws);
 static RULE(zero);
 
-RULE(json_decode);
-
 static int ishexdigit(int c)
 {
 	c = tolower(c);
 	return isdigit(c) || (c >= 'a' && c <= 'f');
+}
+
+CAPTURE_MACHINE(got_number, struct JSONCaptureMachineData) {
+	switch ((enum JSONCaptureState)capture->state) {
+	case NUMBER_EXPONENT:
+		data->num.exponent = capture->buf;
+		break;
+	case NUMBER_FRACTION:
+		data->num.fraction = capture->buf;
+		break;
+	case NUMBER_FULL:
+		data->num.fraction = capture->buf;
+		break;
+	case NUMBER_INTEGER:
+		data->num.integer = capture->buf;
+		break;
+	case NUMBER_MINUS:
+		data->num.minus = capture->buf;
+		break;
+	}
+
+	return PEG_CAPTURE_DISCARD;
 }
 
 RULE(JSON) {
@@ -113,7 +134,7 @@ RULE(value) {
 	if (!STRING("true"))
 	if (!MATCH(object))
 	if (!MATCH(array))
-	if (!MATCH(number))
+	if (!CAPTURE(MATCH(number), 0, NUMBER_FULL))
 	if (!MATCH(string))
 	return 0;
 	return 1;
@@ -227,7 +248,7 @@ RULE(exponent) {
 	return 0;
 }
 
-RULE(frac) {
+RULE(fraction) {
 	if (MATCH(decimal_point))
 	if (SOME(digit))
 	return 1;
@@ -235,10 +256,10 @@ RULE(frac) {
 }
 
 RULE(number) {
-	if (OPT(MATCH(minus)))
-	if (MATCH(integer))
-	if (OPT(MATCH(frac)))
-	if (OPT(MATCH(exponent)))
+	if (OPT(CAPTURE(MATCH(minus), 0, NUMBER_MINUS)))
+	if (CAPTURE(MATCH(integer), 0, NUMBER_INTEGER))
+	if (OPT(CAPTURE(MATCH(fraction), 0, NUMBER_FRACTION)))
+	if (OPT(CAPTURE(MATCH(exponent), 0, NUMBER_EXPONENT)))
 	return 1;
 	return 0;
 }

@@ -27,38 +27,22 @@
  */
 #pragma once
 
-#include "config.h"
-#include <assert.h> 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "array.h"
-#include "peg.h"
-#include "peg/macros.h"
-#include "test.h"
-#include "util.h"
+struct JSONCaptureMachineData {
+	struct {
+		char *number;
+		char *minus;
+		char *integer;
+		char *fraction;
+		char *exponent;
+	} num;
+};
 
-static inline char *
-check_captures(RuleFn rule, const char *s, int tag, const char *sep)
-{
-	struct PEG *peg = peg_new(s, strlen(s));
-	int result = peg_match(peg, rule, NULL);
-	if (result && peg_captures(peg, tag)) {
-		struct Array *caps = array_new();
-		ARRAY_FOREACH(peg_captures(peg, tag), struct PEGCapture *, cap) {
-			array_append(caps, cap->buf);
-		}
-		return str_join(caps, sep);
-	}
-	peg_free(peg);
-	return NULL;
-}
+enum JSONCaptureState {
+	NUMBER_EXPONENT,
+	NUMBER_FRACTION,
+	NUMBER_INTEGER,
+	NUMBER_MINUS,
+	NUMBER_FULL,
+};
 
-static inline int
-check_match(RuleFn rule, const char *s, int expected)
-{
-	struct PEG *peg = peg_new(s, strlen(s));
-	int result = peg_match(peg, rule, NULL);
-	peg_free(peg);
-	return result == expected;
-}
+int json_decode(struct PEG *);

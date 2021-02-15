@@ -28,6 +28,7 @@
 
 #include "tests/peg/common.h"
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,6 +39,7 @@ TESTS() {
 	TEST(check_match(json_decode, "\"\\\"foo\"", 1));
 	TEST(check_match(json_decode, "\"foo\"", 1));
 	TEST(check_match(json_decode, "[null]", 1));
+	TEST_STREQ(check_captures(json_decode, "{\"f\":[null,1]}", 0, "@"), "");
 	TEST(check_match(json_decode, "[null,null]", 1));
 	TEST(check_match(json_decode, "[]", 1));
 	TEST(check_match(json_decode, "[  ]", 1));
@@ -48,4 +50,8 @@ TESTS() {
 	TEST(check_match(json_decode, "{\"\":null,\"\":null}", 1));
 	TEST(check_match(json_decode, "{\"foo\":null}", 1));
 	TEST(check_match(json_decode, "[\"Да Му Еба Майката\"]", 1));
+	// int fd = open("pkg-status.json", O_RDONLY);
+	// char *buf = slurp(fd);
+	// printf("oh\n");
+	// TEST(check_match(json_decode, buf, 1));
 }

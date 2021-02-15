@@ -43,10 +43,40 @@ static RULE(ipv4);
 static RULE(num0_4);
 static RULE(num0_5);
 
+struct IPv4Capture {
+	const char *byte1;
+	const char *byte2;
+	const char *byte3;
+	const char *byte4;
+	const char *full;
+};
+
+enum IPv4CaptureState {
+	BYTE1,
+	BYTE2,
+	BYTE3,
+	BYTE4,
+	BYTE25,
+	FULL,
+};
+
+CAPTURE_MACHINE(ipv4_capture, struct IPv4Capture) {
+	switch ((enum IPv4CaptureState)capture->state) {
+	case BYTE1:
+	case BYTE2:
+	case BYTE3:
+	case BYTE4:
+	case BYTE25:
+	case FULL:
+		break;
+	}
+	return PEG_CAPTURE_KEEP;
+}
+
 RULE(dig) { return RANGE('0', '9'); }
 RULE(num0_4) { return RANGE('0', '4'); }
 RULE(num0_5) { return RANGE('0', '5'); }
-RULE(byte_1) { if (CAPTURE(STRING("25"), 2)) if (MATCH(num0_5)) return 1; return 0; }
+RULE(byte_1) { if (CAPTURE(STRING("25"), 2, BYTE25)) if (MATCH(num0_5)) return 1; return 0; }
 RULE(byte_2) { if (CHAR('2')) if (MATCH(num0_4)) if (MATCH(dig)) return 1; return 0; }
 RULE(byte_3) { if (CHAR('1')) if (MATCH(dig)) if (MATCH(dig)) return 1; return 0; }
 RULE(byte) {
@@ -59,19 +89,19 @@ RULE(byte) {
 }
 
 RULE(ipv4) {
-	if (CAPTURE(MATCH(byte), 0))
+	if (CAPTURE(MATCH(byte), 0, BYTE1))
 	if (CHAR('.'))
-	if (CAPTURE(MATCH(byte), 0))
+	if (CAPTURE(MATCH(byte), 0, BYTE2))
 	if (CHAR('.'))
-	if (CAPTURE(MATCH(byte), 0))
+	if (CAPTURE(MATCH(byte), 0, BYTE3))
 	if (CHAR('.'))
-	if (CAPTURE(MATCH(byte), 0))
+	if (CAPTURE(MATCH(byte), 0, BYTE4))
 	if (EOS())
 	return 1;
 	return 0;
 }
 
-RULE(ipv4_capture) { return CAPTURE(MATCH(ipv4), 1); }
+RULE(ipv4_capture) { return CAPTURE(MATCH(ipv4), 1, FULL); }
 
 TESTS() {
 	TEST(check_match(ipv4, "10.240.250.250", 1));

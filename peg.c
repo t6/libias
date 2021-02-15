@@ -59,8 +59,7 @@ struct PEG {
 		size_t n;
 	} captures;
 
-	MismatchFn on_mismatch;
-	void *userdata;
+	void *capture_userdata;
 };
 
 
@@ -89,9 +88,19 @@ peg_captures(struct PEG *peg, unsigned int tag)
 }
 
 int
-peg_match(struct PEG *peg, RuleFn rulefn)
+peg_match(struct PEG *peg, RuleFn rulefn, void **userdata)
 {
-	return peg_match_rule(peg, ":main", rulefn);
+	if (peg_match_rule(peg, ":main", rulefn)) {
+		if (userdata) {
+			*userdata = peg->capture_userdata;
+		} else {
+			free(peg->capture_userdata);
+			peg->capture_userdata = NULL;
+		}
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 int
@@ -142,7 +151,7 @@ peg_match_capture_start(struct PEG *peg)
 }
 
 int
-peg_match_capture_end(struct PEG *peg, unsigned int tag, int retval)
+peg_match_capture_end(struct PEG *peg, unsigned int tag, unsigned int state, CaptureFn f, size_t size, int retval)
 {
 	if (peg->captures.n > 0) {
 		peg->captures.n--;
@@ -153,8 +162,23 @@ peg_match_capture_end(struct PEG *peg, unsigned int tag, int retval)
 			size_t len = peg->pos - start;
 			capture->buf = xstrndup(peg->buf + start, len);
 			capture->tag = tag;
+			capture->state = state;
 			capture->pos = start;
 			capture->len = len;
+			if (f) {
+				if (peg->capture_userdata == NULL) {
+					peg->capture_userdata = xmalloc(size);
+				}
+				switch (f(peg, capture, peg->capture_userdata)) {
+				case PEG_CAPTURE_DISCARD:
+					free(capture->buf);
+					capture->buf = NULL;
+					peg->captures.tags[tag].n--;
+					break;
+				case PEG_CAPTURE_KEEP:
+					break;
+				}
+			}
 		}
 	}
 	return retval;
@@ -299,12 +323,11 @@ peg_match_to(struct PEG *peg, const char *rule, const char *needle)
 }
 
 struct PEG *
-peg_new(const char *const buf, size_t len, MismatchFn on_mismatch)
+peg_new(const char *const buf, size_t len)
 {
 	struct PEG proto = {
 		.buf = buf,
 		.len = len,
-		.on_mismatch = on_mismatch
 	};
 	struct PEG *peg = xmalloc(sizeof(struct PEG));
 	memcpy(peg, &proto, sizeof(*peg));
