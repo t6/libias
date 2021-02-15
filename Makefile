@@ -39,11 +39,12 @@ diff.o: config.h diff.h
 diffutil.o: config.h array.h diff.h diffutil.h util.h
 map.o: config.h array.h map.h util.h
 peg.o: config.h array.h peg.h utf8.h util.h
-peg/json.o: config.h peg.h peg-macros.h
+peg/clang.o: config.h peg.h peg/macros.h
+peg/json.o: config.h peg.h peg/macros.h
 set.o: config.h array.h map.h set.h util.h
 utf8.o: config.h utf8.h
 util.o: config.h array.h util.h
-${TESTS_PEG}: config.h array.h peg.h peg-macros.h test.h tests/peg/common.h util.h
+${TESTS_PEG}: config.h array.h peg.h peg/macros.h test.h tests/peg/common.h util.h
 ${TESTS_UTIL}: config.h array.h test.h util.h
 
 clean:

@@ -30,7 +30,7 @@
 #include <ctype.h>
 
 #include "peg.h"
-#include "peg-macros.h"
+#include "peg/macros.h"
 #include "util.h"
 
 // See https://tools.ietf.org/html/rfc7159
