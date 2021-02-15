@@ -51,7 +51,7 @@ static RULE(escape);
 static RULE(escaped_0);
 static RULE(escaped_1);
 static RULE(escaped);
-static RULE(exp);
+static RULE(exponent);
 static RULE(frac);
 static RULE(hexdigit);
 static RULE(integer);
@@ -219,7 +219,7 @@ RULE(minus_plus) {
 	return 1;
 }
 
-RULE(exp) {
+RULE(exponent) {
 	if (MATCH(e))
 	if (OPT(MATCH(minus_plus)))
 	if (SOME(digit))
@@ -238,7 +238,7 @@ RULE(number) {
 	if (OPT(MATCH(minus)))
 	if (MATCH(integer))
 	if (OPT(MATCH(frac)))
-	if (OPT(MATCH(exp)))
+	if (OPT(MATCH(exponent)))
 	return 1;
 	return 0;
 }
