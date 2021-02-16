@@ -53,7 +53,7 @@ struct PEG *peg_new(const char *, size_t);
 void peg_free(struct PEG *);
 
 struct Array *peg_captures(struct PEG *, unsigned int);
-int peg_match(struct PEG *, RuleFn, void **);
+int peg_match(struct PEG *, RuleFn, void *);
 
 int peg_match_atleast(struct PEG *, const char *, RuleFn, int);
 int peg_match_between(struct PEG *, const char *, RuleFn, int, int);

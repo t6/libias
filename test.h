@@ -37,14 +37,20 @@
 		fflush(stdout); \
 	} while(0)
 
+#define TEST_IF(x) if (!(x)) { \
+			array_append(failures, (char *)#x); \
+			putchar('X'); \
+			fflush(stdout); \
+		} else if (putchar('.') && 1); else
+
 #define TEST_STR(cmp, a, b) do { \
 		const char *s1 = (a); \
 		const char *s2 = (b); \
-		if (strcmp(s1, s2) cmp 0) { \
+		if (s1 && s2 && strcmp(s1, s2) cmp 0) { \
 			putchar('.'); \
 		} else { \
 			char *buf; \
-			xasprintf(&buf, ""#a" "#cmp" "#b" => \"%s\" "#cmp" \"%s\"", s1, s2); \
+			xasprintf(&buf, ""#a" "#cmp" "#b" => \"%s\" "#cmp" \"%s\"", s1 ? s1 : "(null)", s2 ? s2 : "(null)"); \
 			array_append(failures, buf); \
 			putchar('X'); \
 		} \

@@ -44,10 +44,7 @@ static RULE(num0_4);
 static RULE(num0_5);
 
 struct IPv4Capture {
-	const char *byte1;
-	const char *byte2;
-	const char *byte3;
-	const char *byte4;
+	const char *bytes[5];
 	const char *full;
 };
 
@@ -63,11 +60,22 @@ enum IPv4CaptureState {
 CAPTURE_MACHINE(enum IPv4CaptureState, struct IPv4Capture) {
 	switch (state) {
 	case BYTE1:
+		data->bytes[0] = capture->buf;
+		break;
 	case BYTE2:
+		data->bytes[1] = capture->buf;
+		break;
 	case BYTE3:
+		data->bytes[2] = capture->buf;
+		break;
 	case BYTE4:
+		data->bytes[3] = capture->buf;
+		break;
 	case BYTE25:
+		data->bytes[4] = capture->buf;
+		break;
 	case FULL:
+		data->full = capture->buf;
 		break;
 	}
 	return PEG_CAPTURE_KEEP;
@@ -109,7 +117,31 @@ TESTS() {
 	TEST_STREQ(check_captures(ipv4_capture, "10.240.250.250", 1, "@"), "10.240.250.250");
 	TEST_STREQ(check_captures(ipv4_capture, "10.240.250.250", 2, "@"), "25@25");
 	TEST_STREQ(check_captures(ipv4_capture, "0.0.0.0", 1, "@"), "0.0.0.0");
-	TEST(check_match(ipv4, "1.2.3.4", 1));
+
+	struct PEG *peg;
+	struct IPv4Capture *capture;
+	TEST_IF((peg = peg_new("1.2.3.4", 7)) && peg_match(peg, ipv4_capture, &capture)) {
+		TEST_STREQ(capture->full, "1.2.3.4");
+		TEST_STREQ(capture->bytes[0], "1");
+		TEST_STREQ(capture->bytes[1], "2");
+		TEST_STREQ(capture->bytes[2], "3");
+		TEST_STREQ(capture->bytes[3], "4");
+		TEST(capture->bytes[4] == NULL);
+	}
+	peg_free(peg);
+	peg = NULL;
+
+	TEST_IF((peg = peg_new("255.2.3.4", 9)) && peg_match(peg, ipv4_capture, &capture)) {
+		TEST_STREQ(capture->full, "255.2.3.4");
+		TEST_STREQ(capture->bytes[0], "255");
+		TEST_STREQ(capture->bytes[1], "2");
+		TEST_STREQ(capture->bytes[2], "3");
+		TEST_STREQ(capture->bytes[3], "4");
+		TEST_STREQ(capture->bytes[4], "25");
+	}
+	peg_free(peg);
+	peg = NULL;
+
 	TEST(check_match(ipv4, "256.0.0.0", 0));
 	TEST(check_match(ipv4, "256.2.3.4", 0));
 	TEST(check_match(ipv4, "256.2.3.2514", 0));

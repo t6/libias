@@ -89,14 +89,13 @@ CAPTURE_MACHINE(enum JSONCaptureState, struct JSONCaptureMachineData) {
 	case NUMBER_FRACTION:
 		data->num.fraction = capture->buf;
 		break;
-	case NUMBER_FULL:
-		data->num.fraction = capture->buf;
-		break;
 	case NUMBER_INTEGER:
 		data->num.integer = capture->buf;
 		break;
 	case NUMBER_MINUS:
 		data->num.minus = capture->buf;
+		break;
+	case NUMBER_FULL:
 		break;
 	}
 

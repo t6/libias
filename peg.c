@@ -88,11 +88,11 @@ peg_captures(struct PEG *peg, unsigned int tag)
 }
 
 int
-peg_match(struct PEG *peg, RuleFn rulefn, void **userdata)
+peg_match(struct PEG *peg, RuleFn rulefn, void *userdata)
 {
 	if (peg_match_rule(peg, ":main", rulefn)) {
 		if (userdata) {
-			*userdata = peg->capture_userdata;
+			*((void **)userdata) = peg->capture_userdata;
 		} else {
 			free(peg->capture_userdata);
 			peg->capture_userdata = NULL;
