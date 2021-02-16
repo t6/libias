@@ -46,6 +46,7 @@
 #define CHAR(c)			peg_match_char(peg, __func__, (c))
 #define CHARF(f)		peg_match_char_f(peg, __func__, (f))
 #define EOS()			peg_match_eos(peg, __func__)
+#define GC(x, f)		peg_gc(capture->peg, (x), (f))
 #define MATCH(r)		peg_match_rule(peg, __func__, (r))
 #define OPT(r)			((r) || 1)
 #define RANGE(a, b)		peg_match_range(peg, __func__, (a), (b))

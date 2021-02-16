@@ -61,29 +61,24 @@ enum IPv4CaptureState {
 CAPTURE_MACHINE(enum IPv4CaptureState, struct IPv4Capture) {
 	switch (state) {
 	case BYTE1:
-		data->bytes[0] = xstrndup(capture->buf, capture->len);
+		data->bytes[0] = capture->buf;
 		break;
 	case BYTE2:
-		data->bytes[1] = xstrndup(capture->buf, capture->len);
+		data->bytes[1] = capture->buf;
 		break;
 	case BYTE3:
-		data->bytes[2] = xstrndup(capture->buf, capture->len);
+		data->bytes[2] = capture->buf;
 		break;
 	case BYTE4:
-		data->bytes[3] = xstrndup(capture->buf, capture->len);
+		data->bytes[3] = capture->buf;
 		break;
 	case BYTE25:
-		data->bytes[4] = xstrndup(capture->buf, capture->len);
+		data->bytes[4] = capture->buf;
 		break;
 	case ACCEPT:
-		data->full = xstrndup(capture->buf, capture->len);
+		data->full = capture->buf;
 		break;
 	case REJECT:
-		free(data->bytes[0]);
-		free(data->bytes[1]);
-		free(data->bytes[2]);
-		free(data->bytes[3]);
-		free(data->full);
 		break;
 	}
 	return PEG_CAPTURE_KEEP;

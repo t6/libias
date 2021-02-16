@@ -51,6 +51,7 @@ typedef int (*RuleFn)(struct PEG *);
 
 struct PEG *peg_new(const char *, size_t);
 void peg_free(struct PEG *);
+void *peg_gc(struct PEG *, void *, void *);
 
 struct Array *peg_captures(struct PEG *, unsigned int);
 int peg_match(struct PEG *, RuleFn, void *);

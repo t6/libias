@@ -61,6 +61,8 @@ struct PEG {
 
 	CaptureFn capture_machine;
 	void *capture_userdata;
+
+	struct Array *gc[2];
 };
 
 
@@ -97,7 +99,7 @@ peg_match(struct PEG *peg, RuleFn rulefn, void *userdata)
 		struct PEGCapture capture;
 		capture.peg = peg;
 		capture.userdata = peg->capture_userdata;
-		capture.buf = (char *)peg->buf;
+		capture.buf = peg_gc(peg, xstrndup(peg->buf, peg->pos), free);
 		capture.pos = 0;
 		capture.len = peg->pos;
 		capture.tag = -1;
@@ -346,6 +348,10 @@ peg_new(const char *const buf, size_t len)
 	};
 	struct PEG *peg = xmalloc(sizeof(struct PEG));
 	memcpy(peg, &proto, sizeof(*peg));
+
+	peg->gc[0] = array_new();
+	peg->gc[1] = array_new();
+
 	return peg;
 }
 
@@ -361,6 +367,25 @@ peg_free(struct PEG *peg)
 			free(peg->captures.tags[i].captures[j].buf);
 		}
 	}
+
+	for (size_t i = 0; i < array_len(peg->gc[0]); i++) {
+		void *ptr = array_get(peg->gc[0], i);
+		void (*freefn)(void *) = array_get(peg->gc[1], i);
+		freefn(ptr);
+	}
+	array_free(peg->gc[0]);
+	array_free(peg->gc[1]);
+
 	free(peg);
 }
 
+void *
+peg_gc(struct PEG *peg, void *ptr, void *freefn)
+{
+	if (ptr) {
+		assert(freefn != NULL);
+		array_append(peg->gc[0], ptr);
+		array_append(peg->gc[1], freefn);
+	}
+	return ptr;
+}
