@@ -59,6 +59,7 @@ struct PEG {
 		size_t n;
 	} captures;
 
+	CaptureFn capture_machine;
 	void *capture_userdata;
 };
 
@@ -90,17 +91,30 @@ peg_captures(struct PEG *peg, unsigned int tag)
 int
 peg_match(struct PEG *peg, RuleFn rulefn, void *userdata)
 {
-	if (peg_match_rule(peg, ":main", rulefn)) {
-		if (userdata) {
-			*((void **)userdata) = peg->capture_userdata;
-		} else {
-			free(peg->capture_userdata);
-			peg->capture_userdata = NULL;
-		}
-		return 1;
-	} else {
-		return 0;
+	int result = peg_match_rule(peg, ":main", rulefn);
+
+	if (peg->capture_machine && peg->capture_userdata) {
+		struct PEGCapture capture;
+		capture.peg = peg;
+		capture.userdata = peg->capture_userdata;
+		capture.buf = (char *)peg->buf;
+		capture.pos = 0;
+		capture.len = peg->pos;
+		capture.tag = -1;
+		capture.state = result;
+		peg->capture_machine(&capture);
 	}
+
+	if (userdata) {
+		*((void **)userdata) = peg->capture_userdata;
+	} else {
+		free(peg->capture_userdata);
+		peg->capture_userdata = NULL;
+	}
+
+	peg->capture_machine = NULL;
+
+	return result;
 }
 
 int
@@ -170,10 +184,11 @@ peg_match_capture_end(struct PEG *peg, unsigned int tag, unsigned int state, Cap
 				peg->capture_userdata = xmalloc(size);
 			}
 			capture->userdata = peg->capture_userdata;
+			peg->capture_machine = f;
 			switch (f(capture)) {
 			case PEG_CAPTURE_DISCARD:
 				free(capture->buf);
-				capture->buf = NULL;
+				memset(capture, 0, sizeof(*capture));
 				peg->captures.tags[tag].n--;
 				break;
 			case PEG_CAPTURE_KEEP:

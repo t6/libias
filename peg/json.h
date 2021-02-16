@@ -38,6 +38,8 @@ struct JSONCaptureMachineData {
 };
 
 enum JSONCaptureState {
+	JSON_REJECT = 0,
+	JSON_ACCEPT = 1,
 	NUMBER_EXPONENT,
 	NUMBER_FRACTION,
 	NUMBER_INTEGER,

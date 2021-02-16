@@ -33,49 +33,57 @@
 #include <stdlib.h>
 #include <string.h>
 
+static RULE(byte);
 static RULE(byte_1);
 static RULE(byte_2);
 static RULE(byte_3);
-static RULE(byte);
 static RULE(dig);
-static RULE(ipv4_capture);
 static RULE(ipv4);
+static RULE(ipv4_address);
 static RULE(num0_4);
 static RULE(num0_5);
 
 struct IPv4Capture {
-	const char *bytes[5];
-	const char *full;
+	char *bytes[5];
+	char *full;
 };
 
 enum IPv4CaptureState {
+	REJECT = 0,
+	ACCEPT = 1,
 	BYTE1,
 	BYTE2,
 	BYTE3,
 	BYTE4,
 	BYTE25,
-	FULL,
 };
 
 CAPTURE_MACHINE(enum IPv4CaptureState, struct IPv4Capture) {
 	switch (state) {
 	case BYTE1:
-		data->bytes[0] = capture->buf;
+		data->bytes[0] = xstrndup(capture->buf, capture->len);
 		break;
 	case BYTE2:
-		data->bytes[1] = capture->buf;
+		data->bytes[1] = xstrndup(capture->buf, capture->len);
 		break;
 	case BYTE3:
-		data->bytes[2] = capture->buf;
+		data->bytes[2] = xstrndup(capture->buf, capture->len);
 		break;
 	case BYTE4:
-		data->bytes[3] = capture->buf;
+		data->bytes[3] = xstrndup(capture->buf, capture->len);
 		break;
 	case BYTE25:
-		data->bytes[4] = capture->buf;
+		data->bytes[4] = xstrndup(capture->buf, capture->len);
 		break;
-	case FULL:
-		data->full = capture->buf;
+	case ACCEPT:
+		data->full = xstrndup(capture->buf, capture->len);
+		break;
+	case REJECT:
+		free(data->bytes[0]);
+		free(data->bytes[1]);
+		free(data->bytes[2]);
+		free(data->bytes[3]);
+		free(data->full);
 		break;
 	}
 	return PEG_CAPTURE_KEEP;
@@ -96,7 +104,7 @@ RULE(byte) {
 	return 1;
 }
 
-RULE(ipv4) {
+RULE(ipv4_address) {
 	if (CAPTURE(MATCH(byte), 0, BYTE1))
 	if (CHAR('.'))
 	if (CAPTURE(MATCH(byte), 0, BYTE2))
@@ -104,23 +112,26 @@ RULE(ipv4) {
 	if (CAPTURE(MATCH(byte), 0, BYTE3))
 	if (CHAR('.'))
 	if (CAPTURE(MATCH(byte), 0, BYTE4))
+	return 1;
+	return 0;
+}
+
+RULE(ipv4) {
+	if (MATCH(ipv4_address))
 	if (EOS())
 	return 1;
 	return 0;
 }
 
-RULE(ipv4_capture) { return CAPTURE(MATCH(ipv4), 1, FULL); }
-
 TESTS() {
 	TEST(check_match(ipv4, "10.240.250.250", 1));
-	TEST_STREQ(check_captures(ipv4_capture, "10.240.250.250", 0, "@"), "10@240@250@250");
-	TEST_STREQ(check_captures(ipv4_capture, "10.240.250.250", 1, "@"), "10.240.250.250");
-	TEST_STREQ(check_captures(ipv4_capture, "10.240.250.250", 2, "@"), "25@25");
-	TEST_STREQ(check_captures(ipv4_capture, "0.0.0.0", 1, "@"), "0.0.0.0");
+	TEST(check_match(ipv4, "0.0.0.0", 1));
+	TEST_STREQ(check_captures(ipv4, "10.240.250.250", 0, "@"), "10@240@250@250");
+	TEST_STREQ(check_captures(ipv4, "10.240.250.250", 2, "@"), "25@25");
 
 	struct PEG *peg;
 	struct IPv4Capture *capture;
-	TEST_IF((peg = peg_new("1.2.3.4", 7)) && peg_match(peg, ipv4_capture, &capture)) {
+	TEST_IF((peg = peg_new("1.2.3.4", 7)) && peg_match(peg, ipv4, &capture)) {
 		TEST_STREQ(capture->full, "1.2.3.4");
 		TEST_STREQ(capture->bytes[0], "1");
 		TEST_STREQ(capture->bytes[1], "2");
@@ -131,7 +142,20 @@ TESTS() {
 	peg_free(peg);
 	peg = NULL;
 
-	TEST_IF((peg = peg_new("255.2.3.4", 9)) && peg_match(peg, ipv4_capture, &capture)) {
+	TEST_IF((peg = peg_new("255.2.3.4", 9)) && peg_match(peg, ipv4, &capture)) {
+		TEST_STREQ(capture->full, "255.2.3.4");
+		TEST_STREQ(capture->bytes[0], "255");
+		TEST_STREQ(capture->bytes[1], "2");
+		TEST_STREQ(capture->bytes[2], "3");
+		TEST_STREQ(capture->bytes[3], "4");
+		TEST_STREQ(capture->bytes[4], "25");
+	}
+	peg_free(peg);
+	peg = NULL;
+
+	// Can we partially match an ipv4 address with trailing garbage?
+	// Does the capture machine return the correct full match?
+	TEST_IF((peg = peg_new("255.2.3.4garbage", 16)) && peg_match(peg, ipv4_address, &capture)) {
 		TEST_STREQ(capture->full, "255.2.3.4");
 		TEST_STREQ(capture->bytes[0], "255");
 		TEST_STREQ(capture->bytes[1], "2");
