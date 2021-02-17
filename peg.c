@@ -41,9 +41,7 @@
 #include "utf8.h"
 #include "util.h"
 
-#define MAX_CAPTURE_TAGS		64
-#define MAX_CAPTURES_PER_TAG		128
-#define CAPTURE_STACK_SIZE		(MAX_CAPTURE_TAGS * MAX_CAPTURES_PER_TAG)
+#define MAX_CAPTURES 			(64 * 128)
 
 struct PEG {
 	const char *const buf;
@@ -51,40 +49,41 @@ struct PEG {
 	size_t pos;
 
 	struct {
-		struct {
-			struct PEGCapture captures[MAX_CAPTURES_PER_TAG];
-			size_t n;
-		} tags[MAX_CAPTURE_TAGS];
-		size_t stack[CAPTURE_STACK_SIZE];
-		size_t n;
+		struct PEGCapture captures[MAX_CAPTURES];
+		size_t len;
+		size_t stack[MAX_CAPTURES];
+		size_t stack_len;
 	} captures;
 
 	CaptureFn capture_machine;
-	void *capture_userdata;
-
 	struct Array *gc[2];
 };
 
 
-#define MATCHER_INIT() do { \
+#define MATCHER_INIT() size_t MATCHER_INIT_captures_len = peg->captures.len; do { \
 		if (peg->pos > peg->len) { \
 			MATCHER_RETURN(0); \
 		} \
 	} while (0)
 #define MATCHER_RETURN(x) do { \
+		if (!(x)) { \
+			peg->captures.len = MATCHER_INIT_captures_len; \
+		} \
 		return (x); \
 	} while (0)
 
 struct Array *
 peg_captures(struct PEG *peg, unsigned int tag)
 {
-	if (tag >= MAX_CAPTURE_TAGS) {
-		return NULL;
-	}
-
 	struct Array *a = array_new();
-	for (size_t i = 0; i < peg->captures.tags[tag].n; i++) {
-		array_append(a, &peg->captures.tags[tag].captures[i]);
+	for (size_t i = 0; i < peg->captures.len; i++) {
+		struct PEGCapture *capture = &peg->captures.captures[i];
+		if (capture->tag == tag) {
+			if (!capture->buf) {
+				capture->buf = peg_gc(peg, xstrndup(peg->buf + capture->pos, capture->len), free);
+			}
+			array_append(a, capture);
+		}
 	}
 
 	return a;
@@ -95,26 +94,23 @@ peg_match(struct PEG *peg, RuleFn rulefn, void *userdata)
 {
 	int result = peg_match_rule(peg, ":main", rulefn);
 
-	if (peg->capture_machine && peg->capture_userdata) {
+	if (peg->capture_machine && userdata) {
+		for (size_t i = 0; i < peg->captures.len; i++) {
+			struct PEGCapture *capture = &peg->captures.captures[i];
+			if (capture->buf == NULL) {
+				capture->buf = peg_gc(peg, xstrndup(peg->buf + capture->pos, capture->len), free);
+			}
+			peg->capture_machine(capture, userdata);
+		}
 		struct PEGCapture capture;
 		capture.peg = peg;
-		capture.userdata = peg->capture_userdata;
 		capture.buf = peg_gc(peg, xstrndup(peg->buf, peg->pos), free);
 		capture.pos = 0;
 		capture.len = peg->pos;
 		capture.tag = -1;
-		capture.state = result;
-		peg->capture_machine(&capture);
+		capture.state = 0; // Accept state
+		peg->capture_machine(&capture, userdata);
 	}
-
-	if (userdata) {
-		*((void **)userdata) = peg->capture_userdata;
-	} else {
-		free(peg->capture_userdata);
-		peg->capture_userdata = NULL;
-	}
-
-	peg->capture_machine = NULL;
 
 	return result;
 }
@@ -159,43 +155,28 @@ peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b
 int
 peg_match_capture_start(struct PEG *peg)
 {
-	if (peg->captures.n >= CAPTURE_STACK_SIZE) {
+	if (peg->captures.stack_len >= MAX_CAPTURES) {
 		return 0;
 	}
-	peg->captures.stack[peg->captures.n++] = peg->pos;
+	peg->captures.stack[peg->captures.stack_len++] = peg->pos;
 	return 1;
 }
 
 int
 peg_match_capture_end(struct PEG *peg, unsigned int tag, unsigned int state, CaptureFn f, size_t size, int retval)
 {
-	if (peg->captures.n > 0) {
-		peg->captures.n--;
-		if (retval && tag < MAX_CAPTURE_TAGS &&
-		    peg->captures.tags[tag].n < MAX_CAPTURES_PER_TAG) {
-			struct PEGCapture *capture = &peg->captures.tags[tag].captures[peg->captures.tags[tag].n++];
-			size_t start = peg->captures.stack[peg->captures.n];
+	if (peg->captures.stack_len > 0) {
+		peg->captures.stack_len--;
+		if (retval && peg->captures.len < MAX_CAPTURES) {
+			struct PEGCapture *capture = &peg->captures.captures[peg->captures.len++];
+			size_t start = peg->captures.stack[peg->captures.stack_len];
 			size_t len = peg->pos - start;
-			capture->buf = xstrndup(peg->buf + start, len);
 			capture->tag = tag;
 			capture->state = state;
 			capture->pos = start;
 			capture->len = len;
 			capture->peg = peg;
-			if (peg->capture_userdata == NULL) {
-				peg->capture_userdata = xmalloc(size);
-			}
-			capture->userdata = peg->capture_userdata;
 			peg->capture_machine = f;
-			switch (f(capture)) {
-			case PEG_CAPTURE_DISCARD:
-				free(capture->buf);
-				memset(capture, 0, sizeof(*capture));
-				peg->captures.tags[tag].n--;
-				break;
-			case PEG_CAPTURE_KEEP:
-				break;
-			}
 		}
 	}
 	return retval;
@@ -360,12 +341,6 @@ peg_free(struct PEG *peg)
 {
 	if (peg == NULL) {
 		return;
-	}
-
-	for (size_t i = 0; i < MAX_CAPTURE_TAGS; i++) {
-		for (size_t j = 0; j < peg->captures.tags[i].n; j++) {
-			free(peg->captures.tags[i].captures[j].buf);
-		}
 	}
 
 	for (size_t i = 0; i < array_len(peg->gc[0]); i++) {

@@ -46,7 +46,7 @@ enum PEGCaptureFlag {
 	PEG_CAPTURE_KEEP,
 };
 
-typedef enum PEGCaptureFlag (*CaptureFn)(struct PEGCapture *);
+typedef enum PEGCaptureFlag (*CaptureFn)(struct PEGCapture *, void *);
 typedef int (*RuleFn)(struct PEG *);
 
 struct PEG *peg_new(const char *, size_t);

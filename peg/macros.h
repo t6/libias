@@ -37,8 +37,7 @@
 #define BETWEEN(r, a, b)	peg_match_between(peg, __func__, (r), (a), (b))
 #define CAPTURE_MACHINE(e, d)	static enum PEGCaptureFlag __CAPTURE_MACHINE(struct PEGCapture *, e, d *); \
 				static const size_t __CAPTURE_MACHINE_data_size = sizeof(d); \
-				static inline enum PEGCaptureFlag __CAPTURE_MACHINE_wrapper(struct PEGCapture *capture) { \
-					d *data = capture->userdata; \
+				static inline enum PEGCaptureFlag __CAPTURE_MACHINE_wrapper(struct PEGCapture *capture, void *data) { \
 					return __CAPTURE_MACHINE(capture, capture->state, data); \
 				} enum PEGCaptureFlag __CAPTURE_MACHINE(struct PEGCapture *capture, e state, d *data)
 #define CAPTURE(x, t, s)	(peg_match_capture_start(peg) ? peg_match_capture_end(peg, (t), (s), __CAPTURE_MACHINE_wrapper, __CAPTURE_MACHINE_data_size, (x)) : 0)

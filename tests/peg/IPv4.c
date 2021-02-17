@@ -49,8 +49,7 @@ struct IPv4Capture {
 };
 
 enum IPv4CaptureState {
-	REJECT = 0,
-	ACCEPT = 1,
+	ACCEPT = 0,
 	BYTE1,
 	BYTE2,
 	BYTE3,
@@ -77,8 +76,6 @@ CAPTURE_MACHINE(enum IPv4CaptureState, struct IPv4Capture) {
 		break;
 	case ACCEPT:
 		data->full = capture->buf;
-		break;
-	case REJECT:
 		break;
 	}
 	return PEG_CAPTURE_KEEP;
@@ -125,38 +122,41 @@ TESTS() {
 	TEST_STREQ(check_captures(ipv4, "10.240.250.250", 2, "@"), "25@25");
 
 	struct PEG *peg;
-	struct IPv4Capture *capture;
+	struct IPv4Capture capture;
+	memset(&capture, 0, sizeof(capture));
 	TEST_IF((peg = peg_new("1.2.3.4", 7)) && peg_match(peg, ipv4, &capture)) {
-		TEST_STREQ(capture->full, "1.2.3.4");
-		TEST_STREQ(capture->bytes[0], "1");
-		TEST_STREQ(capture->bytes[1], "2");
-		TEST_STREQ(capture->bytes[2], "3");
-		TEST_STREQ(capture->bytes[3], "4");
-		TEST(capture->bytes[4] == NULL);
+		TEST_STREQ(capture.full, "1.2.3.4");
+		TEST_STREQ(capture.bytes[0], "1");
+		TEST_STREQ(capture.bytes[1], "2");
+		TEST_STREQ(capture.bytes[2], "3");
+		TEST_STREQ(capture.bytes[3], "4");
+		TEST(capture.bytes[4] == NULL);
 	}
 	peg_free(peg);
 	peg = NULL;
 
+	memset(&capture, 0, sizeof(capture));
 	TEST_IF((peg = peg_new("255.2.3.4", 9)) && peg_match(peg, ipv4, &capture)) {
-		TEST_STREQ(capture->full, "255.2.3.4");
-		TEST_STREQ(capture->bytes[0], "255");
-		TEST_STREQ(capture->bytes[1], "2");
-		TEST_STREQ(capture->bytes[2], "3");
-		TEST_STREQ(capture->bytes[3], "4");
-		TEST_STREQ(capture->bytes[4], "25");
+		TEST_STREQ(capture.full, "255.2.3.4");
+		TEST_STREQ(capture.bytes[0], "255");
+		TEST_STREQ(capture.bytes[1], "2");
+		TEST_STREQ(capture.bytes[2], "3");
+		TEST_STREQ(capture.bytes[3], "4");
+		TEST_STREQ(capture.bytes[4], "25");
 	}
 	peg_free(peg);
 	peg = NULL;
 
 	// Can we partially match an ipv4 address with trailing garbage?
 	// Does the capture machine return the correct full match?
+	memset(&capture, 0, sizeof(capture));
 	TEST_IF((peg = peg_new("255.2.3.4garbage", 16)) && peg_match(peg, ipv4_address, &capture)) {
-		TEST_STREQ(capture->full, "255.2.3.4");
-		TEST_STREQ(capture->bytes[0], "255");
-		TEST_STREQ(capture->bytes[1], "2");
-		TEST_STREQ(capture->bytes[2], "3");
-		TEST_STREQ(capture->bytes[3], "4");
-		TEST_STREQ(capture->bytes[4], "25");
+		TEST_STREQ(capture.full, "255.2.3.4");
+		TEST_STREQ(capture.bytes[0], "255");
+		TEST_STREQ(capture.bytes[1], "2");
+		TEST_STREQ(capture.bytes[2], "3");
+		TEST_STREQ(capture.bytes[3], "4");
+		TEST_STREQ(capture.bytes[4], "25");
 	}
 	peg_free(peg);
 	peg = NULL;
