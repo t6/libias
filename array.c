@@ -173,6 +173,14 @@ array_truncate(struct Array *array)
 	array->len = 0;
 }
 
+void
+array_truncate_at(struct Array *array, size_t len)
+{
+	if (len < array->len) {
+		array->len = len;
+	}
+}
+
 struct ArrayIterator *
 array_iterator(struct Array *array)
 {

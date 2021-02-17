@@ -43,6 +43,7 @@ void *array_pop(struct Array *);
 void array_set(struct Array *, size_t, void *);
 void array_sort(struct Array *, ArrayCompareFn, void *);
 void array_truncate(struct Array *);
+void array_truncate_at(struct Array *array, size_t);
 
 struct ArrayIterator *array_iterator(struct Array *);
 void array_iterator_free(struct ArrayIterator **);
