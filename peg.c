@@ -50,9 +50,9 @@ struct PEG {
 	size_t pos;
 
 	struct {
-		struct PEGCapture captures[MAX_CAPTURES];
+		struct PEGCapture *captures;
 		size_t len;
-		size_t stack[MAX_CAPTURES];
+		size_t *stack;
 		size_t stack_len;
 	} captures;
 
@@ -191,16 +191,18 @@ peg_match_capture_end(struct PEG *peg, unsigned int tag, unsigned int state, Cap
 {
 	if (peg->captures.stack_len > 0) {
 		peg->captures.stack_len--;
-		if (retval && peg->captures.len < MAX_CAPTURES) {
-			struct PEGCapture *capture = &peg->captures.captures[peg->captures.len++];
-			size_t start = peg->captures.stack[peg->captures.stack_len];
-			size_t len = peg->pos - start;
-			capture->tag = tag;
-			capture->state = state;
-			capture->pos = start;
-			capture->len = len;
-			capture->peg = peg;
-			peg->capture_machine = f;
+		if (retval) {
+			if (peg->captures.len < MAX_CAPTURES) {
+				struct PEGCapture *capture = &peg->captures.captures[peg->captures.len++];
+				size_t start = peg->captures.stack[peg->captures.stack_len];
+				size_t len = peg->pos - start;
+				capture->tag = tag;
+				capture->state = state;
+				capture->pos = start;
+				capture->len = len;
+				capture->peg = peg;
+				peg->capture_machine = f;
+			}
 		}
 	}
 	return retval;
@@ -360,6 +362,9 @@ peg_new(const char *const buf, size_t len)
 	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;
 	peg->positive_matches = array_new();
 
+	peg->captures.captures = xrecallocarray(NULL, 0, MAX_CAPTURES, sizeof(struct PEGCapture));
+	peg->captures.stack = xrecallocarray(NULL, 0, MAX_CAPTURES, sizeof(size_t));
+
 	return peg;
 }
 
@@ -378,6 +383,8 @@ peg_free(struct PEG *peg)
 	array_free(peg->gc[0]);
 	array_free(peg->gc[1]);
 	array_free(peg->positive_matches);
+	free(peg->captures.captures);
+	free(peg->captures.stack);
 
 	free(peg);
 }
