@@ -6,15 +6,17 @@ include Makefile.configure
 CFLAGS+=	-std=gnu99 -I.
 
 OBJS=		array.o compats.o diff.o diffutil.o map.o peg.o peg/clang.o \
-		peg/json.o set.o utf8.o util.o
+		peg/json.o set.o stack.o utf8.o util.o
 TESTS=		tests/array/array.test \
 		tests/peg/IPv4.test \
 		tests/peg/MOVED.test \
 		tests/peg/json.test \
 		tests/peg/range.test \
+		tests/stack/stack.test \
 		tests/util/str.test
 TESTS_ARRAY!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/array/' | sed 's,\.test$$,.o,'
 TESTS_PEG!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/peg/' | sed 's,\.test$$,.o,'
+TESTS_STACK!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/stack/' | sed 's,\.test$$,.o,'
 TESTS_UTIL!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/util/' | sed 's,\.test$$,.o,'
 
 all: libias.a
@@ -47,6 +49,7 @@ utf8.o: config.h utf8.h
 util.o: config.h array.h util.h
 ${TESTS_ARRAY}: config.h array.h test.h util.h
 ${TESTS_PEG}: config.h array.h peg.h peg/macros.h test.h tests/peg/common.h util.h
+${TESTS_STACK}: config.h array.h stack.h test.h util.h
 ${TESTS_UTIL}: config.h array.h test.h util.h
 
 clean:
