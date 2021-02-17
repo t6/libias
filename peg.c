@@ -33,6 +33,7 @@
 #endif
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "array.h"
@@ -41,7 +42,7 @@
 #include "utf8.h"
 #include "util.h"
 
-#define MAX_CAPTURES 			(64 * 128)
+#define MAX_CAPTURES			(64 * 128)
 
 struct PEG {
 	const char *const buf;
@@ -57,17 +58,29 @@ struct PEG {
 
 	CaptureFn capture_machine;
 	struct Array *gc[2];
+
+	int debug;
+	struct Array *positive_matches;
 };
 
 
-#define MATCHER_INIT() size_t MATCHER_INIT_captures_len = peg->captures.len; do { \
+#define MATCHER_INIT() \
+	size_t MATCHER_INIT_captures_len = peg->captures.len; \
+	size_t MATCHER_INIT_positive_matches_len = array_len(peg->positive_matches); \
+	do { \
 		if (peg->pos > peg->len) { \
 			MATCHER_RETURN(0); \
+		} \
+		if (peg->debug) { \
+			array_append(peg->positive_matches, (char *)rule); \
 		} \
 	} while (0)
 #define MATCHER_RETURN(x) do { \
 		if (!(x)) { \
 			peg->captures.len = MATCHER_INIT_captures_len; \
+			if (peg->debug) { \
+				array_truncate_at(peg->positive_matches, MATCHER_INIT_positive_matches_len); \
+			} \
 		} \
 		return (x); \
 	} while (0)
@@ -110,6 +123,17 @@ peg_match(struct PEG *peg, RuleFn rulefn, void *userdata)
 		capture.tag = -1;
 		capture.state = 0; // Accept state
 		peg->capture_machine(&capture, userdata);
+	}
+
+	if (peg->debug && array_len(peg->positive_matches) > 0) {
+		for (size_t i = 0; i < array_len(peg->positive_matches); i++) {
+			if (i == 0) {
+				printf("%s", array_get(peg->positive_matches, i));
+			} else {
+				printf(" -> %s", array_get(peg->positive_matches, i));
+			}
+		}
+		printf("\n");
 	}
 
 	return result;
@@ -333,6 +357,9 @@ peg_new(const char *const buf, size_t len)
 	peg->gc[0] = array_new();
 	peg->gc[1] = array_new();
 
+	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;
+	peg->positive_matches = array_new();
+
 	return peg;
 }
 
@@ -350,6 +377,7 @@ peg_free(struct PEG *peg)
 	}
 	array_free(peg->gc[0]);
 	array_free(peg->gc[1]);
+	array_free(peg->positive_matches);
 
 	free(peg);
 }
