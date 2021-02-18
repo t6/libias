@@ -58,26 +58,26 @@ struct PEG {
 	struct Queue *gc[2];
 
 	int debug;
-	struct Array *positive_matches;
+	struct Queue *rule_trace;
 };
 
 
 #define MATCHER_INIT() \
 	size_t MATCHER_INIT_captures_queue_len = queue_len(peg->captures.queue); \
-	size_t MATCHER_INIT_positive_matches_len = array_len(peg->positive_matches); \
+	size_t MATCHER_INIT_rule_trace_len = queue_len(peg->rule_trace); \
 	do { \
 		if (peg->pos > peg->len) { \
 			MATCHER_RETURN(0); \
 		} \
 		if (peg->debug) { \
-			array_append(peg->positive_matches, (char *)rule); \
+			queue_push(peg->rule_trace, (char *)rule); \
 		} \
 	} while (0)
 #define MATCHER_RETURN(x) do { \
 		if (!(x)) { \
 			queue_unqueue(peg->captures.queue, queue_len(peg->captures.queue) - MATCHER_INIT_captures_queue_len); \
 			if (peg->debug) { \
-				array_truncate_at(peg->positive_matches, MATCHER_INIT_positive_matches_len); \
+				queue_unqueue(peg->rule_trace, queue_len(peg->rule_trace) - MATCHER_INIT_rule_trace_len); \
 			} \
 		} \
 		return (x); \
@@ -125,13 +125,11 @@ peg_match(struct PEG *peg, RuleFn rulefn, void *userdata)
 		peg->capture_machine(capture, userdata);
 	}
 
-	if (peg->debug && array_len(peg->positive_matches) > 0) {
-		for (size_t i = 0; i < array_len(peg->positive_matches); i++) {
-			if (i == 0) {
-				printf("%s", array_get(peg->positive_matches, i));
-			} else {
-				printf(" -> %s", array_get(peg->positive_matches, i));
-			}
+	if (peg->debug && queue_len(peg->rule_trace) > 0) {
+		char *rule = queue_pop(peg->rule_trace);
+		printf("%s", rule);
+		while ((rule = queue_pop(peg->rule_trace))) {
+			printf(" -> %s", rule);
 		}
 		printf("\n");
 	}
@@ -356,7 +354,7 @@ peg_new(const char *const buf, size_t len)
 	peg->gc[1] = queue_new();
 
 	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;
-	peg->positive_matches = array_new();
+	peg->rule_trace = queue_new();
 
 	peg->captures.queue = queue_new();
 	peg->captures.pos = stack_new();
@@ -379,7 +377,7 @@ peg_free(struct PEG *peg)
 	queue_free(peg->gc[0]);
 	queue_free(peg->gc[1]);
 
-	array_free(peg->positive_matches);
+	queue_free(peg->rule_trace);
 	queue_free(peg->captures.queue);
 	stack_free(peg->captures.pos);
 
