@@ -46,7 +46,7 @@ check_captures(RuleFn rule, const char *s, int tag, const char *sep)
 	if (result && peg_captures(peg, tag)) {
 		struct Array *caps = array_new();
 		ARRAY_FOREACH(peg_captures(peg, tag), struct PEGCapture *, cap) {
-			array_append(caps, cap->buf);
+			array_append(caps, xstrndup(cap->buf, cap->len));
 		}
 		return str_join(caps, sep);
 	}

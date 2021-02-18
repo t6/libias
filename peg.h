@@ -31,7 +31,7 @@ struct PEG;
 struct Array;
 
 struct PEGCapture {
-	char *buf;
+	const char *buf;
 	unsigned int tag;
 	unsigned int state;
 	size_t pos;

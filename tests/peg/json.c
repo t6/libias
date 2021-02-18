@@ -33,26 +33,73 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern int json_decode(struct PEG *peg);
+#include "map.h"
+#include "peg/json.h"
+
+static int
+test_json_decode(const char *s, void *data)
+{
+	struct PEG *peg = peg_new(s, strlen(s));
+	return peg_match(peg, peg_json_decode, data);
+}
 
 TESTS() {
-	TEST(check_match(json_decode, "\"\\\"foo\"", 1));
-	TEST(check_match(json_decode, "\"foo\"", 1));
-	TEST(check_match(json_decode, "[null]", 1));
-	TEST_STREQ(check_captures(json_decode, "{\"f\":[null,1]}", 0, "@"), "");
-	TEST(check_match(json_decode, "[null,null]", 1));
-	TEST(check_match(json_decode, "[]", 1));
-	TEST(check_match(json_decode, "[  ]", 1));
-	TEST(check_match(json_decode, "{}", 1));
-	TEST(check_match(json_decode, "{ }", 1));
-	TEST(check_match(json_decode, "1", 1));
-	TEST(check_match(json_decode, "-1", 1));
-	TEST(check_match(json_decode, "[1, 1.0, 2.3333, 1e+10, 1e-10, 1e10]", 1));
-	TEST(check_match(json_decode, "{\"\":null,\"\":null}", 1));
-	TEST(check_match(json_decode, "{\"foo\":null}", 1));
-	TEST(check_match(json_decode, "[\"Да Му Еба Майката\"]", 1));
-	// int fd = open("pkg-status.json", O_RDONLY);
-	// char *buf = slurp(fd);
-	// printf("oh\n");
-	// TEST(check_match(json_decode, buf, 1));
+	struct JSONCaptureMachineData data;
+
+	int fd = open("pkg-status.json", O_RDONLY);
+	char *buf = slurp(fd);
+	memset(&data, 0, sizeof(data));
+	TEST_IF(test_json_decode(buf, &data)) {
+	}
+
+	memset(&data, 0, sizeof(data));
+	TEST(test_json_decode("[\"foo\"]", &data));
+	TEST(data.json);
+	TEST(data.json->type == JSON_ARRAY);
+	TEST(data.json->array && array_len(data.json->array) == 1);
+	TEST(((struct JSON *)array_get(data.json->array, 0))->type == JSON_STRING);
+	struct PEGCapture *s = ((struct JSON *)array_get(data.json->array, 0))->string;
+	TEST(strncmp(s->buf, "foo", s->len) == 0);
+
+	TEST(check_match(peg_json_decode, "[null]", 1));
+	TEST(check_match(peg_json_decode, "\"\\\"foo\"", 1));
+	TEST(check_match(peg_json_decode, "\"foo\"", 1));
+	TEST_STREQ(check_captures(peg_json_decode, "{\"f\":[null,1]}", 1, "@"), "");
+	TEST(check_match(peg_json_decode, "[null,null]", 1));
+	TEST(check_match(peg_json_decode, "[]", 1));
+	TEST(check_match(peg_json_decode, "[  ]", 1));
+	TEST(check_match(peg_json_decode, "{}", 1));
+	TEST(check_match(peg_json_decode, "{ }", 1));
+	TEST(check_match(peg_json_decode, "1", 1));
+	TEST(check_match(peg_json_decode, "-1", 1));
+	TEST(check_match(peg_json_decode, "[1, 1.0, 2.3333, 1e+10, 1e-10, 1e10]", 1));
+	TEST(check_match(peg_json_decode, "{\"\":null,\"\":null}", 1));
+	TEST(check_match(peg_json_decode, "{\"foo\":null}", 1));
+	TEST(check_match(peg_json_decode, "[\"Да Му Еба Майката\"]", 1));
+
+	memset(&data, 0, sizeof(data));
+	TEST(test_json_decode("[[1],[2,[3,[4]]]]", &data));
+	TEST(data.json);
+	TEST(data.json->type == JSON_ARRAY);
+	TEST(array_len(data.json->array) == 2);
+	TEST(((struct JSON *)array_get(data.json->array, 0))->type == JSON_ARRAY);
+	TEST(array_len(((struct JSON *)array_get(data.json->array, 0))->array) == 1);
+	TEST(((struct JSON *)array_get(data.json->array, 1))->type == JSON_ARRAY);
+	TEST(array_len(((struct JSON *)array_get(data.json->array, 1))->array) == 2);
+
+	memset(&data, 0, sizeof(data));
+	TEST(test_json_decode("[{\"1\":[true,null,false]}]", &data));
+	TEST(data.json);
+	TEST(data.json->type == JSON_ARRAY);
+	TEST(array_len(data.json->array) == 1);
+	TEST(((struct JSON *)array_get(data.json->array, 0))->type == JSON_OBJECT);
+	struct Map *obj = ((struct JSON *)array_get(data.json->array, 0))->object;
+	TEST(map_len(obj) == 1);
+	//TEST(map_contains(obj, (char *)"1"));
+	//struct Array *array = map_get(obj, (char *)"1");
+	//TEST(array_len(array) == 3);
+	// TEST(((struct JSON *)array_get(array, 0))->type == JSON_TRUE);
+	// TEST(((struct JSON *)array_get(array, 1))->type == JSON_NULL);
+	// TEST(((struct JSON *)array_get(array, 2))->type == JSON_FALSE);
+
 }

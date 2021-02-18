@@ -39,10 +39,11 @@
 #include "array.h"
 #include "map.h"
 #include "peg.h"
+#include "queue.h"
 #include "utf8.h"
 #include "util.h"
 
-#define MAX_CAPTURES			(64 * 128)
+#define MAX_CAPTURES			(64 * 1024 * 1024)
 
 struct PEG {
 	const char *const buf;
@@ -57,7 +58,7 @@ struct PEG {
 	} captures;
 
 	CaptureFn capture_machine;
-	struct Array *gc[2];
+	struct Queue *gc[2];
 
 	int debug;
 	struct Array *positive_matches;
@@ -92,9 +93,6 @@ peg_captures(struct PEG *peg, unsigned int tag)
 	for (size_t i = 0; i < peg->captures.len; i++) {
 		struct PEGCapture *capture = &peg->captures.captures[i];
 		if (capture->tag == tag) {
-			if (!capture->buf) {
-				capture->buf = peg_gc(peg, xstrndup(peg->buf + capture->pos, capture->len), free);
-			}
 			array_append(a, capture);
 		}
 	}
@@ -110,14 +108,11 @@ peg_match(struct PEG *peg, RuleFn rulefn, void *userdata)
 	if (peg->capture_machine && userdata) {
 		for (size_t i = 0; i < peg->captures.len; i++) {
 			struct PEGCapture *capture = &peg->captures.captures[i];
-			if (capture->buf == NULL) {
-				capture->buf = peg_gc(peg, xstrndup(peg->buf + capture->pos, capture->len), free);
-			}
 			peg->capture_machine(capture, userdata);
 		}
 		struct PEGCapture capture;
 		capture.peg = peg;
-		capture.buf = peg_gc(peg, xstrndup(peg->buf, peg->pos), free);
+		capture.buf = peg->buf;
 		capture.pos = 0;
 		capture.len = peg->pos;
 		capture.tag = -1;
@@ -191,6 +186,7 @@ peg_match_capture_end(struct PEG *peg, unsigned int tag, unsigned int state, Cap
 {
 	if (peg->captures.stack_len > 0) {
 		peg->captures.stack_len--;
+		peg->capture_machine = f;
 		if (retval) {
 			if (peg->captures.len < MAX_CAPTURES) {
 				struct PEGCapture *capture = &peg->captures.captures[peg->captures.len++];
@@ -198,10 +194,10 @@ peg_match_capture_end(struct PEG *peg, unsigned int tag, unsigned int state, Cap
 				size_t len = peg->pos - start;
 				capture->tag = tag;
 				capture->state = state;
+				capture->buf = peg->buf + start;
 				capture->pos = start;
 				capture->len = len;
 				capture->peg = peg;
-				peg->capture_machine = f;
 			}
 		}
 	}
@@ -356,8 +352,8 @@ peg_new(const char *const buf, size_t len)
 	struct PEG *peg = xmalloc(sizeof(struct PEG));
 	memcpy(peg, &proto, sizeof(*peg));
 
-	peg->gc[0] = array_new();
-	peg->gc[1] = array_new();
+	peg->gc[0] = queue_new();
+	peg->gc[1] = queue_new();
 
 	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;
 	peg->positive_matches = array_new();
@@ -375,13 +371,14 @@ peg_free(struct PEG *peg)
 		return;
 	}
 
-	for (size_t i = 0; i < array_len(peg->gc[0]); i++) {
-		void *ptr = array_get(peg->gc[0], i);
-		void (*freefn)(void *) = array_get(peg->gc[1], i);
+	void *ptr;
+	while ((ptr = queue_pop(peg->gc[0]))) {
+		void (*freefn)(void *) = queue_pop(peg->gc[1]);
 		freefn(ptr);
 	}
-	array_free(peg->gc[0]);
-	array_free(peg->gc[1]);
+	queue_free(peg->gc[0]);
+	queue_free(peg->gc[1]);
+
 	array_free(peg->positive_matches);
 	free(peg->captures.captures);
 	free(peg->captures.stack);
@@ -394,8 +391,8 @@ peg_gc(struct PEG *peg, void *ptr, void *freefn)
 {
 	if (ptr) {
 		assert(freefn != NULL);
-		array_append(peg->gc[0], ptr);
-		array_append(peg->gc[1], freefn);
+		queue_push(peg->gc[0], ptr);
+		queue_push(peg->gc[1], freefn);
 	}
 	return ptr;
 }
