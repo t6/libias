@@ -39,6 +39,7 @@
 #include "array.h"
 #include "map.h"
 #include "peg.h"
+#include "stack.h"
 #include "queue.h"
 #include "utf8.h"
 #include "util.h"
@@ -53,8 +54,7 @@ struct PEG {
 	struct {
 		struct PEGCapture *captures;
 		size_t len;
-		size_t *stack;
-		size_t stack_len;
+		struct Stack *pos;
 	} captures;
 
 	CaptureFn capture_machine;
@@ -174,23 +174,19 @@ peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b
 int
 peg_match_capture_start(struct PEG *peg)
 {
-	if (peg->captures.stack_len >= MAX_CAPTURES) {
-		return 0;
-	}
-	peg->captures.stack[peg->captures.stack_len++] = peg->pos;
+	stack_push(peg->captures.pos, (void *)(uintptr_t)peg->pos);
 	return 1;
 }
 
 int
 peg_match_capture_end(struct PEG *peg, unsigned int tag, unsigned int state, CaptureFn f, size_t size, int retval)
 {
-	if (peg->captures.stack_len > 0) {
-		peg->captures.stack_len--;
+	if (stack_len(peg->captures.pos) > 0) {
+		size_t start = (size_t)stack_pop(peg->captures.pos);
 		peg->capture_machine = f;
 		if (retval) {
 			if (peg->captures.len < MAX_CAPTURES) {
 				struct PEGCapture *capture = &peg->captures.captures[peg->captures.len++];
-				size_t start = peg->captures.stack[peg->captures.stack_len];
 				size_t len = peg->pos - start;
 				capture->tag = tag;
 				capture->state = state;
@@ -359,7 +355,7 @@ peg_new(const char *const buf, size_t len)
 	peg->positive_matches = array_new();
 
 	peg->captures.captures = xrecallocarray(NULL, 0, MAX_CAPTURES, sizeof(struct PEGCapture));
-	peg->captures.stack = xrecallocarray(NULL, 0, MAX_CAPTURES, sizeof(size_t));
+	peg->captures.pos = stack_new();
 
 	return peg;
 }
@@ -381,7 +377,7 @@ peg_free(struct PEG *peg)
 
 	array_free(peg->positive_matches);
 	free(peg->captures.captures);
-	free(peg->captures.stack);
+	stack_free(peg->captures.pos);
 
 	free(peg);
 }

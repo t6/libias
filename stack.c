@@ -90,9 +90,6 @@ stack_pop(struct Stack *stack)
 void
 stack_push(struct Stack *stack, void *value)
 {
-	if (value == NULL) {
-		abort();
-	}
 	struct StackNode *node = xmalloc(sizeof(struct StackNode));
 	node->value = value;
 	node->next = stack->head;

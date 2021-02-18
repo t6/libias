@@ -98,10 +98,6 @@ queue_pop(struct Queue *queue)
 void
 queue_push(struct Queue *queue, void *value)
 {
-	if (value == NULL) {
-		abort();
-	}
-
 	struct QueueNode *node = xmalloc(sizeof(struct QueueNode));
 	node->value = value;
 	if (queue->tail) {
