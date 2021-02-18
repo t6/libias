@@ -44,16 +44,13 @@
 #include "utf8.h"
 #include "util.h"
 
-#define MAX_CAPTURES			(64 * 1024 * 1024)
-
 struct PEG {
 	const char *const buf;
 	const size_t len;
 	size_t pos;
 
 	struct {
-		struct PEGCapture *captures;
-		size_t len;
+		struct Queue *queue;
 		struct Stack *pos;
 	} captures;
 
@@ -66,7 +63,7 @@ struct PEG {
 
 
 #define MATCHER_INIT() \
-	size_t MATCHER_INIT_captures_len = peg->captures.len; \
+	size_t MATCHER_INIT_captures_queue_len = queue_len(peg->captures.queue); \
 	size_t MATCHER_INIT_positive_matches_len = array_len(peg->positive_matches); \
 	do { \
 		if (peg->pos > peg->len) { \
@@ -78,7 +75,7 @@ struct PEG {
 	} while (0)
 #define MATCHER_RETURN(x) do { \
 		if (!(x)) { \
-			peg->captures.len = MATCHER_INIT_captures_len; \
+			queue_unqueue(peg->captures.queue, queue_len(peg->captures.queue) - MATCHER_INIT_captures_queue_len); \
 			if (peg->debug) { \
 				array_truncate_at(peg->positive_matches, MATCHER_INIT_positive_matches_len); \
 			} \
@@ -90,13 +87,16 @@ struct Array *
 peg_captures(struct PEG *peg, unsigned int tag)
 {
 	struct Array *a = array_new();
-	for (size_t i = 0; i < peg->captures.len; i++) {
-		struct PEGCapture *capture = &peg->captures.captures[i];
+	struct PEGCapture *capture;
+	struct Queue *captures = queue_new();;
+	while ((capture = queue_pop(peg->captures.queue))) {
 		if (capture->tag == tag) {
 			array_append(a, capture);
 		}
+		queue_push(captures, capture);
 	}
-
+	queue_free(peg->captures.queue);
+	peg->captures.queue = captures;
 	return a;
 }
 
@@ -106,18 +106,23 @@ peg_match(struct PEG *peg, RuleFn rulefn, void *userdata)
 	int result = peg_match_rule(peg, ":main", rulefn);
 
 	if (peg->capture_machine && userdata) {
-		for (size_t i = 0; i < peg->captures.len; i++) {
-			struct PEGCapture *capture = &peg->captures.captures[i];
+		struct PEGCapture *capture;
+		struct Queue *captures = queue_new();;
+		while ((capture = queue_pop(peg->captures.queue))) {
+			peg_gc(peg, capture, free);
 			peg->capture_machine(capture, userdata);
+			queue_push(captures, capture);
 		}
-		struct PEGCapture capture;
-		capture.peg = peg;
-		capture.buf = peg->buf;
-		capture.pos = 0;
-		capture.len = peg->pos;
-		capture.tag = -1;
-		capture.state = 0; // Accept state
-		peg->capture_machine(&capture, userdata);
+		queue_free(peg->captures.queue);
+		peg->captures.queue = captures;
+		capture = peg_gc(peg, xmalloc(sizeof(struct PEGCapture)), free);
+		capture->peg = peg;
+		capture->buf = peg->buf;
+		capture->pos = 0;
+		capture->len = peg->pos;
+		capture->tag = -1;
+		capture->state = 0; // Accept state
+		peg->capture_machine(capture, userdata);
 	}
 
 	if (peg->debug && array_len(peg->positive_matches) > 0) {
@@ -185,16 +190,15 @@ peg_match_capture_end(struct PEG *peg, unsigned int tag, unsigned int state, Cap
 		size_t start = (size_t)stack_pop(peg->captures.pos);
 		peg->capture_machine = f;
 		if (retval) {
-			if (peg->captures.len < MAX_CAPTURES) {
-				struct PEGCapture *capture = &peg->captures.captures[peg->captures.len++];
-				size_t len = peg->pos - start;
-				capture->tag = tag;
-				capture->state = state;
-				capture->buf = peg->buf + start;
-				capture->pos = start;
-				capture->len = len;
-				capture->peg = peg;
-			}
+			struct PEGCapture *capture = xmalloc(sizeof(struct PEGCapture));
+			size_t len = peg->pos - start;
+			capture->tag = tag;
+			capture->state = state;
+			capture->buf = peg->buf + start;
+			capture->pos = start;
+			capture->len = len;
+			capture->peg = peg;
+			queue_push(peg->captures.queue, capture);
 		}
 	}
 	return retval;
@@ -354,7 +358,7 @@ peg_new(const char *const buf, size_t len)
 	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;
 	peg->positive_matches = array_new();
 
-	peg->captures.captures = xrecallocarray(NULL, 0, MAX_CAPTURES, sizeof(struct PEGCapture));
+	peg->captures.queue = queue_new();
 	peg->captures.pos = stack_new();
 
 	return peg;
@@ -376,7 +380,7 @@ peg_free(struct PEG *peg)
 	queue_free(peg->gc[1]);
 
 	array_free(peg->positive_matches);
-	free(peg->captures.captures);
+	queue_free(peg->captures.queue);
 	stack_free(peg->captures.pos);
 
 	free(peg);
