@@ -57,7 +57,10 @@ TESTS() {
 	queue_push(queue, xstrdup("3"));
 	queue_push(queue, xstrdup("4"));
 	TEST(queue_len(queue) == 4);
-	queue_unqueue(queue, 3);
-	TEST_STREQ(queue_pop(queue), "1");
+	queue_dequeue(queue);
+	queue_dequeue(queue);
+	queue_dequeue(queue);
+	TEST_STREQ(queue_peek(queue), "1");
+	queue_dequeue(queue);
 	TEST(queue_len(queue) == 0);
 }

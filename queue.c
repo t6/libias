@@ -110,15 +110,21 @@ queue_push(struct Queue *queue, void *value)
 	queue->len++;
 }
 
-void
-queue_unqueue(struct Queue *queue, size_t n)
+void *
+queue_dequeue(struct Queue *queue)
 {
-	for (size_t i = 0; i < n && queue->tail != NULL; queue->tail = queue->tail->prev, i++) {
-		if (queue->tail->prev) {
-			queue->tail->prev->next = NULL;
+	if (queue->tail == NULL) {
+		return NULL;
+	} else {
+		void *value = queue->tail->value;
+		struct QueueNode *newtail = queue->tail->prev;
+		if (newtail) {
+			newtail->next = NULL;
 		}
 		free(queue->tail);
+		queue->tail = newtail;
 		queue->len--;
+		return value;
 	}
 }
 

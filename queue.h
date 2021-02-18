@@ -34,5 +34,5 @@ void queue_free(struct Queue *);
 size_t queue_len(struct Queue *);
 void *queue_peek(struct Queue *);
 void *queue_pop(struct Queue *);
+void *queue_dequeue(struct Queue *);
 void queue_push(struct Queue *, void *);
-void queue_unqueue(struct Queue *, size_t);

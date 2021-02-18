@@ -75,9 +75,13 @@ struct PEG {
 	} while (0)
 #define MATCHER_RETURN(x) do { \
 		if (!(x)) { \
-			queue_unqueue(peg->captures.queue, queue_len(peg->captures.queue) - MATCHER_INIT_captures_queue_len); \
+			for (size_t i = MATCHER_INIT_captures_queue_len; i < queue_len(peg->captures.queue); i++) { \
+				free(queue_dequeue(peg->captures.queue)); \
+			} \
 			if (peg->debug) { \
-				queue_unqueue(peg->rule_trace, queue_len(peg->rule_trace) - MATCHER_INIT_rule_trace_len); \
+				for (size_t i = MATCHER_INIT_rule_trace_len; i < queue_len(peg->rule_trace); i++) { \
+					queue_dequeue(peg->rule_trace); \
+				} \
 			} \
 		} \
 		return (x); \
@@ -107,7 +111,7 @@ peg_match(struct PEG *peg, RuleFn rulefn, void *userdata)
 
 	if (peg->capture_machine && userdata) {
 		struct PEGCapture *capture;
-		struct Queue *captures = queue_new();;
+		struct Queue *captures = queue_new();
 		while ((capture = queue_pop(peg->captures.queue))) {
 			peg_gc(peg, capture, free);
 			peg->capture_machine(capture, userdata);
