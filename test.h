@@ -31,17 +31,21 @@
 		if ((x)) { \
 			putchar('.'); \
 		} else { \
-			array_append(failures, (char *)#x); \
+			char *buf; \
+			xasprintf(&buf, "%s:%d %s", __FILE__, __LINE__, #x); \
+			array_append(failures, buf); \
 			putchar('X'); \
 		} \
 		fflush(stdout); \
 	} while(0)
 
 #define TEST_IF(x) if (!(x)) { \
-			array_append(failures, (char *)#x); \
+			char *buf; \
+			xasprintf(&buf, "%s:%d %s", __FILE__, __LINE__, #x); \
+			array_append(failures, buf); \
 			putchar('X'); \
 			fflush(stdout); \
-		} else if (putchar('.') && 1); else
+		} else if (putchar('.') && 1)
 
 #define TEST_STR(cmp, a, b) do { \
 		const char *s1 = (a); \
@@ -50,7 +54,7 @@
 			putchar('.'); \
 		} else { \
 			char *buf; \
-			xasprintf(&buf, ""#a" "#cmp" "#b" => \"%s\" "#cmp" \"%s\"", s1 ? s1 : "(null)", s2 ? s2 : "(null)"); \
+			xasprintf(&buf, "%s:%d "#a" "#cmp" "#b"", __FILE__, __LINE__); \
 			array_append(failures, buf); \
 			putchar('X'); \
 		} \
