@@ -42,7 +42,7 @@ static inline char *
 check_captures(RuleFn rule, const char *s, int tag, const char *sep)
 {
 	struct PEG *peg = peg_new(s, strlen(s));
-	int result = peg_match(peg, rule, NULL);
+	int result = peg_match(peg, rule, NULL, NULL);
 	if (result && peg_captures(peg, tag)) {
 		struct Array *caps = array_new();
 		ARRAY_FOREACH(peg_captures(peg, tag), struct PEGCapture *, cap) {
@@ -58,7 +58,7 @@ static inline int
 check_match(RuleFn rule, const char *s, int expected)
 {
 	struct PEG *peg = peg_new(s, strlen(s));
-	int result = peg_match(peg, rule, NULL);
+	int result = peg_match(peg, rule, NULL, NULL);
 	peg_free(peg);
 	return result == expected;
 }

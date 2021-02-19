@@ -27,48 +27,25 @@
  */
 #pragma once
 
-struct Array;
-struct Map;
-struct Stack;
+struct PEG;
 
-enum JSONType {
-	JSON_ARRAY,
-	JSON_FALSE,
-	JSON_NULL,
-	JSON_NUMBER_FLOAT,
-	JSON_NUMBER_INT,
-	JSON_NUMBER_UNREPRESENTABLE,
-	JSON_OBJECT,
-	JSON_STRING,
-	JSON_TRUE,
-};
-
-struct JSON {
-	enum JSONType type;
-	union {
-		struct Array *array;
-		union {
-			long long i;
-			double f;
-			char *u;
-		} number;
-		struct Map *object;
-		struct PEGCapture *string;
-	};
-};
-
-struct JSONCaptureMachineData {
-	struct JSON *json;
-	struct {
-		char *number;
-		char *minus;
-		char *integer;
-		char *fraction;
-		char *exponent;
-	} num;
-	struct Stack *arrays;
-	struct Stack *objects;
-	struct Stack *values;
+enum JSONCaptureState {
+	ACCEPT = 0,
+	CAPTURE_ARRAY_BEGIN,
+	CAPTURE_ARRAY_END,
+	CAPTURE_ARRAY_VALUE,
+	CAPTURE_FALSE,
+	CAPTURE_NULL,
+	CAPTURE_OBJECT_BEGIN,
+	CAPTURE_OBJECT_END,
+	CAPTURE_OBJECT_VALUE,
+	CAPTURE_STRING,
+	CAPTURE_TRUE,
+	NUMBER_EXPONENT,
+	NUMBER_FRACTION,
+	NUMBER_INTEGER,
+	NUMBER_MINUS,
+	NUMBER_FULL,
 };
 
 int peg_json_decode(struct PEG *);

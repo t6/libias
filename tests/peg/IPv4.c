@@ -57,8 +57,11 @@ enum IPv4CaptureState {
 	BYTE25,
 };
 
-CAPTURE_MACHINE(enum IPv4CaptureState, struct IPv4Capture) {
-	switch (state) {
+static enum PEGCaptureFlag
+capture_machine(struct MemoryPool *pool, struct PEGCapture *capture, void *userdata)
+{
+	struct IPv4Capture *data = userdata;
+	switch ((enum IPv4CaptureState)capture->state) {
 	case BYTE1:
 		data->bytes[0] = xstrndup(capture->buf, capture->len);
 		break;
@@ -124,7 +127,7 @@ TESTS() {
 	struct PEG *peg;
 	struct IPv4Capture capture;
 	memset(&capture, 0, sizeof(capture));
-	TEST_IF((peg = peg_new("1.2.3.4", 7)) && peg_match(peg, ipv4, &capture)) {
+	TEST_IF((peg = peg_new("1.2.3.4", 7)) && peg_match(peg, ipv4, capture_machine, &capture)) {
 		TEST_STREQ(capture.full, "1.2.3.4");
 		TEST_STREQ(capture.bytes[0], "1");
 		TEST_STREQ(capture.bytes[1], "2");
@@ -136,7 +139,7 @@ TESTS() {
 	peg = NULL;
 
 	memset(&capture, 0, sizeof(capture));
-	TEST_IF((peg = peg_new("255.2.3.4", 9)) && peg_match(peg, ipv4, &capture)) {
+	TEST_IF((peg = peg_new("255.2.3.4", 9)) && peg_match(peg, ipv4, capture_machine, &capture)) {
 		TEST_STREQ(capture.full, "255.2.3.4");
 		TEST_STREQ(capture.bytes[0], "255");
 		TEST_STREQ(capture.bytes[1], "2");
@@ -150,7 +153,7 @@ TESTS() {
 	// Can we partially match an ipv4 address with trailing garbage?
 	// Does the capture machine return the correct full match?
 	memset(&capture, 0, sizeof(capture));
-	TEST_IF((peg = peg_new("255.2.3.4garbage", 16)) && peg_match(peg, ipv4_address, &capture)) {
+	TEST_IF((peg = peg_new("255.2.3.4garbage", 16)) && peg_match(peg, ipv4_address, capture_machine, &capture)) {
 		TEST_STREQ(capture.full, "255.2.3.4");
 		TEST_STREQ(capture.bytes[0], "255");
 		TEST_STREQ(capture.bytes[1], "2");
