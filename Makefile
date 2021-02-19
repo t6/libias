@@ -70,7 +70,7 @@ utf8.o: config.h utf8.h
 util.o: config.h array.h util.h
 ${TESTS_ARRAY}: config.h array.h test.h util.h
 ${TESTS_JSON}: config.h array.h json.h test.h util.h
-${TESTS_PEG}: config.h array.h peg.h peg/macros.h test.h tests/peg/common.h util.h
+${TESTS_PEG}: config.h array.h memorypool.h peg.h peg/macros.h test.h tests/peg/common.h util.h
 ${TESTS_QUEUE}: config.h array.h queue.h test.h util.h
 ${TESTS_STACK}: config.h array.h stack.h test.h util.h
 ${TESTS_UTIL}: config.h array.h test.h util.h

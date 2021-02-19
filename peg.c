@@ -53,6 +53,7 @@ struct PEG {
 	struct {
 		struct Queue *queue;
 		struct Stack *pos;
+		int enabled;
 	} captures;
 
 	int debug;
@@ -87,38 +88,18 @@ struct PEG {
 		return (x); \
 	} while (0)
 
-struct Array *
-peg_captures(struct PEG *peg, unsigned int tag)
-{
-	struct Array *a = array_new();
-	struct PEGCapture *capture;
-	struct Queue *captures = queue_new();;
-	while ((capture = queue_pop(peg->captures.queue))) {
-		if (capture->tag == tag) {
-			array_append(a, capture);
-		}
-		queue_push(captures, capture);
-	}
-	queue_free(peg->captures.queue);
-	peg->captures.queue = captures;
-	return a;
-}
-
 int
 peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userdata)
 {
+	peg->captures.enabled = capture_machine != NULL;
 	int result = peg_match_rule(peg, ":main", rulefn);
 
 	if (capture_machine) {
 		struct PEGCapture *capture;
-		struct Queue *captures = queue_new();
 		while ((capture = queue_pop(peg->captures.queue))) {
 			memory_pool_acquire(peg->pool, capture, free);
 			capture_machine(capture, userdata);
-			queue_push(captures, capture);
 		}
-		queue_free(peg->captures.queue);
-		peg->captures.queue = captures;
 		capture = memory_pool_acquire(peg->pool, xmalloc(sizeof(struct PEGCapture)), free);
 		capture->peg = peg;
 		capture->buf = peg->buf;
@@ -181,14 +162,16 @@ peg_match_between(struct PEG *peg, const char *rule, RuleFn rulefn, int a, int b
 int
 peg_match_capture_start(struct PEG *peg)
 {
-	stack_push(peg->captures.pos, (void *)(uintptr_t)peg->pos);
+	if (peg->captures.enabled) {
+		stack_push(peg->captures.pos, (void *)(uintptr_t)peg->pos);
+	}
 	return 1;
 }
 
 int
 peg_match_capture_end(struct PEG *peg, unsigned int tag, unsigned int state, int retval)
 {
-	if (stack_len(peg->captures.pos) > 0) {
+	if (peg->captures.enabled && stack_len(peg->captures.pos) > 0) {
 		size_t start = (size_t)stack_pop(peg->captures.pos);
 		if (retval) {
 			struct PEGCapture *capture = xmalloc(sizeof(struct PEGCapture));

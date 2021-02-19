@@ -33,24 +33,38 @@
 #include <stdlib.h>
 #include <string.h>
 #include "array.h"
+#include "memorypool.h"
 #include "peg.h"
 #include "peg/macros.h"
 #include "test.h"
 #include "util.h"
 
-static inline char *
-check_captures(RuleFn rule, const char *s, int tag, const char *sep)
+static enum PEGCaptureFlag
+captures_to_array(struct PEGCapture *capture, void *userdata)
 {
-	struct PEG *peg = peg_new(s, strlen(s));
-	int result = peg_match(peg, rule, NULL, NULL);
-	if (result && peg_captures(peg, tag)) {
-		struct Array *caps = array_new();
-		ARRAY_FOREACH(peg_captures(peg, tag), struct PEGCapture *, cap) {
-			array_append(caps, xstrndup(cap->buf, cap->len));
+	struct Array *captures = userdata;
+	array_append(captures, capture);
+	return PEG_CAPTURE_KEEP;
+}
+
+static inline char *
+check_captures(RuleFn rule, const char *s, unsigned int tag, const char *sep)
+{
+	struct MemoryPool *pool = memory_pool_new();
+	struct PEG *peg = memory_pool_acquire(pool, peg_new(s, strlen(s)), free);
+	struct Array *captures = memory_pool_acquire(pool, array_new(), array_free);
+	int result = peg_match(peg, rule, captures_to_array, captures);
+	if (result) {
+		struct Array *caps = memory_pool_acquire(pool, array_new(), array_free);
+		ARRAY_FOREACH(captures, struct PEGCapture *, cap) {
+			if (cap->tag == tag) {
+				array_append(caps, memory_pool_acquire(pool, xstrndup(cap->buf, cap->len), free));
+			}
 		}
+		memory_pool_free(pool);
 		return str_join(caps, sep);
 	}
-	peg_free(peg);
+	memory_pool_free(pool);
 	return NULL;
 }
 
