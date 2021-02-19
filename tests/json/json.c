@@ -45,55 +45,50 @@
 // }
 
 TESTS() {
-	// struct JSONCaptureMachineData data;
+	const char *buf;
+	const char *s;
+	struct JSON *json;
+	struct Array *array;
+	struct Map *object;
 
-	int fd = open("pkg-status.json", O_RDONLY);
-	const char *buf = slurp(fd);
-	struct JSON *j = json_new(buf, strlen(buf));
-	TEST(j);
-
-	// memset(&data, 0, sizeof(data));
-	// TEST(test_json_decode("[\"foo\"]", &data));
-	// TEST(data.json);
-	// TEST(data.json->type == JSON_ARRAY);
-	// TEST(data.json->array && array_len(data.json->array) == 1);
-	// TEST(((struct JSON *)array_get(data.json->array, 0))->type == JSON_STRING);
-	// struct PEGCapture *s = ((struct JSON *)array_get(data.json->array, 0))->string;
-	// TEST(strncmp(s->buf, "foo", s->len) == 0);
+	// int fd = open("pkg-status.json", O_RDONLY);
+	// buf = slurp(fd);
+	// json = json_new(buf, strlen(buf));
+	// TEST(json);
 
 	buf = "[\"foo\",\"bar\"]";
-	struct JSON *json = json_new(buf, strlen(buf));
-	TEST(json != NULL && json_type(json) == JSON_ARRAY);
-	struct Array *array = json_unwrap_array(json);
+	json = json_new(buf, strlen(buf));
+	TEST(json_type(json) == JSON_ARRAY);
+	array = json_unwrap_array(json);
 	TEST(array_len(array) == 2);
-	size_t len;
-	const char *s = json_unwrap_string(array_get(array, 0));
-	TEST_STREQ(s, "foo");
+	s = json_unwrap_string(array_get(array, 0));
+	TEST(s); TEST_STREQ(s, "foo");
+	s = json_unwrap_string(array_get(array, 1));
+	TEST(s); TEST_STREQ(s, "bar");
 
-	// memset(&data, 0, sizeof(data));
-	// TEST(test_json_decode("[[1],[2,[3,[4]]]]", &data));
-	// TEST(data.json);
-	// TEST(data.json->type == JSON_ARRAY);
-	// TEST(array_len(data.json->array) == 2);
-	// TEST(((struct JSON *)array_get(data.json->array, 0))->type == JSON_ARRAY);
-	// TEST(array_len(((struct JSON *)array_get(data.json->array, 0))->array) == 1);
-	// TEST(((struct JSON *)array_get(data.json->array, 1))->type == JSON_ARRAY);
-	// TEST(array_len(((struct JSON *)array_get(data.json->array, 1))->array) == 2);
+	buf = "[[1],[2,[3,[4]]]]";
+	json = json_new(buf, strlen(buf));
+	TEST(json != NULL && json_type(json) == JSON_ARRAY);
+	array = json_unwrap_array(json);
+	TEST(array_len(array) == 2);
+	array = json_unwrap_array(array_get(array, 0));
+	TEST(array);
+	TEST(json_type(json) == JSON_ARRAY);
+	TEST(array_len(array) == 1);
+	TEST(json_type(array_get(array, 0)) == JSON_NUMBER_INT);
 
-	// memset(&data, 0, sizeof(data));
-	// TEST(test_json_decode("[{\"1\":[true,null,false]}]", &data));
-	// TEST(data.json);
-	// TEST(data.json->type == JSON_ARRAY);
-	// TEST(array_len(data.json->array) == 1);
-	// TEST(((struct JSON *)array_get(data.json->array, 0))->type == JSON_OBJECT);
-	// struct Map *obj = ((struct JSON *)array_get(data.json->array, 0))->object;
-	// TEST(map_len(obj) == 1);
-
-	//TEST(map_contains(obj, (char *)"1"));
-	//struct Array *array = map_get(obj, (char *)"1");
-	//TEST(array_len(array) == 3);
-	// TEST(((struct JSON *)array_get(array, 0))->type == JSON_TRUE);
-	// TEST(((struct JSON *)array_get(array, 1))->type == JSON_NULL);
-	// TEST(((struct JSON *)array_get(array, 2))->type == JSON_FALSE);
-
+	buf = "{\"1\":[true,null,false]}";
+	json = json_new(buf, strlen(buf));
+	TEST(json);
+	TEST(json_type(json) == JSON_OBJECT);
+	object = json_unwrap_object(json);
+	TEST(map_contains(object, (char *)"1"));
+	json = map_get(object, (char *)"1");
+	TEST(json);
+	TEST(json_type(json) == JSON_ARRAY);
+	array = json_unwrap_array(json);
+	TEST(array_len(array) == 3);
+	TEST(json_type(array_get(array, 0)) == JSON_TRUE);
+	TEST(json_type(array_get(array, 1)) == JSON_NULL);
+	TEST(json_type(array_get(array, 2)) == JSON_FALSE);
 }
