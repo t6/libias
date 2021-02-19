@@ -175,12 +175,17 @@ json_new(const char *buf, size_t len)
 	data.arrays = memory_pool_acquire(data.pool, stack_new(), stack_free);
 	data.objects = memory_pool_acquire(data.pool, stack_new(), stack_free);
 	data.values = memory_pool_acquire(data.pool, stack_new(), stack_free);
-	struct PEG *peg = memory_pool_acquire(data.pool, peg_new(buf, len), peg_free);
-	if (!peg_match(peg, peg_json_decode, json_capture_machine, &data)) {
+
+	struct PEG *peg = peg_new(buf, len);
+	int status =  peg_match(peg, peg_json_decode, json_capture_machine, &data);
+	peg_free(peg);
+
+	if (status) {
+		return data.json;
+	} else {
 		memory_pool_free(data.pool);
 		return NULL;
 	}
-	return data.json;
 }
 
 void
