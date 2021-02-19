@@ -58,37 +58,37 @@ TESTS() {
 
 	buf = "[\"foo\",\"bar\"]";
 	json = json_new(buf, strlen(buf));
-	TEST(json_type(json) == JSON_ARRAY);
+	TEST_IF(json) {
+	TEST_IF(json_type(json) == JSON_ARRAY) {
 	array = json_unwrap_array(json);
-	TEST(array_len(array) == 2);
+	TEST_IF(array_len(array) == 2) {
 	s = json_unwrap_string(array_get(array, 0));
-	TEST(s); TEST_STREQ(s, "foo");
+	TEST_IF(s) {
+	TEST_STREQ(s, "foo");
 	s = json_unwrap_string(array_get(array, 1));
-	TEST(s); TEST_STREQ(s, "bar");
+	TEST_IF(s) {
+	TEST_STREQ(s, "bar");
+	}}}}}
 
 	buf = "[[1],[2,[3,[4]]]]";
 	json = json_new(buf, strlen(buf));
-	TEST(json != NULL && json_type(json) == JSON_ARRAY);
+	TEST_IF(json && json_type(json) == JSON_ARRAY) {
 	array = json_unwrap_array(json);
-	TEST(array_len(array) == 2);
+	TEST_IF(array_len(array) == 2) {
 	array = json_unwrap_array(array_get(array, 0));
-	TEST(array);
-	TEST(json_type(json) == JSON_ARRAY);
-	TEST(array_len(array) == 1);
+	TEST_IF(array && json_type(json) == JSON_ARRAY && array_len(array) == 1) {
 	TEST(json_type(array_get(array, 0)) == JSON_NUMBER_INT);
-
 	buf = "{\"1\":[true,null,false]}";
 	json = json_new(buf, strlen(buf));
-	TEST(json);
-	TEST(json_type(json) == JSON_OBJECT);
+	TEST_IF(json && json_type(json) == JSON_OBJECT) {
 	object = json_unwrap_object(json);
 	TEST(map_contains(object, (char *)"1"));
 	json = map_get(object, (char *)"1");
-	TEST(json);
-	TEST(json_type(json) == JSON_ARRAY);
+	TEST_IF(json && json_type(json) == JSON_ARRAY) {
 	array = json_unwrap_array(json);
 	TEST(array_len(array) == 3);
 	TEST(json_type(array_get(array, 0)) == JSON_TRUE);
 	TEST(json_type(array_get(array, 1)) == JSON_NULL);
 	TEST(json_type(array_get(array, 2)) == JSON_FALSE);
+	}}}}}
 }
