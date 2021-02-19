@@ -114,7 +114,7 @@ peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userd
 		struct Queue *captures = queue_new();
 		while ((capture = queue_pop(peg->captures.queue))) {
 			memory_pool_acquire(peg->pool, capture, free);
-			capture_machine(peg->pool, capture, userdata);
+			capture_machine(capture, userdata);
 			queue_push(captures, capture);
 		}
 		queue_free(peg->captures.queue);
@@ -126,7 +126,7 @@ peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userd
 		capture->len = peg->pos;
 		capture->tag = -1;
 		capture->state = 0; // Accept state
-		capture_machine(peg->pool, capture, userdata);
+		capture_machine(capture, userdata);
 	}
 
 	if (peg->debug && queue_len(peg->rule_trace) > 0) {

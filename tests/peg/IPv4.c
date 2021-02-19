@@ -58,7 +58,7 @@ enum IPv4CaptureState {
 };
 
 static enum PEGCaptureFlag
-capture_machine(struct MemoryPool *pool, struct PEGCapture *capture, void *userdata)
+capture_machine(struct PEGCapture *capture, void *userdata)
 {
 	struct IPv4Capture *data = userdata;
 	switch ((enum IPv4CaptureState)capture->state) {
