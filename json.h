@@ -41,3 +41,11 @@ enum JSONType {
 	JSON_TRUE,
 };
 
+struct JSON *json_new(const char *, size_t);
+void json_free(struct JSON *);
+
+enum JSONType json_type(struct JSON *);
+struct Array *json_unwrap_array(struct JSON *);
+struct Map *json_unwrap_object(struct JSON *);
+const char *json_unwrap_string(struct JSON *);
+

@@ -27,13 +27,22 @@
  */
 #include "config.h"
 
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "array.h"
 #include "json.h"
 #include "map.h"
+#include "memorypool.h"
 #include "peg.h"
 #include "peg/json.h"
+#include "stack.h"
+#include "util.h"
+
 
 struct JSON {
+	struct MemoryPool *pool;
 	enum JSONType type;
 	union {
 		struct Array *array;
@@ -43,12 +52,13 @@ struct JSON {
 			char *u;
 		} number;
 		struct Map *object;
-		struct PEGCapture *string;
+		char *string;
 	};
 };
 
 struct JSONCaptureMachineData {
 	struct JSON *json;
+	struct MemoryPool *pool;
 	struct {
 		char *number;
 		char *minus;
@@ -61,30 +71,11 @@ struct JSONCaptureMachineData {
 	struct Stack *values;
 };
 
-static int
-peg_capture_str_compare(const void *ap, const void *bp, void *userdata)
-{
-	struct PEGCapture *a = *(struct PEGCapture **)ap;
-	struct PEGCapture *b = *(struct PEGCapture **)bp;
-	if (a->len > b->len) {
-		return 1;
-	} else if (a->len < b->len) {
-		return -1;
-	} else {
-		return strncmp(a->buf, b->buf, a->len);
-	}
-}
-
-enum PEGCaptureFlag
-json_capture_machine(struct MemoryPool *pool, struct PEGCapture *capture, void *userdata)
+static enum PEGCaptureFlag
+json_capture_machine(struct PEGCapture *capture, void *userdata)
 {
 	struct JSONCaptureMachineData *data = userdata;
-	if (data->values == NULL) {
-		data->arrays = GC(stack_new(), stack_free);
-		data->objects = GC(stack_new(), stack_free);
-		data->values = GC(stack_new(), stack_free);
-	}
-	switch (capture->state) {
+	switch ((enum JSONCaptureState)capture->state) {
 	case ACCEPT: {
 		assert(stack_len(data->values) == 1);
 		assert(stack_len(data->objects) == 0);
@@ -92,11 +83,12 @@ json_capture_machine(struct MemoryPool *pool, struct PEGCapture *capture, void *
 		data->json = stack_pop(data->values);
 		break;
 	} case CAPTURE_ARRAY_BEGIN:
-		stack_push(data->arrays, GC(array_new(), array_free));
+		stack_push(data->arrays, memory_pool_acquire(data->pool, array_new(), array_free));
 		break;
 	case CAPTURE_ARRAY_END: {
 		struct Array *array = stack_pop(data->arrays);
-		struct JSON *value = GC(xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		value->pool = data->pool;
 		value->type = JSON_ARRAY;
 		value->array = array;
 		stack_push(data->values, value);
@@ -107,11 +99,12 @@ json_capture_machine(struct MemoryPool *pool, struct PEGCapture *capture, void *
 		array_append(array, value);
 		break;
 	} case CAPTURE_OBJECT_BEGIN:
-		stack_push(data->objects, GC(map_new(peg_capture_str_compare, NULL, NULL, NULL), map_free));
+		stack_push(data->objects, memory_pool_acquire(data->pool, map_new(str_compare, NULL, NULL, NULL), map_free));
 		break;
 	case CAPTURE_OBJECT_END: {
 		struct Map *object = stack_pop(data->objects);
-		struct JSON *value = GC(xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		value->pool = data->pool;
 		value->type = JSON_OBJECT;
 		value->object = object;
 		stack_push(data->values, value);
@@ -123,23 +116,28 @@ json_capture_machine(struct MemoryPool *pool, struct PEGCapture *capture, void *
 		map_add(object, key->string, value);
 		break;
 	} case CAPTURE_FALSE: {
-		struct JSON *value = GC(xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		value->pool = data->pool;
 		value->type = JSON_FALSE;
 		stack_push(data->values, value);
 		break;
 	} case CAPTURE_NULL: {
-		struct JSON *value = GC(xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		value->pool = data->pool;
 		value->type = JSON_NULL;
 		stack_push(data->values, value);
 		break;
 	} case CAPTURE_STRING: {
-		struct JSON *value = GC(xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		value->pool = data->pool;
 		value->type = JSON_STRING;
-		value->string = capture;
+		// XXX: deal with unicode escapes etc.
+		value->string = memory_pool_acquire(data->pool, xstrndup(capture->buf, capture->len), free);
 		stack_push(data->values, value);
 		break;
 	} case CAPTURE_TRUE: {
-		struct JSON *value = GC(xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		value->pool = data->pool;
 		value->type = JSON_TRUE;
 		stack_push(data->values, value);
 		break;
@@ -156,7 +154,8 @@ json_capture_machine(struct MemoryPool *pool, struct PEGCapture *capture, void *
 		//data->num.minus = capture->buf;
 		break;
 	case NUMBER_FULL: {
-		struct JSON *value = GC(xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		value->pool = data->pool;
 		value->type = JSON_NUMBER_INT;
 		value->number.i = 1;
 		stack_push(data->values, value);
@@ -167,3 +166,61 @@ json_capture_machine(struct MemoryPool *pool, struct PEGCapture *capture, void *
 	return PEG_CAPTURE_DISCARD;
 }
 
+struct JSON *
+json_new(const char *buf, size_t len)
+{
+	struct JSONCaptureMachineData data;
+	memset(&data, 0, sizeof(data));
+	data.pool = memory_pool_new();
+	data.arrays = memory_pool_acquire(data.pool, stack_new(), stack_free);
+	data.objects = memory_pool_acquire(data.pool, stack_new(), stack_free);
+	data.values = memory_pool_acquire(data.pool, stack_new(), stack_free);
+	struct PEG *peg = memory_pool_acquire(data.pool, peg_new(buf, len), peg_free);
+	if (!peg_match(peg, peg_json_decode, json_capture_machine, &data)) {
+		memory_pool_free(data.pool);
+		return NULL;
+	}
+	return data.json;
+}
+
+void
+json_free(struct JSON *json)
+{
+	memory_pool_free(json->pool);
+}
+
+enum JSONType
+json_type(struct JSON *json)
+{
+	return json->type;
+}
+
+struct Array *
+json_unwrap_array(struct JSON *json)
+{
+	if (json->type == JSON_ARRAY) {
+		return json->array;
+	} else {
+		return NULL;
+	}
+}
+
+struct Map *
+json_unwrap_object(struct JSON *json)
+{
+	if (json->type == JSON_OBJECT) {
+		return json->object;
+	} else {
+		return NULL;
+	}
+}
+
+const char *
+json_unwrap_string(struct JSON *json)
+{
+	if (json->type == JSON_STRING) {
+		return json->string;
+	} else {
+		return NULL;
+	}
+}
