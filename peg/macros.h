@@ -35,17 +35,17 @@
 #define ATLEAST(r, n)		peg_match_atleast(peg, __func__, (r), (n))
 #define ATMOST(r, n)		peg_match_between(peg, __func__, (r), 0, (n))
 #define BETWEEN(r, a, b)	peg_match_between(peg, __func__, (r), (a), (b))
-#define CAPTURE_MACHINE(e, d)	static enum PEGCaptureFlag __CAPTURE_MACHINE(struct PEGCapture *, e, d *); \
+#define CAPTURE_MACHINE(e, d)	static enum PEGCaptureFlag __CAPTURE_MACHINE(struct MemoryPool *, struct PEGCapture *, e, d *); \
 				static const size_t __CAPTURE_MACHINE_data_size = sizeof(d); \
-				static inline enum PEGCaptureFlag __CAPTURE_MACHINE_wrapper(struct PEGCapture *capture, void *data) { \
-					return __CAPTURE_MACHINE(capture, capture->state, data); \
-				} enum PEGCaptureFlag __CAPTURE_MACHINE(struct PEGCapture *capture, e state, d *data)
+				static inline enum PEGCaptureFlag __CAPTURE_MACHINE_wrapper(struct MemoryPool *pool, struct PEGCapture *capture, void *data) { \
+					return __CAPTURE_MACHINE(pool, capture, capture->state, data); \
+				} enum PEGCaptureFlag __CAPTURE_MACHINE(struct MemoryPool *pool, struct PEGCapture *capture, e state, d *data)
 #define CAPTURE(x, t, s)	(peg_match_capture_start(peg) ? peg_match_capture_end(peg, (t), (s), __CAPTURE_MACHINE_wrapper, __CAPTURE_MACHINE_data_size, (x)) : 0)
 #define $(x)			peg_capture_reg(peg, (x))
 #define CHAR(c)			peg_match_char(peg, __func__, (c))
 #define CHARF(f)		peg_match_char_f(peg, __func__, (f))
 #define EOS()			peg_match_eos(peg, __func__)
-#define GC(x, f)		peg_gc(capture->peg, (x), (f))
+#define GC(x, f)		memory_pool_acquire(pool, (x), (f))
 #define MATCH(r)		peg_match_rule(peg, __func__, (r))
 #define OPT(r)			((r) || 1)
 #define RANGE(a, b)		peg_match_range(peg, __func__, (a), (b))

@@ -38,6 +38,7 @@
 
 #include "array.h"
 #include "map.h"
+#include "memorypool.h"
 #include "peg.h"
 #include "stack.h"
 #include "queue.h"
@@ -55,10 +56,11 @@ struct PEG {
 	} captures;
 
 	CaptureFn capture_machine;
-	struct Queue *gc[2];
 
 	int debug;
 	struct Queue *rule_trace;
+
+	struct MemoryPool *pool;
 };
 
 
@@ -113,20 +115,20 @@ peg_match(struct PEG *peg, RuleFn rulefn, void *userdata)
 		struct PEGCapture *capture;
 		struct Queue *captures = queue_new();
 		while ((capture = queue_pop(peg->captures.queue))) {
-			peg_gc(peg, capture, free);
-			peg->capture_machine(capture, userdata);
+			memory_pool_acquire(peg->pool, capture, free);
+			peg->capture_machine(peg->pool, capture, userdata);
 			queue_push(captures, capture);
 		}
 		queue_free(peg->captures.queue);
 		peg->captures.queue = captures;
-		capture = peg_gc(peg, xmalloc(sizeof(struct PEGCapture)), free);
+		capture = memory_pool_acquire(peg->pool, xmalloc(sizeof(struct PEGCapture)), free);
 		capture->peg = peg;
 		capture->buf = peg->buf;
 		capture->pos = 0;
 		capture->len = peg->pos;
 		capture->tag = -1;
 		capture->state = 0; // Accept state
-		peg->capture_machine(capture, userdata);
+		peg->capture_machine(peg->pool, capture, userdata);
 	}
 
 	if (peg->debug && queue_len(peg->rule_trace) > 0) {
@@ -354,8 +356,7 @@ peg_new(const char *const buf, size_t len)
 	struct PEG *peg = xmalloc(sizeof(struct PEG));
 	memcpy(peg, &proto, sizeof(*peg));
 
-	peg->gc[0] = queue_new();
-	peg->gc[1] = queue_new();
+	peg->pool= memory_pool_new();
 
 	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;
 	peg->rule_trace = queue_new();
@@ -373,28 +374,10 @@ peg_free(struct PEG *peg)
 		return;
 	}
 
-	void *ptr;
-	while ((ptr = queue_pop(peg->gc[0]))) {
-		void (*freefn)(void *) = queue_pop(peg->gc[1]);
-		freefn(ptr);
-	}
-	queue_free(peg->gc[0]);
-	queue_free(peg->gc[1]);
-
 	queue_free(peg->rule_trace);
 	queue_free(peg->captures.queue);
 	stack_free(peg->captures.pos);
+	memory_pool_free(peg->pool);
 
 	free(peg);
-}
-
-void *
-peg_gc(struct PEG *peg, void *ptr, void *freefn)
-{
-	if (ptr) {
-		assert(freefn != NULL);
-		queue_push(peg->gc[0], ptr);
-		queue_push(peg->gc[1], freefn);
-	}
-	return ptr;
 }

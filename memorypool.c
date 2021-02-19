@@ -25,48 +25,53 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#pragma once
 
-struct PEG;
-struct Array;
-struct MemoryPool;
+#include "config.h"
 
-struct PEGCapture {
-	const char *buf;
-	unsigned int tag;
-	unsigned int state;
-	size_t pos;
-	size_t len;
+#include <assert.h>
+#include <stdlib.h>
 
-	struct PEG *peg;
-	void *userdata;
+#include "memorypool.h"
+#include "queue.h"
+#include "util.h"
+
+struct MemoryPool {
+	struct Queue *queue;
 };
 
-enum PEGCaptureFlag {
-	PEG_CAPTURE_DISCARD,
-	PEG_CAPTURE_KEEP,
-};
+struct MemoryPool *
+memory_pool_new()
+{
+	struct MemoryPool *pool = xmalloc(sizeof(struct MemoryPool));
+	pool->queue = queue_new();
+	return pool;
+}
 
-typedef enum PEGCaptureFlag (*CaptureFn)(struct MemoryPool *, struct PEGCapture *, void *);
-typedef int (*RuleFn)(struct PEG *);
+void
+memory_pool_free(struct MemoryPool *pool)
+{
+	memory_pool_release(pool);
+	queue_free(pool->queue);
+	free(pool);
+}
 
-struct PEG *peg_new(const char *, size_t);
-void peg_free(struct PEG *);
-void *peg_gc(struct PEG *, void *, void *);
+void *
+memory_pool_acquire(struct MemoryPool *pool, void *ptr, void *freefn)
+{
+	if (ptr) {
+		assert(freefn != NULL);
+		queue_push(pool->queue, ptr);
+		queue_push(pool->queue, freefn);
+	}
+	return ptr;
+}
 
-struct Array *peg_captures(struct PEG *, unsigned int);
-int peg_match(struct PEG *, RuleFn, void *);
-
-int peg_match_atleast(struct PEG *, const char *, RuleFn, int);
-int peg_match_between(struct PEG *, const char *, RuleFn, int, int);
-int peg_match_capture_start(struct PEG *);
-int peg_match_capture_end(struct PEG *, unsigned int, unsigned int, CaptureFn, size_t, int);
-int peg_match_char(struct PEG *, const char *, uint32_t);
-int peg_match_char_f(struct PEG *, const char *, int (*)(int));
-int peg_match_chars(struct PEG *, const char *, uint32_t[], size_t);
-int peg_match_eos(struct PEG *, const char *);
-int peg_match_range(struct PEG *, const char *, uint32_t, uint32_t);
-int peg_match_rule(struct PEG *, const char *, RuleFn);
-int peg_match_string(struct PEG *, const char *, const char *);
-int peg_match_thru(struct PEG *, const char *, const char *);
-int peg_match_to(struct PEG *, const char *, const char *);
+void
+memory_pool_release(struct MemoryPool *pool)
+{
+	void *ptr;
+	while ((ptr = queue_pop(pool->queue))) {
+		void (*freefn)(void *) = queue_pop(pool->queue);
+		freefn(ptr);
+	}
+}

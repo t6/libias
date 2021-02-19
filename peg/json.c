@@ -34,6 +34,7 @@
 
 #include "array.h"
 #include "map.h"
+#include "memorypool.h"
 #include "peg.h"
 #include "peg/json.h"
 #include "peg/macros.h"
@@ -130,6 +131,8 @@ CAPTURE_MACHINE(enum JSONCaptureState, struct JSONCaptureMachineData) {
 	switch (state) {
 	case ACCEPT: {
 		assert(stack_len(data->values) == 1);
+		assert(stack_len(data->objects) == 0);
+		assert(stack_len(data->arrays) == 0);
 		data->json = stack_pop(data->values);
 		break;
 	} case CAPTURE_ARRAY_BEGIN:

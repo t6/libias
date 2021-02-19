@@ -27,46 +27,9 @@
  */
 #pragma once
 
-struct PEG;
-struct Array;
 struct MemoryPool;
 
-struct PEGCapture {
-	const char *buf;
-	unsigned int tag;
-	unsigned int state;
-	size_t pos;
-	size_t len;
-
-	struct PEG *peg;
-	void *userdata;
-};
-
-enum PEGCaptureFlag {
-	PEG_CAPTURE_DISCARD,
-	PEG_CAPTURE_KEEP,
-};
-
-typedef enum PEGCaptureFlag (*CaptureFn)(struct MemoryPool *, struct PEGCapture *, void *);
-typedef int (*RuleFn)(struct PEG *);
-
-struct PEG *peg_new(const char *, size_t);
-void peg_free(struct PEG *);
-void *peg_gc(struct PEG *, void *, void *);
-
-struct Array *peg_captures(struct PEG *, unsigned int);
-int peg_match(struct PEG *, RuleFn, void *);
-
-int peg_match_atleast(struct PEG *, const char *, RuleFn, int);
-int peg_match_between(struct PEG *, const char *, RuleFn, int, int);
-int peg_match_capture_start(struct PEG *);
-int peg_match_capture_end(struct PEG *, unsigned int, unsigned int, CaptureFn, size_t, int);
-int peg_match_char(struct PEG *, const char *, uint32_t);
-int peg_match_char_f(struct PEG *, const char *, int (*)(int));
-int peg_match_chars(struct PEG *, const char *, uint32_t[], size_t);
-int peg_match_eos(struct PEG *, const char *);
-int peg_match_range(struct PEG *, const char *, uint32_t, uint32_t);
-int peg_match_rule(struct PEG *, const char *, RuleFn);
-int peg_match_string(struct PEG *, const char *, const char *);
-int peg_match_thru(struct PEG *, const char *, const char *);
-int peg_match_to(struct PEG *, const char *, const char *);
+struct MemoryPool *memory_pool_new(void);
+void memory_pool_free(struct MemoryPool *);
+void *memory_pool_acquire(struct MemoryPool *, void *, void *);
+void memory_pool_release(struct MemoryPool *);
