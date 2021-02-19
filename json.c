@@ -28,6 +28,7 @@
 #include "config.h"
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -56,16 +57,18 @@ struct JSON {
 	};
 };
 
+struct JSONNumberCapture {
+	struct PEGCapture *number;
+	int minus;
+	struct PEGCapture *integer;
+	struct PEGCapture *fraction;
+	struct PEGCapture *exponent;
+};
+
 struct JSONCaptureMachineData {
 	struct JSON *json;
 	struct MemoryPool *pool;
-	struct {
-		char *number;
-		char *minus;
-		char *integer;
-		char *fraction;
-		char *exponent;
-	} num;
+	struct JSONNumberCapture num;
 	struct Stack *arrays;
 	struct Stack *objects;
 	struct Stack *values;
@@ -142,22 +145,46 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		stack_push(data->values, value);
 		break;
 	} case NUMBER_EXPONENT:
-		//data->num.exponent = capture->buf;
+		data->num.exponent = capture;
 		break;
 	case NUMBER_FRACTION:
-		//data->num.fraction = capture->buf;
+		data->num.fraction = capture;
 		break;
 	case NUMBER_INTEGER:
-		//data->num.integer = capture->buf;
+		data->num.integer = capture;
 		break;
 	case NUMBER_MINUS:
-		//data->num.minus = capture->buf;
+		data->num.minus = 1;
 		break;
 	case NUMBER_FULL: {
 		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
-		value->type = JSON_NUMBER_INT;
-		value->number.i = 1;
+		if (data->num.fraction) {
+			value->type = JSON_NUMBER_UNREPRESENTABLE;
+			value->number.u = memory_pool_acquire(data->pool, xstrndup(capture->buf, capture->len), free);
+			// XXX
+		} else {
+			char *buf = xstrndup(data->num.integer->buf, data->num.integer->len);
+			const char *errstr;
+			long long i = strtonum(buf, 0, INT64_MAX, &errstr);
+			if (errstr == NULL) {
+				if (data->num.exponent) {
+					value->type = JSON_NUMBER_UNREPRESENTABLE;
+					value->number.u = memory_pool_acquire(data->pool, xstrndup(capture->buf, capture->len), free);
+					// XXX
+				} else {
+					value->type = JSON_NUMBER_INT;
+					value->number.i = i;
+				}
+				if (data->num.minus) {
+					value->number.i *= -1;
+				}
+			} else {
+				value->type = JSON_NUMBER_UNREPRESENTABLE;
+				value->number.u = memory_pool_acquire(data->pool, xstrndup(capture->buf, capture->len), free);
+			}
+			free(buf);
+		}
 		stack_push(data->values, value);
 		memset(&data->num, 0, sizeof(data->num));
 		break;
