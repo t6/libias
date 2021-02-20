@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "array.h"
-#include "memorypool.h"
+#include "mempool.h"
 #include "peg.h"
 #include "peg/macros.h"
 #include "test.h"
@@ -50,21 +50,21 @@ captures_to_array(struct PEGCapture *capture, void *userdata)
 static inline char *
 check_captures(RuleFn rule, const char *s, unsigned int tag, const char *sep)
 {
-	struct MemoryPool *pool = memory_pool_new();
-	struct PEG *peg = memory_pool_acquire(pool, peg_new(s, strlen(s)), free);
-	struct Array *captures = memory_pool_acquire(pool, array_new(), array_free);
+	struct Mempool *pool = mempool_new();
+	struct PEG *peg = mempool_add(pool, peg_new(s, strlen(s)), free);
+	struct Array *captures = mempool_add(pool, array_new(), array_free);
 	int result = peg_match(peg, rule, captures_to_array, captures);
 	if (result) {
-		struct Array *caps = memory_pool_acquire(pool, array_new(), array_free);
+		struct Array *caps = mempool_add(pool, array_new(), array_free);
 		ARRAY_FOREACH(captures, struct PEGCapture *, cap) {
 			if (cap->tag == tag) {
-				array_append(caps, memory_pool_acquire(pool, xstrndup(cap->buf, cap->len), free));
+				array_append(caps, mempool_add(pool, xstrndup(cap->buf, cap->len), free));
 			}
 		}
-		memory_pool_free(pool);
+		mempool_free(pool);
 		return str_join(caps, sep);
 	}
-	memory_pool_free(pool);
+	mempool_free(pool);
 	return NULL;
 }
 

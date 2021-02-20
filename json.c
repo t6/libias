@@ -35,7 +35,7 @@
 #include "array.h"
 #include "json.h"
 #include "map.h"
-#include "memorypool.h"
+#include "mempool.h"
 #include "peg.h"
 #include "peg/json.h"
 #include "stack.h"
@@ -43,7 +43,7 @@
 
 
 struct JSON {
-	struct MemoryPool *pool;
+	struct Mempool *pool;
 	enum JSONType type;
 	union {
 		struct Array *array;
@@ -67,7 +67,7 @@ struct JSONNumberCapture {
 
 struct JSONCaptureMachineData {
 	struct JSON *json;
-	struct MemoryPool *pool;
+	struct Mempool *pool;
 	struct JSONNumberCapture num;
 	struct Stack *arrays;
 	struct Stack *objects;
@@ -86,11 +86,11 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		data->json = stack_pop(data->values);
 		break;
 	} case CAPTURE_ARRAY_BEGIN:
-		stack_push(data->arrays, memory_pool_acquire(data->pool, array_new(), array_free));
+		stack_push(data->arrays, mempool_add(data->pool, array_new(), array_free));
 		break;
 	case CAPTURE_ARRAY_END: {
 		struct Array *array = stack_pop(data->arrays);
-		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_ARRAY;
 		value->array = array;
@@ -102,11 +102,11 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		array_append(array, value);
 		break;
 	} case CAPTURE_OBJECT_BEGIN:
-		stack_push(data->objects, memory_pool_acquire(data->pool, map_new(str_compare, NULL, NULL, NULL), map_free));
+		stack_push(data->objects, mempool_add(data->pool, map_new(str_compare, NULL, NULL, NULL), map_free));
 		break;
 	case CAPTURE_OBJECT_END: {
 		struct Map *object = stack_pop(data->objects);
-		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_OBJECT;
 		value->object = object;
@@ -119,27 +119,27 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		map_add(object, key->string, value);
 		break;
 	} case CAPTURE_FALSE: {
-		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_FALSE;
 		stack_push(data->values, value);
 		break;
 	} case CAPTURE_NULL: {
-		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_NULL;
 		stack_push(data->values, value);
 		break;
 	} case CAPTURE_STRING: {
-		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_STRING;
 		// XXX: deal with unicode escapes etc.
-		value->string = memory_pool_acquire(data->pool, xstrndup(capture->buf, capture->len), free);
+		value->string = mempool_add(data->pool, xstrndup(capture->buf, capture->len), free);
 		stack_push(data->values, value);
 		break;
 	} case CAPTURE_TRUE: {
-		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_TRUE;
 		stack_push(data->values, value);
@@ -157,11 +157,11 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		data->num.minus = 1;
 		break;
 	case NUMBER_FULL: {
-		struct JSON *value = memory_pool_acquire(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		if (data->num.fraction) {
 			value->type = JSON_NUMBER_UNREPRESENTABLE;
-			value->number.u = memory_pool_acquire(data->pool, xstrndup(capture->buf, capture->len), free);
+			value->number.u = mempool_add(data->pool, xstrndup(capture->buf, capture->len), free);
 			// XXX
 		} else {
 			char *buf = xstrndup(data->num.integer->buf, data->num.integer->len);
@@ -170,7 +170,7 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 			if (errstr == NULL) {
 				if (data->num.exponent) {
 					value->type = JSON_NUMBER_UNREPRESENTABLE;
-					value->number.u = memory_pool_acquire(data->pool, xstrndup(capture->buf, capture->len), free);
+					value->number.u = mempool_add(data->pool, xstrndup(capture->buf, capture->len), free);
 					// XXX
 				} else {
 					value->type = JSON_NUMBER_INT;
@@ -181,7 +181,7 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 				}
 			} else {
 				value->type = JSON_NUMBER_UNREPRESENTABLE;
-				value->number.u = memory_pool_acquire(data->pool, xstrndup(capture->buf, capture->len), free);
+				value->number.u = mempool_add(data->pool, xstrndup(capture->buf, capture->len), free);
 			}
 			free(buf);
 		}
@@ -198,10 +198,10 @@ json_new(const char *buf, size_t len)
 {
 	struct JSONCaptureMachineData data;
 	memset(&data, 0, sizeof(data));
-	data.pool = memory_pool_new();
-	data.arrays = memory_pool_acquire(data.pool, stack_new(), stack_free);
-	data.objects = memory_pool_acquire(data.pool, stack_new(), stack_free);
-	data.values = memory_pool_acquire(data.pool, stack_new(), stack_free);
+	data.pool = mempool_new();
+	data.arrays = mempool_add(data.pool, stack_new(), stack_free);
+	data.objects = mempool_add(data.pool, stack_new(), stack_free);
+	data.values = mempool_add(data.pool, stack_new(), stack_free);
 
 	struct PEG *peg = peg_new(buf, len);
 	int status =  peg_match(peg, peg_json_decode, json_capture_machine, &data);
@@ -210,7 +210,7 @@ json_new(const char *buf, size_t len)
 	if (status) {
 		return data.json;
 	} else {
-		memory_pool_free(data.pool);
+		mempool_free(data.pool);
 		return NULL;
 	}
 }
@@ -218,7 +218,7 @@ json_new(const char *buf, size_t len)
 void
 json_free(struct JSON *json)
 {
-	memory_pool_free(json->pool);
+	mempool_free(json->pool);
 }
 
 enum JSONType

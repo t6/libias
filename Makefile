@@ -11,7 +11,7 @@ OBJS=		array.o \
 		diffutil.o \
 		json.o \
 		map.o \
-		memorypool.o \
+		mempool.o \
 		peg.o \
 		peg/clang.o \
 		peg/json.o \
@@ -57,10 +57,10 @@ libias.a: ${OBJS}
 array.o: config.h array.h diff.h util.h
 diff.o: config.h diff.h
 diffutil.o: config.h array.h diff.h diffutil.h util.h
-json.o: config.h array.h json.h map.h memorypool.h peg.h peg/json.h stack.h util.h
+json.o: config.h array.h json.h map.h mempool.h peg.h peg/json.h stack.h util.h
 map.o: config.h array.h map.h util.h
-memorypool.o: config.h memorypool.h queue.h util.h
-peg.o: config.h array.h memorypool.h peg.h queue.h stack.h utf8.h util.h
+mempool.o: config.h mempool.h queue.h util.h
+peg.o: config.h array.h mempool.h peg.h queue.h stack.h utf8.h util.h
 peg/clang.o: config.h peg.h peg/macros.h
 peg/json.o: config.h array.h map.h peg.h peg/json.h peg/macros.h stack.h util.h
 queue.o: config.h queue.h util.h
@@ -70,7 +70,7 @@ utf8.o: config.h utf8.h
 util.o: config.h array.h util.h
 ${TESTS_ARRAY}: config.h array.h test.h util.h
 ${TESTS_JSON}: config.h array.h json.h test.h util.h
-${TESTS_PEG}: config.h array.h memorypool.h peg.h peg/macros.h test.h tests/peg/common.h util.h
+${TESTS_PEG}: config.h array.h mempool.h peg.h peg/macros.h test.h tests/peg/common.h util.h
 ${TESTS_QUEUE}: config.h array.h queue.h test.h util.h
 ${TESTS_STACK}: config.h array.h stack.h test.h util.h
 ${TESTS_UTIL}: config.h array.h test.h util.h

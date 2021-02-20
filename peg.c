@@ -38,7 +38,7 @@
 
 #include "array.h"
 #include "map.h"
-#include "memorypool.h"
+#include "mempool.h"
 #include "peg.h"
 #include "stack.h"
 #include "queue.h"
@@ -59,7 +59,7 @@ struct PEG {
 	int debug;
 	struct Queue *rule_trace;
 
-	struct MemoryPool *pool;
+	struct Mempool *pool;
 };
 
 
@@ -97,10 +97,10 @@ peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userd
 	if (capture_machine) {
 		struct PEGCapture *capture;
 		while ((capture = queue_pop(peg->captures.queue))) {
-			memory_pool_acquire(peg->pool, capture, free);
+			mempool_add(peg->pool, capture, free);
 			capture_machine(capture, userdata);
 		}
-		capture = memory_pool_acquire(peg->pool, xmalloc(sizeof(struct PEGCapture)), free);
+		capture = mempool_add(peg->pool, xmalloc(sizeof(struct PEGCapture)), free);
 		capture->peg = peg;
 		capture->buf = peg->buf;
 		capture->pos = 0;
@@ -336,7 +336,7 @@ peg_new(const char *const buf, size_t len)
 	struct PEG *peg = xmalloc(sizeof(struct PEG));
 	memcpy(peg, &proto, sizeof(*peg));
 
-	peg->pool= memory_pool_new();
+	peg->pool= mempool_new();
 
 	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;
 	peg->rule_trace = queue_new();
@@ -357,7 +357,7 @@ peg_free(struct PEG *peg)
 	queue_free(peg->rule_trace);
 	queue_free(peg->captures.queue);
 	stack_free(peg->captures.pos);
-	memory_pool_free(peg->pool);
+	mempool_free(peg->pool);
 
 	free(peg);
 }

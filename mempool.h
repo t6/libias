@@ -27,9 +27,9 @@
  */
 #pragma once
 
-struct MemoryPool;
+struct Mempool;
 
-struct MemoryPool *memory_pool_new(void);
-void memory_pool_free(struct MemoryPool *);
-void *memory_pool_acquire(struct MemoryPool *, void *, void *);
-void memory_pool_release(struct MemoryPool *);
+struct Mempool *mempool_new(void);
+void mempool_free(struct Mempool *);
+void *mempool_add(struct Mempool *, void *, void *);
+void mempool_release(struct Mempool *);

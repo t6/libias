@@ -31,32 +31,32 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "memorypool.h"
+#include "mempool.h"
 #include "queue.h"
 #include "util.h"
 
-struct MemoryPool {
+struct Mempool {
 	struct Queue *queue;
 };
 
-struct MemoryPool *
-memory_pool_new()
+struct Mempool *
+mempool_new()
 {
-	struct MemoryPool *pool = xmalloc(sizeof(struct MemoryPool));
+	struct Mempool *pool = xmalloc(sizeof(struct Mempool));
 	pool->queue = queue_new();
 	return pool;
 }
 
 void
-memory_pool_free(struct MemoryPool *pool)
+mempool_free(struct Mempool *pool)
 {
-	memory_pool_release(pool);
+	mempool_release(pool);
 	queue_free(pool->queue);
 	free(pool);
 }
 
 void *
-memory_pool_acquire(struct MemoryPool *pool, void *ptr, void *freefn)
+mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 {
 	if (ptr) {
 		assert(freefn != NULL);
@@ -67,7 +67,7 @@ memory_pool_acquire(struct MemoryPool *pool, void *ptr, void *freefn)
 }
 
 void
-memory_pool_release(struct MemoryPool *pool)
+mempool_release(struct Mempool *pool)
 {
 	void *ptr;
 	while ((ptr = queue_pop(pool->queue))) {
