@@ -29,17 +29,20 @@
 #include "config.h"
 
 #include <sys/param.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "array.h"
 #include "diff.h"
 #include "diffutil.h"
+#include "mempool.h"
 #include "util.h"
 
-struct Array *
+char *
 diff_to_patch(struct diff *p, const char *origin_name, const char *target_name, int color)
 {
-	struct Array *result = array_new();
+	struct Mempool *pool = mempool_new();
+	struct Array *result = mempool_add(pool, array_new(), array_free);
 
 	const char *color_add = ANSI_COLOR_GREEN;
 	const char *color_context = ANSI_COLOR_CYAN;
@@ -57,35 +60,31 @@ diff_to_patch(struct diff *p, const char *origin_name, const char *target_name, 
 		origin_lines = MAX(origin_lines, p->ses[i].originIdx);
 		target_lines = MAX(target_lines, p->ses[i].targetIdx);
 	}
-	if (origin_name == NULL || strlen(origin_name) == 0) {
-		origin_name = "Makefile";
-	}
-	if (target_name == NULL || strlen(target_name) == 0) {
-		target_name = "Makefile";
-	}
 	char *buf;
 	xasprintf(&buf, "%s--- %s\n%s+++ %s\n%s@@ -%zu,%zu +%zu,%zu @@%s\n",
 		color_delete, origin_name, color_add, target_name, color_context,
 		origin_start, origin_lines, target_start, target_lines, color_reset);
-	array_append(result, buf);
+	array_append(result, mempool_add(pool, buf, free));
 
 	for (size_t i = 0; i < p->sessz; i++) {
 		const char *line = *(const char **)p->ses[i].e;
 		switch (p->ses[i].type) {
 		case DIFF_ADD:
 			xasprintf(&buf, "%s+%s%s\n", color_add, line, color_reset);
-			array_append(result, buf);
+			array_append(result, mempool_add(pool, buf, free));
 			break;
 		case DIFF_COMMON:
 			xasprintf(&buf, " %s\n", line);
-			array_append(result, buf);
+			array_append(result, mempool_add(pool, buf, free));
 			break;
 		case DIFF_DELETE:
 			xasprintf(&buf, "%s-%s%s\n", color_delete, line, color_reset);
-			array_append(result, buf);
+			array_append(result, mempool_add(pool, buf, free));
 			break;
 		}
 	}
 
-	return result;
+	buf = str_join(result, "");
+	mempool_free(pool);
+	return buf;
 }

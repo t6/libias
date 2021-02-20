@@ -56,7 +56,7 @@ libias.a: ${OBJS}
 
 array.o: config.h array.h diff.h util.h
 diff.o: config.h diff.h
-diffutil.o: config.h array.h diff.h diffutil.h util.h
+diffutil.o: config.h array.h diff.h diffutil.h mempool.h util.h
 json.o: config.h array.h json.h map.h mempool.h peg.h peg/json.h stack.h util.h
 map.o: config.h array.h map.h util.h
 mempool.o: config.h mempool.h queue.h util.h
