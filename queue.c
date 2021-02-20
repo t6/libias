@@ -55,6 +55,12 @@ queue_new()
 void
 queue_free(struct Queue *queue)
 {
+	struct QueueNode *node = queue->head;
+	while (node) {
+		struct QueueNode *next = node->next;
+		free(node);
+		node = next;
+	}
 	free(queue);
 }
 
@@ -79,7 +85,9 @@ queue_pop(struct Queue *queue)
 {
 	if (queue->head) {
 		void *value = queue->head->value;
-		queue->head = queue->head->next;
+		struct QueueNode *next = queue->head->next;
+		free(queue->head);
+		queue->head = next;
 		if (queue->head) {
 			queue->head->prev = NULL;
 			if (queue->head->next == NULL) {

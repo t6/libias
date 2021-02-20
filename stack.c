@@ -53,6 +53,12 @@ stack_new()
 void
 stack_free(struct Stack *stack)
 {
+	struct StackNode *node = stack->head;
+	while (node) {
+		struct StackNode *next = node->next;
+		free(node);
+		node = next;
+	}
 	free(stack);
 }
 
@@ -96,4 +102,3 @@ stack_push(struct Stack *stack, void *value)
 	stack->head = node;
 	stack->len++;
 }
-
