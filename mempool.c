@@ -58,6 +58,15 @@ mempool_free(struct Mempool *pool)
 	free(pool);
 }
 
+void
+mempool_cleanup(struct Mempool **pool)
+{
+	if (pool) {
+		mempool_free(*pool);
+		*pool = NULL;
+	}
+}
+
 void *
 mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 {

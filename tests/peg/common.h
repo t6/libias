@@ -50,7 +50,7 @@ captures_to_array(struct PEGCapture *capture, void *userdata)
 static inline char *
 check_captures(RuleFn rule, const char *s, unsigned int tag, const char *sep)
 {
-	struct Mempool *pool = mempool_new();
+	SCOPE_MEMPOOL(pool);
 	struct PEG *peg = mempool_add(pool, peg_new(s, strlen(s)), free);
 	struct Array *captures = mempool_add(pool, array_new(), array_free);
 	int result = peg_match(peg, rule, captures_to_array, captures);
@@ -61,10 +61,8 @@ check_captures(RuleFn rule, const char *s, unsigned int tag, const char *sep)
 				array_append(caps, mempool_add(pool, xstrndup(cap->buf, cap->len), free));
 			}
 		}
-		mempool_free(pool);
 		return str_join(caps, sep);
 	}
-	mempool_free(pool);
 	return NULL;
 }
 

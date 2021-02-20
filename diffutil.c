@@ -41,7 +41,7 @@
 char *
 diff_to_patch(struct diff *p, const char *origin_name, const char *target_name, int color)
 {
-	struct Mempool *pool = mempool_new();
+	SCOPE_MEMPOOL(pool);
 	struct Array *result = mempool_add(pool, array_new(), array_free);
 
 	const char *color_add = ANSI_COLOR_GREEN;
@@ -84,7 +84,5 @@ diff_to_patch(struct diff *p, const char *origin_name, const char *target_name, 
 		}
 	}
 
-	buf = str_join(result, "");
-	mempool_free(pool);
-	return buf;
+	return str_join(result, "");
 }
