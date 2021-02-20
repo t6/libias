@@ -29,4 +29,4 @@
 
 struct diff;
 
-char *diff_to_patch(struct diff *, const char *, const char *, int);
+char *diff_to_patch(struct diff *, int);

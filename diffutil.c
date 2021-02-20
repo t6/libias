@@ -39,7 +39,7 @@
 #include "util.h"
 
 char *
-diff_to_patch(struct diff *p, const char *origin_name, const char *target_name, int color)
+diff_to_patch(struct diff *p, int color)
 {
 	SCOPE_MEMPOOL(pool);
 	struct Array *result = mempool_add(pool, array_new(), array_free);
@@ -61,9 +61,8 @@ diff_to_patch(struct diff *p, const char *origin_name, const char *target_name, 
 		target_lines = MAX(target_lines, p->ses[i].targetIdx);
 	}
 	char *buf;
-	xasprintf(&buf, "%s--- %s\n%s+++ %s\n%s@@ -%zu,%zu +%zu,%zu @@%s\n",
-		color_delete, origin_name, color_add, target_name, color_context,
-		origin_start, origin_lines, target_start, target_lines, color_reset);
+	xasprintf(&buf, "%s@@ -%zu,%zu +%zu,%zu @@%s\n", color_context, origin_start,
+		origin_lines, target_start, target_lines, color_reset);
 	array_append(result, mempool_add(pool, buf, free));
 
 	for (size_t i = 0; i < p->sessz; i++) {
