@@ -32,7 +32,7 @@
 			putchar('.'); \
 		} else { \
 			char *buf; \
-			xasprintf(&buf, "%s:%d %s", __FILE__, __LINE__, #x); \
+			xasprintf(&buf, "%s:%d:1:FAIL: %s", __FILE__, __LINE__, #x); \
 			array_append(failures, buf); \
 			putchar('X'); \
 		} \
@@ -41,7 +41,7 @@
 
 #define TEST_IF(x) if (!(x)) { \
 			char *buf; \
-			xasprintf(&buf, "%s:%d %s", __FILE__, __LINE__, #x); \
+			xasprintf(&buf, "%s:%d:1:FAIL: %s", __FILE__, __LINE__, #x); \
 			array_append(failures, buf); \
 			putchar('X'); \
 			fflush(stdout); \
@@ -54,7 +54,7 @@
 			putchar('.'); \
 		} else { \
 			char *buf; \
-			xasprintf(&buf, "%s:%d "#a" "#cmp" "#b"", __FILE__, __LINE__); \
+			xasprintf(&buf, "%s:%d:1:FAIL: "#a" "#cmp" "#b"", __FILE__, __LINE__); \
 			array_append(failures, buf); \
 			putchar('X'); \
 		} \
@@ -71,7 +71,7 @@
 		run_tests(); \
 		printf("\n"); \
 		ARRAY_FOREACH(failures, const char *, err) { \
-			printf("\tFAIL: %s\n", err); \
+			puts(err); \
 		} \
 		return array_len(failures) != 0; \
 	} \
