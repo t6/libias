@@ -336,13 +336,14 @@ peg_new(const char *const buf, size_t len)
 	struct PEG *peg = xmalloc(sizeof(struct PEG));
 	memcpy(peg, &proto, sizeof(*peg));
 
-	peg->pool= mempool_new();
+	peg->pool = mempool_new();
+	mempool_add(peg->pool, peg, free);
 
 	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;
-	peg->rule_trace = queue_new();
+	peg->rule_trace = mempool_add(peg->pool, queue_new(), queue_free);
 
-	peg->captures.queue = queue_new();
-	peg->captures.pos = stack_new();
+	peg->captures.queue = mempool_add(peg->pool, queue_new(), queue_free);
+	peg->captures.pos = mempool_add(peg->pool, stack_new(), stack_free);
 
 	return peg;
 }
@@ -353,11 +354,5 @@ peg_free(struct PEG *peg)
 	if (peg == NULL) {
 		return;
 	}
-
-	queue_free(peg->rule_trace);
-	queue_free(peg->captures.queue);
-	stack_free(peg->captures.pos);
 	mempool_free(peg->pool);
-
-	free(peg);
 }
