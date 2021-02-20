@@ -50,6 +50,9 @@ mempool_new()
 void
 mempool_free(struct Mempool *pool)
 {
+	if (pool == NULL) {
+		return;
+	}
 	mempool_release(pool);
 	queue_free(pool->queue);
 	free(pool);
