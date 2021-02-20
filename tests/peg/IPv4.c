@@ -26,12 +26,20 @@
  * SUCH DAMAGE.
  */
 
-#include "tests/peg/common.h"
+#include "config.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "array.h"
+#include "mempool.h"
+#include "peg.h"
+#include "peg/macros.h"
+#include "test.h"
+#include "util.h"
 
 static RULE(byte);
 static RULE(byte_1);
@@ -118,16 +126,56 @@ RULE(ipv4) {
 	return 0;
 }
 
+static enum PEGCaptureFlag
+captures_to_array(struct PEGCapture *capture, void *userdata)
+{
+	struct Array *captures = userdata;
+	array_append(captures, capture);
+	return PEG_CAPTURE_KEEP;
+}
+
+static char *
+check_captures(RuleFn rule, const char *s, unsigned int tag, const char *sep)
+{
+	SCOPE_MEMPOOL(pool);
+	struct PEG *peg = mempool_add(pool, peg_new(s, strlen(s)), free);
+	struct Array *captures = mempool_add(pool, array_new(), array_free);
+	int result = peg_match(peg, rule, captures_to_array, captures);
+	if (result) {
+		struct Array *caps = mempool_add(pool, array_new(), array_free);
+		ARRAY_FOREACH(captures, struct PEGCapture *, cap) {
+			if (cap->tag == tag) {
+				array_append(caps, mempool_add(pool, xstrndup(cap->buf, cap->len), free));
+			}
+		}
+		return str_join(caps, sep);
+	}
+	return NULL;
+}
+
+static int
+check_match(RuleFn rule, const char *s, int expected, void *capture)
+{
+	struct PEG *peg = peg_new(s, strlen(s));
+	int result;
+	if (capture) {
+		result = peg_match(peg, rule, capture_machine, capture);
+	} else {
+		result = peg_match(peg, rule, NULL, NULL);
+	}
+	peg_free(peg);
+	return result == expected;
+}
+
 TESTS() {
-	TEST(check_match(ipv4, "10.240.250.250", 1));
-	TEST(check_match(ipv4, "0.0.0.0", 1));
+	TEST(check_match(ipv4, "10.240.250.250", 1, NULL));
+	TEST(check_match(ipv4, "0.0.0.0", 1, NULL));
 	TEST_STREQ(check_captures(ipv4, "10.240.250.250", 0, "@"), "10@240@250@250");
 	TEST_STREQ(check_captures(ipv4, "10.240.250.250", 2, "@"), "25@25");
 
-	struct PEG *peg;
 	struct IPv4Capture capture;
 	memset(&capture, 0, sizeof(capture));
-	TEST_IF((peg = peg_new("1.2.3.4", 7)) && peg_match(peg, ipv4, capture_machine, &capture)) {
+	TEST_IF(check_match(ipv4, "1.2.3.4", 1, &capture)) {
 		TEST_STREQ(capture.full, "1.2.3.4");
 		TEST_STREQ(capture.bytes[0], "1");
 		TEST_STREQ(capture.bytes[1], "2");
@@ -135,11 +183,9 @@ TESTS() {
 		TEST_STREQ(capture.bytes[3], "4");
 		TEST(capture.bytes[4] == NULL);
 	}
-	peg_free(peg);
-	peg = NULL;
 
 	memset(&capture, 0, sizeof(capture));
-	TEST_IF((peg = peg_new("255.2.3.4", 9)) && peg_match(peg, ipv4, capture_machine, &capture)) {
+	TEST_IF(check_match(ipv4, "255.2.3.4", 1, &capture)) {
 		TEST_STREQ(capture.full, "255.2.3.4");
 		TEST_STREQ(capture.bytes[0], "255");
 		TEST_STREQ(capture.bytes[1], "2");
@@ -147,13 +193,11 @@ TESTS() {
 		TEST_STREQ(capture.bytes[3], "4");
 		TEST_STREQ(capture.bytes[4], "25");
 	}
-	peg_free(peg);
-	peg = NULL;
 
 	// Can we partially match an ipv4 address with trailing garbage?
 	// Does the capture machine return the correct full match?
 	memset(&capture, 0, sizeof(capture));
-	TEST_IF((peg = peg_new("255.2.3.4garbage", 16)) && peg_match(peg, ipv4_address, capture_machine, &capture)) {
+	TEST_IF(check_match(ipv4_address, "255.2.3.4garbage", 1, &capture)) {
 		TEST_STREQ(capture.full, "255.2.3.4");
 		TEST_STREQ(capture.bytes[0], "255");
 		TEST_STREQ(capture.bytes[1], "2");
@@ -161,10 +205,8 @@ TESTS() {
 		TEST_STREQ(capture.bytes[3], "4");
 		TEST_STREQ(capture.bytes[4], "25");
 	}
-	peg_free(peg);
-	peg = NULL;
 
-	TEST(check_match(ipv4, "256.0.0.0", 0));
-	TEST(check_match(ipv4, "256.2.3.4", 0));
-	TEST(check_match(ipv4, "256.2.3.2514", 0));
+	TEST(check_match(ipv4, "256.0.0.0", 0, NULL));
+	TEST(check_match(ipv4, "256.2.3.4", 0, NULL));
+	TEST(check_match(ipv4, "256.2.3.2514", 0, NULL));
 }

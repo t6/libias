@@ -26,16 +26,30 @@
  * SUCH DAMAGE.
  */
 
-#include "tests/peg/common.h"
+#include "config.h"
 
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "map.h"
+#include "array.h"
 #include "json.h"
+#include "mempool.h"
+#include "peg.h"
 #include "peg/json.h"
+#include "peg/macros.h"
+#include "test.h"
+#include "util.h"
+
+static int
+check_match(RuleFn rule, const char *s, int expected)
+{
+	struct PEG *peg = peg_new(s, strlen(s));
+	int result = peg_match(peg, rule, NULL, NULL);
+	peg_free(peg);
+	return result == expected;
+}
 
 TESTS() {
 	// int fd = open("pkg-status.json", O_RDONLY);
@@ -45,7 +59,6 @@ TESTS() {
 	TEST(check_match(peg_json_decode, "[null]", 1));
 	TEST(check_match(peg_json_decode, "\"\\\"foo\"", 1));
 	TEST(check_match(peg_json_decode, "\"foo\"", 1));
-	TEST_STREQ(check_captures(peg_json_decode, "{\"f\":[null,1]}", 1, "@"), "");
 	TEST(check_match(peg_json_decode, "[null,null]", 1));
 	TEST(check_match(peg_json_decode, "[]", 1));
 	TEST(check_match(peg_json_decode, "[  ]", 1));

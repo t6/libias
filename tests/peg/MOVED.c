@@ -26,12 +26,18 @@
  * SUCH DAMAGE.
  */
 
-#include "tests/peg/common.h"
+#include "config.h"
 
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "array.h"
+#include "peg.h"
+#include "peg/macros.h"
+#include "test.h"
+#include "util.h"
 
 static RULE(comment);
 static RULE(digit);
@@ -88,12 +94,21 @@ RULE(MOVED) {
 	return 0;
 }
 
+static int
+check_match(const char *s, int expected)
+{
+	struct PEG *peg = peg_new(s, strlen(s));
+	int result = peg_match(peg, MOVED, NULL, NULL);
+	peg_free(peg);
+	return result == expected;
+}
+
 TESTS() {
 	const char * buf = "#\naudio/polypaudio|audio/pulseaudio|2008-01-01|Project renamed\n# asdjflasdk\n"
 	"audio/akode-plugins-polypaudio||2008-01-01|Polypaudio is obsolete in favor of Pulseaudio\n"
 	"audio/akode-plugins-polypaudio||2008-01-01|Polypaudio is obsolete in favor of Pulseaudio\n";
 
-	TEST(check_match(MOVED, buf, 1));
-	TEST(check_match(MOVED, "", 1));
-	TEST(check_match(MOVED, "foo", 0));
+	TEST(check_match(buf, 1));
+	TEST(check_match("", 1));
+	TEST(check_match("foo", 0));
 }

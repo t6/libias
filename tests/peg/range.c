@@ -25,7 +25,17 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#include "tests/peg/common.h"
+
+#include "config.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include "array.h"
+#include "peg.h"
+#include "peg/macros.h"
+#include "test.h"
+#include "util.h"
 
 static RULE(az);
 static RULE(range);
@@ -42,6 +52,15 @@ RULE(range) {
 	if (EOS())
 	return 1;
 	return 0;
+}
+
+static int
+check_match(RuleFn rule, const char *s, int expected)
+{
+	struct PEG *peg = peg_new(s, strlen(s));
+	int result = peg_match(peg, rule, NULL, NULL);
+	peg_free(peg);
+	return result == expected;
 }
 
 TESTS() {

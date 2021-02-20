@@ -64,10 +64,10 @@ set.o: config.h array.h map.h set.h util.h
 stack.o: config.h stack.h util.h
 tests/array/array.o: config.h array.h test.h util.h
 tests/json/json.o: array.h map.h json.h test.h util.h
-tests/peg/IPv4.o: tests/peg/common.h
-tests/peg/json.o: tests/peg/common.h map.h json.h peg/json.h
-tests/peg/MOVED.o: tests/peg/common.h
-tests/peg/range.o: tests/peg/common.h
+tests/peg/IPv4.o: config.h array.h mempool.h peg.h peg/macros.h test.h util.h
+tests/peg/json.o: config.h array.h json.h mempool.h peg.h peg/json.h peg/macros.h test.h util.h
+tests/peg/MOVED.o: config.h array.h peg.h peg/macros.h test.h util.h
+tests/peg/range.o: config.h array.h peg.h peg/macros.h test.h util.h
 tests/queue/queue.o: config.h array.h queue.h test.h util.h
 tests/stack/stack.o: config.h array.h stack.h test.h util.h
 tests/util/str.o: config.h array.h test.h util.h
