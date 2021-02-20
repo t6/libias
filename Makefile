@@ -1,5 +1,5 @@
 .SUFFIXES: .test
-.PHONY: all clean lint test
+.PHONY: all clean deps lint test
 
 include Makefile.configure
 
@@ -29,12 +29,6 @@ TESTS=		tests/array/array.test \
 		tests/queue/queue.test \
 		tests/stack/stack.test \
 		tests/util/str.test
-TESTS_ARRAY!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/array/' | sed 's,\.test$$,.o,'
-TESTS_JSON!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/json/' | sed 's,\.test$$,.o,'
-TESTS_PEG!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/peg/' | sed 's,\.test$$,.o,'
-TESTS_QUEUE!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/queue/' | sed 's,\.test$$,.o,'
-TESTS_STACK!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/stack/' | sed 's,\.test$$,.o,'
-TESTS_UTIL!=	echo ${TESTS} | tr ' ' '\n' | grep '^tests/util/' | sed 's,\.test$$,.o,'
 
 all: libias.a
 
@@ -54,26 +48,46 @@ ${TESTS}: libias.a
 libias.a: ${OBJS}
 	${AR} rcs libias.a ${OBJS}
 
+#
 array.o: config.h array.h diff.h util.h
+compats.o: config.h
 diff.o: config.h diff.h
 diffutil.o: config.h array.h diff.h diffutil.h mempool.h util.h
 json.o: config.h array.h json.h map.h mempool.h peg.h peg/json.h stack.h util.h
 map.o: config.h array.h map.h util.h
 mempool.o: config.h mempool.h queue.h util.h
-peg.o: config.h array.h mempool.h peg.h queue.h stack.h utf8.h util.h
+peg.o: config.h array.h map.h mempool.h peg.h queue.h stack.h utf8.h util.h
 peg/clang.o: config.h peg.h peg/macros.h
 peg/json.o: config.h array.h map.h mempool.h peg.h peg/json.h peg/macros.h stack.h util.h
 queue.o: config.h queue.h util.h
 set.o: config.h array.h map.h set.h util.h
 stack.o: config.h stack.h util.h
+tests/array/array.o: config.h array.h test.h util.h
+tests/json/json.o: array.h map.h json.h test.h util.h
+tests/peg/IPv4.o: tests/peg/common.h
+tests/peg/json.o: tests/peg/common.h map.h json.h peg/json.h
+tests/peg/MOVED.o: tests/peg/common.h
+tests/peg/range.o: tests/peg/common.h
+tests/queue/queue.o: config.h array.h queue.h test.h util.h
+tests/stack/stack.o: config.h array.h stack.h test.h util.h
+tests/util/str.o: config.h array.h test.h util.h
 utf8.o: config.h utf8.h
 util.o: config.h array.h util.h
-${TESTS_ARRAY}: config.h array.h test.h util.h
-${TESTS_JSON}: config.h array.h json.h test.h util.h
-${TESTS_PEG}: config.h array.h mempool.h peg.h peg/macros.h test.h tests/peg/common.h util.h
-${TESTS_QUEUE}: config.h array.h queue.h test.h util.h
-${TESTS_STACK}: config.h array.h stack.h test.h util.h
-${TESTS_UTIL}: config.h array.h test.h util.h
+
+deps:
+	@find . -type f -name '*.c' | sort | xargs -L1 awk '/^#include "/ { \
+		if (!filename) { \
+			printf("%s.o:", substr(FILENAME, 3, length(FILENAME) - 4)); \
+			filename = 1; \
+		} \
+		printf(" %s", substr($$2, 2, length($$2) - 2)) \
+	} \
+	END { if (filename) { print "" } }' > Makefile.deps
+	@mv Makefile Makefile.bak
+	@awk '/^#$$/ { print; deps = 1 } \
+	deps && /^$$/ { deps = 0; system("cat Makefile.deps") } \
+	!deps { print; }' Makefile.bak > Makefile
+	@rm -f Makefile.bak Makefile.deps
 
 clean:
 	@find . -name '*.o' | xargs rm -f

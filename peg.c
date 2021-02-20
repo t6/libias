@@ -40,8 +40,8 @@
 #include "map.h"
 #include "mempool.h"
 #include "peg.h"
-#include "stack.h"
 #include "queue.h"
+#include "stack.h"
 #include "utf8.h"
 #include "util.h"
 
