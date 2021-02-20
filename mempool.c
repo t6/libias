@@ -32,18 +32,18 @@
 #include <stdlib.h>
 
 #include "mempool.h"
-#include "queue.h"
+#include "stack.h"
 #include "util.h"
 
 struct Mempool {
-	struct Queue *queue;
+	struct Stack *stack;
 };
 
 struct Mempool *
 mempool_new()
 {
 	struct Mempool *pool = xmalloc(sizeof(struct Mempool));
-	pool->queue = queue_new();
+	pool->stack = stack_new();
 	return pool;
 }
 
@@ -54,7 +54,7 @@ mempool_free(struct Mempool *pool)
 		return;
 	}
 	mempool_release(pool);
-	queue_free(pool->queue);
+	stack_free(pool->stack);
 	free(pool);
 }
 
@@ -72,8 +72,8 @@ mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 {
 	if (ptr) {
 		assert(freefn != NULL);
-		queue_push(pool->queue, ptr);
-		queue_push(pool->queue, freefn);
+		stack_push(pool->stack, freefn);
+		stack_push(pool->stack, ptr);
 	}
 	return ptr;
 }
@@ -82,8 +82,8 @@ void
 mempool_release(struct Mempool *pool)
 {
 	void *ptr;
-	while ((ptr = queue_pop(pool->queue))) {
-		void (*freefn)(void *) = queue_pop(pool->queue);
+	while ((ptr = stack_pop(pool->stack))) {
+		void (*freefn)(void *) = stack_pop(pool->stack);
 		freefn(ptr);
 	}
 }
