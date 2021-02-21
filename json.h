@@ -33,9 +33,7 @@ enum JSONType {
 	JSON_ARRAY,
 	JSON_FALSE,
 	JSON_NULL,
-	JSON_NUMBER_FLOAT,
-	JSON_NUMBER_INT,
-	JSON_NUMBER_UNREPRESENTABLE,
+	JSON_NUMBER,
 	JSON_OBJECT,
 	JSON_STRING,
 	JSON_TRUE,
@@ -46,6 +44,7 @@ void json_free(struct JSON *);
 
 enum JSONType json_type(struct JSON *);
 struct Array *json_unwrap_array(struct JSON *);
+const char *json_unwrap_number(struct JSON *);
 struct Map *json_unwrap_object(struct JSON *);
 const char *json_unwrap_string(struct JSON *);
 

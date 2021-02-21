@@ -47,11 +47,6 @@ struct JSON {
 	enum JSONType type;
 	union {
 		struct Array *array;
-		union {
-			long long i;
-			double f;
-			char *u;
-		} number;
 		struct Map *object;
 		char *string;
 	};
@@ -144,49 +139,12 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		value->type = JSON_TRUE;
 		stack_push(data->values, value);
 		break;
-	} case NUMBER_EXPONENT:
-		data->num.exponent = capture;
-		break;
-	case NUMBER_FRACTION:
-		data->num.fraction = capture;
-		break;
-	case NUMBER_INTEGER:
-		data->num.integer = capture;
-		break;
-	case NUMBER_MINUS:
-		data->num.minus = 1;
-		break;
-	case NUMBER_FULL: {
+	} case CAPTURE_NUMBER: {
 		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
-		if (data->num.fraction) {
-			value->type = JSON_NUMBER_UNREPRESENTABLE;
-			value->number.u = mempool_add(data->pool, xstrndup(capture->buf, capture->len), free);
-			// XXX
-		} else {
-			char *buf = xstrndup(data->num.integer->buf, data->num.integer->len);
-			const char *errstr;
-			long long i = strtonum(buf, 0, INT64_MAX, &errstr);
-			if (errstr == NULL) {
-				if (data->num.exponent) {
-					value->type = JSON_NUMBER_UNREPRESENTABLE;
-					value->number.u = mempool_add(data->pool, xstrndup(capture->buf, capture->len), free);
-					// XXX
-				} else {
-					value->type = JSON_NUMBER_INT;
-					value->number.i = i;
-				}
-				if (data->num.minus) {
-					value->number.i *= -1;
-				}
-			} else {
-				value->type = JSON_NUMBER_UNREPRESENTABLE;
-				value->number.u = mempool_add(data->pool, xstrndup(capture->buf, capture->len), free);
-			}
-			free(buf);
-		}
+		value->type = JSON_NUMBER;
+		value->string = mempool_add(data->pool, xstrndup(capture->buf, capture->len), free);
 		stack_push(data->values, value);
-		memset(&data->num, 0, sizeof(data->num));
 		break;
 	} }
 
@@ -234,6 +192,16 @@ json_unwrap_array(struct JSON *json)
 		return json->array;
 	} else {
 		return NULL;
+	}
+}
+
+const char *
+json_unwrap_number(struct JSON *json)
+{
+	if (json->type == JSON_NUMBER) {
+		return json->string;
+	} else {
+		return 0;
 	}
 }
 

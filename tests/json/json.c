@@ -70,14 +70,15 @@ TESTS() {
 	TEST_STREQ(s, "bar");
 	}}}}}
 
-	buf = "[[1],[2,[3,[4]]]]";
+	buf = "[[1e2],[2,[3,[4]]]]";
 	json = json_new(buf, strlen(buf));
 	TEST_IF(json && json_type(json) == JSON_ARRAY) {
 	array = json_unwrap_array(json);
 	TEST_IF(array_len(array) == 2) {
 	array = json_unwrap_array(array_get(array, 0));
 	TEST_IF(array && json_type(json) == JSON_ARRAY && array_len(array) == 1) {
-	TEST(json_type(array_get(array, 0)) == JSON_NUMBER_INT);
+	TEST(json_type(array_get(array, 0)) == JSON_NUMBER);
+	TEST_STREQ(json_unwrap_number(array_get(array, 0)), "1e2");
 	buf = "{\"1\":[true,null,false]}";
 	json = json_new(buf, strlen(buf));
 	TEST_IF(json && json_type(json) == JSON_OBJECT) {

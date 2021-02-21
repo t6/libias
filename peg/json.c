@@ -120,7 +120,7 @@ RULE(value) {
 	if (!CAPTURE(STRING("true"), 0, CAPTURE_TRUE))
 	if (!MATCH(object))
 	if (!MATCH(array))
-	if (!CAPTURE(MATCH(number), 0, NUMBER_FULL))
+	if (!CAPTURE(MATCH(number), 0, CAPTURE_NUMBER))
 	if (!MATCH(string))
 	return 0;
 	return 1;
@@ -242,10 +242,10 @@ RULE(fraction) {
 }
 
 RULE(number) {
-	if (OPT(CAPTURE(MATCH(minus), 0, NUMBER_MINUS)))
-	if (CAPTURE(MATCH(integer), 0, NUMBER_INTEGER))
-	if (OPT(CAPTURE(MATCH(fraction), 0, NUMBER_FRACTION)))
-	if (OPT(CAPTURE(MATCH(exponent), 0, NUMBER_EXPONENT)))
+	if (OPT(MATCH(minus)))
+	if (MATCH(integer))
+	if (OPT(MATCH(fraction)))
+	if (OPT(MATCH(exponent)))
 	return 1;
 	return 0;
 }
