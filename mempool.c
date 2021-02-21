@@ -70,7 +70,7 @@ mempool_cleanup(struct Mempool **pool)
 void *
 mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 {
-	if (ptr) {
+	if (ptr && !stack_contains(pool->stack, ptr)) {
 		assert(freefn != NULL);
 		stack_push(pool->stack, freefn);
 		stack_push(pool->stack, ptr);

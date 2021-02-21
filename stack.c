@@ -68,6 +68,17 @@ stack_len(struct Stack *stack)
 	return stack->len;
 }
 
+int
+stack_contains(struct Stack *stack, void *value)
+{
+	for (struct StackNode *node = stack->head; node; node = node->next) {
+		if (value == node->value) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 void *
 stack_peek(struct Stack *stack)
 {

@@ -70,6 +70,17 @@ queue_len(struct Queue *queue)
 	return queue->len;
 }
 
+int
+queue_contains(struct Queue *queue, void *value)
+{
+	for (struct QueueNode *node = queue->head; node; node = node->next) {
+		if (value == node->value) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 void *
 queue_peek(struct Queue *queue)
 {

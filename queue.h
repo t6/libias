@@ -32,6 +32,7 @@ struct Queue;
 struct Queue *queue_new(void);
 void queue_free(struct Queue *);
 size_t queue_len(struct Queue *);
+int queue_contains(struct Queue *, void *);
 void *queue_peek(struct Queue *);
 void *queue_pop(struct Queue *);
 void *queue_dequeue(struct Queue *);
