@@ -75,14 +75,15 @@ utf8.o: config.h utf8.h
 util.o: config.h array.h util.h
 
 deps:
-	@find . -type f -name '*.c' | sort | xargs -L1 awk '/^#include "/ { \
+	@for f in $$(git ls-files | grep '.*\.c$$' | sort); do \
+	awk '/^#include "/ { \
 		if (!filename) { \
-			printf("%s.o:", substr(FILENAME, 3, length(FILENAME) - 4)); \
+			printf("%s.o:", substr(FILENAME, 1, length(FILENAME) - 2)); \
 			filename = 1; \
 		} \
 		printf(" %s", substr($$2, 2, length($$2) - 2)) \
 	} \
-	END { if (filename) { print "" } }' > Makefile.deps
+	END { if (filename) { print "" } }' $$f; done > Makefile.deps
 	@mv Makefile Makefile.bak
 	@awk '/^#$$/ { print; deps = 1 } \
 	deps && /^$$/ { deps = 0; system("cat Makefile.deps") } \
