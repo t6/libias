@@ -237,12 +237,7 @@ RULE(expression) {
 
 RULE(ws) { return ANY(wschar); }
 
-RULE(wschar) {
-	if (!CHAR(0x20)) // space
-	if (!CHAR(0x09)) // horizontal tab
-	return 0;
-	return 1;
-}
+RULE(wschar) { return SET(0x20, 0x09); } // space or horizontal tab
 
 // Newline
 
@@ -290,8 +285,8 @@ RULE(keyval) {
 }
 
 RULE(key) {
-	if (!MATCH(simple_key))
 	if (!MATCH(dotted_key))
+	if (!MATCH(simple_key))
 	return 0;
 	return 1;
 }
@@ -306,8 +301,7 @@ RULE(simple_key) {
 RULE(unquoted_key_0) {
 	if (!MATCH(ALPHA))
 	if (!MATCH(DIGIT))
-	if (!CHAR(0x2D)) // -
-	if (!CHAR(0x5F)) // _
+	if (!SET(0x2D, 0x5F)) // - _
 	return 0;
 	return 1;
 }
@@ -412,17 +406,14 @@ RULE(escaped) {
 
 RULE(escape) { return CHAR(0x5C); } // backslash
 
-RULE(escape_seq_char_0) {
-	if (!CHAR(0x22)) // "    quotation mark  U+0022
-	if (!CHAR(0x5C)) // \    reverse solidus U+005C
-	if (!CHAR(0x62)) // b    backspace       U+0008
-	if (!CHAR(0x66)) // f    form feed       U+000C
-	if (!CHAR(0x6E)) // n    line feed       U+000A
-	if (!CHAR(0x72)) // r    carriage return U+000D
-	if (!CHAR(0x74)) // t    tab             U+0009
-	return 0;
-	return 1;
-}
+// "    quotation mark  U+0022
+// \    reverse solidus U+005C
+// b    backspace       U+0008
+// f    form feed       U+000C
+// n    line feed       U+000A
+// r    carriage return U+000D
+// t    tab             U+0009
+RULE(escape_seq_char_0) { return SET(0x22, 0x5C, 0x62, 0x66, 0x6E, 0x72, 0x74); }
 
 RULE(escape_seq_char_1) {
 	// uXXXX                U+XXXX
@@ -492,7 +483,10 @@ RULE(mlb_char) {
 }
 
 RULE(mlb_quotes_0) { return REPEAT(quotation_mark, 2); }
-RULE(mlb_quotes) { return SOME(mlb_quotes_0); }
+RULE(mlb_quotes) {
+	if (LOOKAHEAD(ml_basic_string_delim)) return 0;
+	return SOME(mlb_quotes_0);
+}
 
 RULE(mlb_unescaped) {
 	if (!MATCH(wschar))
@@ -578,23 +572,33 @@ RULE(mll_content) {
 
 RULE(mll_char) {
 	if (!CHAR(0x09))
-	if (!RANGE(0x20, 0x26))
-	if (!RANGE(0x28, 0x7E))
-	if (!MATCH(non_ascii))
-	return 0;
+	if (!RANGE(0x20, 0x26)) {
+		if (LOOKAHEAD(ml_literal_string_delim)) return 0;
+		// XXX: Bug in grammar?  Range does not include 0x27
+		// (apostrophe) but without it we will not match
+		// raw-multiline-string.toml
+		if (!MATCH(apostrophe))
+		if (!RANGE(0x28, 0x7E))
+		if (!MATCH(non_ascii))
+		return 0;
+		return 1;
+	}
 	return 1;
 }
 
 RULE(mll_quotes_0) { return REPEAT(apostrophe, 2); }
-RULE(mll_quotes) { return SOME(mll_quotes_0); }
+RULE(mll_quotes) {
+	if (LOOKAHEAD(ml_literal_string_delim)) return 0;
+	return SOME(mll_quotes_0);
+}
 
 // Integer
 
 RULE(integer) {
-	if (!MATCH(dec_int))
 	if (!MATCH(hex_int))
 	if (!MATCH(oct_int))
 	if (!MATCH(bin_int))
+	if (!MATCH(dec_int))
 	return 0;
 	return 1;
 }
@@ -646,8 +650,8 @@ RULE(unsigned_dec_int_2) {
 }
 
 RULE(unsigned_dec_int) {
-	if (!MATCH(DIGIT))
 	if (!MATCH(unsigned_dec_int_0))
+	if (!MATCH(DIGIT))
 	return 0;
 	return 1;
 }
@@ -722,8 +726,7 @@ RULE(bin_int) {
 
 RULE(floating_0) {
 	if (MATCH(float_int_part))
-	if (MATCH(floating_0))
-	if (MATCH(special_float))
+	if (MATCH(floating_1))
 	return 1;
 	return 0;
 }
@@ -744,7 +747,7 @@ RULE(floating_2) {
 
 RULE(floating) {
 	if (MATCH(floating_0))
-	if (MATCH(floating_1))
+	if (MATCH(special_float))
 	return 1;
 	return 0;
 }
@@ -782,7 +785,7 @@ RULE(zero_prefixable_int) {
 }
 
 RULE(exponent) {
-	if (CHAR('e'))
+	if (SET('e', 'E'))
 	if (MATCH(float_exp_part))
 	return 1;
 	return 0;
@@ -853,13 +856,7 @@ RULE(date_fullyear) { return REPEAT(DIGIT, 4); }
 RULE(date_month) { return REPEAT(DIGIT, 2); } // 01-12
 RULE(date_mday) { return REPEAT(DIGIT, 2); } // 01-28, 01-29, 01-30, 01-31 based on month/year
 
-RULE(time_delim) {
-	if (!CHAR('T'))
-	if (!CHAR(0x20))
-	return 0;
-	return 1;
-}
-
+RULE(time_delim) { return SET('T', 't', 0x20); }
 RULE(time_hour) { return REPEAT(DIGIT, 2); } // 00-23
 RULE(time_minute) { return REPEAT(DIGIT, 2); } // 00-59
 RULE(time_second) { return REPEAT(DIGIT, 2); } // 00-58, 00-59, 00-60 based on leap second rules
@@ -871,12 +868,7 @@ RULE(time_secfrac) {
 	return 0;
 }
 
-RULE(time_numoffset_0) {
-	if (!CHAR('+'))
-	if (!CHAR('-'))
-	return 0;
-	return 1;
-}
+RULE(time_numoffset_0) { return SET('+', '-'); }
 
 RULE(time_numoffset) {
 	if (MATCH(time_numoffset_0))
@@ -888,7 +880,7 @@ RULE(time_numoffset) {
 }
 
 RULE(time_offset) {
-	if (!CHAR('Z'))
+	if (!SET('Z', 'z'))
 	if (!MATCH(time_numoffset))
 	return 0;
 	return 1;
@@ -978,7 +970,7 @@ RULE(array_values_1) {
 	if (MATCH(ws_comment_newline))
 	if (MATCH(val))
 	if (MATCH(ws_comment_newline))
-	if (MATCH(array_sep))
+	if (OPT(MATCH(array_sep)))
 	return 1;
 	return 0;
 }
@@ -1120,7 +1112,8 @@ RULE(DIGIT) { return RANGE(0x30, 0x39); } // 0-9
 
 RULE(HEXDIG) {
 	if (!MATCH(DIGIT))
-	if (!SET('A', 'B', 'C', 'D', 'E', 'F'))
+	if (!RANGE('a', 'f'))
+	if (!RANGE('A', 'F'))
 	return 0;
 	return 1;
 }

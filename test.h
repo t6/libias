@@ -33,16 +33,18 @@ do { \
 	fflush(stdout); \
 } while(0)
 
-#define TEST_FAIL(msg) \
+#define TEST_FAIL_LOC(file, line, col, msg) \
 do { \
 	if (failureslen < nitems(failures)) { \
 		char *buf; \
-		xasprintf(&buf, "%s:%d:1:FAIL: %s", __FILE__, __LINE__, (msg)); \
+		xasprintf(&buf, "%s:%d:%d: FAIL: %s", file, line, col, msg); \
 		failures[failureslen++] = buf; \
 	} \
 	putchar('X'); \
 	fflush(stdout); \
 } while(0)
+
+#define TEST_FAIL(msg) TEST_FAIL_LOC(__FILE__, __LINE__, 1, msg)
 
 #define TEST(x) \
 if ((x)) { \

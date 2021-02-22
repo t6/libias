@@ -62,7 +62,6 @@ struct PEG {
 	struct Mempool *pool;
 };
 
-
 #define MATCHER_INIT() \
 	size_t MATCHER_INIT_captures_queue_len = queue_len(peg->captures.queue); \
 	size_t MATCHER_INIT_rule_trace_len = queue_len(peg->rule_trace); \
@@ -74,19 +73,24 @@ struct PEG {
 			queue_push(peg->rule_trace, (char *)rule); \
 		} \
 	} while (0)
-#define MATCHER_RETURN(x) do { \
-		if (!(x)) { \
-			for (size_t i = MATCHER_INIT_captures_queue_len; i < queue_len(peg->captures.queue); i++) { \
-				free(queue_dequeue(peg->captures.queue)); \
-			} \
-			if (peg->debug) { \
-				for (size_t i = MATCHER_INIT_rule_trace_len; i < queue_len(peg->rule_trace); i++) { \
-					queue_dequeue(peg->rule_trace); \
-				} \
-			} \
+#define MATCHER_POP(x) \
+do { \
+	for (size_t i = MATCHER_INIT_captures_queue_len; i < queue_len(peg->captures.queue); i++) { \
+		free(queue_dequeue(peg->captures.queue)); \
+	} \
+	if (peg->debug) { \
+		for (size_t i = MATCHER_INIT_rule_trace_len; i < queue_len(peg->rule_trace); i++) { \
+			queue_dequeue(peg->rule_trace); \
 		} \
-		return (x); \
-	} while (0)
+	} \
+} while(0)
+#define MATCHER_RETURN(x) \
+do { \
+	if (!(x)) { \
+		MATCHER_POP(); \
+	} \
+	return (x); \
+} while (0)
 
 int
 peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userdata)
@@ -248,6 +252,21 @@ peg_match_eos(struct PEG *peg, const char *rule)
 }
 
 int
+peg_match_lookahead(struct PEG *peg, const char *rule, RuleFn rulefn)
+{
+	MATCHER_INIT();
+	size_t pos = peg->pos;
+	if (rulefn(peg)) {
+		peg->pos = pos;
+		MATCHER_POP();
+		return 1;
+	} else {
+		peg->pos = pos;
+		MATCHER_RETURN(0);
+	}
+}
+
+int
 peg_match_range(struct PEG *peg, const char *rule, uint32_t a, uint32_t b)
 {
 	MATCHER_INIT();
@@ -261,6 +280,20 @@ peg_match_range(struct PEG *peg, const char *rule, uint32_t a, uint32_t b)
 		MATCHER_RETURN(0);
 	}
 	peg->pos += clen;
+	MATCHER_RETURN(1);
+}
+
+int
+peg_match_repeat(struct PEG *peg, const char *rule, RuleFn rulefn, int n)
+{
+	MATCHER_INIT();
+	size_t pos = peg->pos;
+	for (int i = 0; i < n; i++) {
+		if (!rulefn(peg)) {
+			peg->pos = pos;
+			MATCHER_RETURN(0);
+		}
+	}
 	MATCHER_RETURN(1);
 }
 
