@@ -68,12 +68,12 @@ stack.o: config.h stack.h util.h
 tests/array/array.o: config.h array.h test.h util.h
 tests/json/json.o: array.h map.h json.h test.h util.h
 tests/peg/IPv4.o: config.h array.h mempool.h peg.h peg/macros.h test.h util.h
-tests/peg/json.o: config.h array.h json.h peg.h peg/json.h test.h util.h
-tests/peg/MOVED.o: config.h array.h peg.h peg/macros.h test.h util.h
-tests/peg/range.o: config.h array.h peg.h peg/macros.h test.h util.h
-tests/peg/toml.o: config.h array.h peg.h peg/toml.h test.h util.h
-tests/queue/queue.o: config.h array.h queue.h test.h util.h
-tests/stack/stack.o: config.h array.h stack.h test.h util.h
+tests/peg/json.o: config.h json.h peg.h peg/json.h test.h util.h
+tests/peg/MOVED.o: config.h peg.h peg/macros.h test.h util.h
+tests/peg/range.o: config.h peg.h peg/macros.h test.h util.h
+tests/peg/toml.o: config.h peg.h peg/toml.h test.h util.h
+tests/queue/queue.o: config.h queue.h test.h util.h
+tests/stack/stack.o: config.h stack.h test.h util.h
 tests/util/str.o: config.h array.h test.h util.h
 utf8.o: config.h utf8.h
 util.o: config.h array.h util.h

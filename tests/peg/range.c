@@ -31,7 +31,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "array.h"
 #include "peg.h"
 #include "peg/macros.h"
 #include "test.h"

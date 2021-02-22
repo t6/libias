@@ -33,7 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "array.h"
 #include "peg.h"
 #include "peg/toml.h"
 #include "test.h"

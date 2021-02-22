@@ -27,52 +27,59 @@
  */
 #pragma once
 
-#define TEST(x) do { \
-		if ((x)) { \
-			putchar('.'); \
-		} else { \
-			char *buf; \
-			xasprintf(&buf, "%s:%d:1:FAIL: %s", __FILE__, __LINE__, #x); \
-			array_append(failures, buf); \
-			putchar('X'); \
-		} \
-		fflush(stdout); \
-	} while(0)
+#define TEST_OK() \
+do { \
+	putchar('.'); \
+	fflush(stdout); \
+} while(0)
 
-#define TEST_IF(x) if (!(x)) { \
-			char *buf; \
-			xasprintf(&buf, "%s:%d:1:FAIL: %s", __FILE__, __LINE__, #x); \
-			array_append(failures, buf); \
-			putchar('X'); \
-			fflush(stdout); \
-		} else if (putchar('.') && 1)
+#define TEST_FAIL(msg) \
+do { \
+	if (failureslen < nitems(failures)) { \
+		char *buf; \
+		xasprintf(&buf, "%s:%d:1:FAIL: %s", __FILE__, __LINE__, (msg)); \
+		failures[failureslen++] = buf; \
+	} \
+	putchar('X'); \
+	fflush(stdout); \
+} while(0)
 
-#define TEST_STR(cmp, a, b) do { \
-		const char *s1 = (a); \
-		const char *s2 = (b); \
-		if (s1 && s2 && strcmp(s1, s2) cmp 0) { \
-			putchar('.'); \
-		} else { \
-			char *buf; \
-			xasprintf(&buf, "%s:%d:1:FAIL: "#a" "#cmp" "#b"", __FILE__, __LINE__); \
-			array_append(failures, buf); \
-			putchar('X'); \
-		} \
-		fflush(stdout); \
-	} while(0)
+#define TEST(x) \
+if ((x)) { \
+	TEST_OK(); \
+} else { \
+	TEST_FAIL(#x); \
+}
+
+#define TEST_IF(x) \
+if (!(x)) { \
+	TEST_FAIL(#x); \
+} else if ((putchar('.') || 1) && (fflush(stdout) || 1))
+
+#define TEST_STR(cmp, a, b) \
+do { \
+	const char *s1 = (a); \
+	const char *s2 = (b); \
+	if (s1 && s2 && strcmp(s1, s2) cmp 0) { \
+		TEST_OK(); \
+	} else { \
+		TEST_FAIL(""#a" "#cmp" "#b""); \
+	} \
+} while(0)
+
 #define TEST_STREQ(a, b) TEST_STR(==, a, b)
 #define TEST_STRNEQ(a, b) TEST_STR(!=, a, b)
 
 #define TESTS() \
-	static struct Array *failures; \
-	static void run_tests(void); \
-	int main(int argc, char *argv[]) { \
-		failures = array_new(); \
-		run_tests(); \
-		printf("\n"); \
-		ARRAY_FOREACH(failures, const char *, err) { \
-			puts(err); \
-		} \
-		return array_len(failures) != 0; \
+static char *failures[512]; \
+static size_t failureslen; \
+static void run_tests(void); \
+int main(int argc, char *argv[]) { \
+	run_tests(); \
+	printf("\n"); \
+	for (size_t i = 0; i < failureslen; i++) { \
+		puts(failures[i]); \
 	} \
-	void run_tests()
+	return failureslen != 0; \
+} \
+void run_tests()

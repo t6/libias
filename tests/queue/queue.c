@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "array.h"
 #include "queue.h"
 #include "test.h"
 #include "util.h"
