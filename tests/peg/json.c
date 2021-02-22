@@ -35,10 +35,8 @@
 
 #include "array.h"
 #include "json.h"
-#include "mempool.h"
 #include "peg.h"
 #include "peg/json.h"
-#include "peg/macros.h"
 #include "test.h"
 #include "util.h"
 

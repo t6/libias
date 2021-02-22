@@ -27,19 +27,11 @@
  */
 #include "config.h"
 
-#include <assert.h>
 #include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
 
-#include "array.h"
-#include "map.h"
-#include "mempool.h"
 #include "peg.h"
 #include "peg/json.h"
 #include "peg/macros.h"
-#include "stack.h"
-#include "util.h"
 
 // See https://tools.ietf.org/html/rfc7159
 
