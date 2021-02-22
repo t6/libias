@@ -15,6 +15,7 @@ OBJS=		array.o \
 		peg.o \
 		peg/clang.o \
 		peg/json.o \
+		peg/toml.o \
 		queue.o \
 		set.o \
 		stack.o \
@@ -26,6 +27,7 @@ TESTS=		tests/array/array.test \
 		tests/peg/MOVED.test \
 		tests/peg/json.test \
 		tests/peg/range.test \
+		tests/peg/toml.test \
 		tests/queue/queue.test \
 		tests/stack/stack.test \
 		tests/util/str.test
@@ -59,6 +61,7 @@ mempool.o: config.h mempool.h stack.h util.h
 peg.o: config.h array.h map.h mempool.h peg.h queue.h stack.h utf8.h util.h
 peg/clang.o: config.h peg.h peg/macros.h
 peg/json.o: config.h peg.h peg/json.h peg/macros.h
+peg/toml.o: config.h peg.h peg/toml.h peg/macros.h
 queue.o: config.h queue.h util.h
 set.o: config.h array.h map.h set.h util.h
 stack.o: config.h stack.h util.h
@@ -68,6 +71,7 @@ tests/peg/IPv4.o: config.h array.h mempool.h peg.h peg/macros.h test.h util.h
 tests/peg/json.o: config.h array.h json.h peg.h peg/json.h test.h util.h
 tests/peg/MOVED.o: config.h array.h peg.h peg/macros.h test.h util.h
 tests/peg/range.o: config.h array.h peg.h peg/macros.h test.h util.h
+tests/peg/toml.o: config.h array.h peg.h peg/toml.h test.h util.h
 tests/queue/queue.o: config.h array.h queue.h test.h util.h
 tests/stack/stack.o: config.h array.h stack.h test.h util.h
 tests/util/str.o: config.h array.h test.h util.h

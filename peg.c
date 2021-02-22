@@ -116,7 +116,7 @@ peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userd
 		while ((rule = queue_pop(peg->rule_trace))) {
 			printf(" -> %s", rule);
 		}
-		printf("\n");
+		printf(" -> end@%zu\n", peg->pos);
 	}
 
 	return result;
