@@ -43,10 +43,12 @@
 
 // See https://tools.ietf.org/html/rfc7159
 
+//
+static RULE(JSON);
+static RULE(array);
 static RULE(array_0);
 static RULE(array_1);
 static RULE(array_values);
-static RULE(array);
 static RULE(begin_array);
 static RULE(begin_object);
 static RULE(character);
@@ -56,29 +58,28 @@ static RULE(e);
 static RULE(end_array);
 static RULE(end_object);
 static RULE(escape);
+static RULE(escaped);
 static RULE(escaped_0);
 static RULE(escaped_1);
-static RULE(escaped);
 static RULE(exponent);
 static RULE(fraction);
 static RULE(hexdigit);
 static RULE(integer);
-static RULE(JSON);
 static RULE(member);
-static RULE(minus_plus);
 static RULE(minus);
+static RULE(minus_plus);
 static RULE(name_separator);
 static RULE(number);
+static RULE(object);
 static RULE(object_0);
 static RULE(object_1);
 static RULE(object_members);
-static RULE(object);
 static RULE(plus);
 static RULE(quotation_mark);
 static RULE(string);
 static RULE(unescaped);
-static RULE(value_separator);
 static RULE(value);
+static RULE(value_separator);
 static RULE(ws);
 static RULE(zero);
 
