@@ -317,7 +317,7 @@ int
 main(void)
 {
 	const char *foo = "bar";
-	return(NULL == strnstr(foo, "a", 2);
+	return(NULL == strnstr(foo, "a", 2));
 }
 #endif /* TEST_STRNSTR */
 #if TEST_STRTONUM
