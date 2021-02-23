@@ -85,7 +85,7 @@ static RULE(expression);
 static RULE(expression_0);
 static RULE(expression_1);
 static RULE(expression_2);
-static RULE(false);
+static RULE(false_);
 static RULE(float_exp_part);
 static RULE(float_exp_part_0);
 static RULE(float_int_part);
@@ -136,7 +136,7 @@ static RULE(mll_char);
 static RULE(mll_content);
 static RULE(mll_quotes);
 static RULE(mll_quotes_0);
-static RULE(nan);
+static RULE(nan_);
 static RULE(newline);
 static RULE(non_ascii);
 static RULE(non_eol);
@@ -166,7 +166,7 @@ static RULE(time_numoffset_0);
 static RULE(time_offset);
 static RULE(time_secfrac);
 static RULE(time_second);
-static RULE(true);
+static RULE(true_);
 static RULE(underscore);
 static RULE(unquoted_key);
 static RULE(unquoted_key_0);
@@ -814,7 +814,7 @@ RULE(special_float_0) {
 
 RULE(special_float_1) {
 	if (!MATCH(inf))
-	if (!MATCH(nan))
+	if (!MATCH(nan_))
 	return 0;
 	return 1;
 }
@@ -827,19 +827,19 @@ RULE(special_float) {
 }
 
 RULE(inf) { return STRING("\x69\x6e\x66"); } // inf
-RULE(nan) { return STRING("\x6e\x61\x6e"); } // nan
+RULE(nan_) { return STRING("\x6e\x61\x6e"); } // nan
 
 // Boolean
 
 RULE(boolean) {
-	if (!MATCH(true))
-	if (!MATCH(false))
+	if (!MATCH(true_))
+	if (!MATCH(false_))
 	return 0;
 	return 1;
 }
 
-RULE(true) { return STRING("\x74\x72\x75\x65"); } // true
-RULE(false) { return STRING("\x66\x61\x6c\x73\x65"); } // false
+RULE(true_) { return STRING("\x74\x72\x75\x65"); } // true
+RULE(false_) { return STRING("\x66\x61\x6c\x73\x65"); } // false
 
 // Date and Time (as defined in RFC 3339)
 
