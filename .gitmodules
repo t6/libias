@@ -1,3 +1,6 @@
 [submodule "tests/peg/toml-test"]
 	path = tests/peg/toml/toml-test
 	url = https://github.com/BurntSushi/toml-test
+[submodule "tests/peg/json/JSONTestSuite"]
+	path = tests/peg/json/JSONTestSuite
+	url = https://github.com/nst/JSONTestSuite

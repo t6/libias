@@ -41,6 +41,7 @@ static RULE(array);
 static RULE(array_0);
 static RULE(array_1);
 static RULE(array_values);
+static RULE(array_values_0);
 static RULE(begin_array);
 static RULE(begin_object);
 static RULE(character);
@@ -66,6 +67,7 @@ static RULE(object);
 static RULE(object_0);
 static RULE(object_1);
 static RULE(object_members);
+static RULE(object_members_0);
 static RULE(plus);
 static RULE(quotation_mark);
 static RULE(string);
@@ -90,7 +92,7 @@ RULE(JSON) {
 	return 0;
 }
 
-RULE(ws) { return CHARF(isspace); }
+RULE(ws) { return SET(0x20, 0x09, 0x0A, 0x0D); }
 
 RULE(begin_array) { return CHAR('['); }
 RULE(begin_object) { return CHAR('{'); }
@@ -119,8 +121,17 @@ RULE(value) {
 	return 1;
 }
 
+RULE(object_members_0) {
+	if (MATCH(value_separator))
+	if (ANY(ws))
+	if (MATCH(end_object))
+	return 1;
+	return 0;
+}
+
 RULE(object_members) {
 	if (ANY(ws))
+	if (!LOOKAHEAD(object_members_0))
 	if (MATCH(value_separator))
 	if (ANY(ws))
 	if (MATCH(member))
@@ -156,14 +167,25 @@ RULE(object) {
 
 RULE(member) {
 	if (MATCH(string))
+	if (ANY(ws))
 	if (MATCH(name_separator))
+	if (ANY(ws))
 	if (CAPTURE(MATCH(value), 0, CAPTURE_OBJECT_VALUE))
+	return 1;
+	return 0;
+}
+
+RULE(array_values_0) {
+	if (MATCH(value_separator))
+	if (ANY(ws))
+	if (MATCH(end_array))
 	return 1;
 	return 0;
 }
 
 RULE(array_values) {
 	if (ANY(ws))
+	if (!LOOKAHEAD(array_values_0))
 	if (MATCH(value_separator))
 	if (ANY(ws))
 	if (CAPTURE(MATCH(value), 0, CAPTURE_ARRAY_VALUE))
