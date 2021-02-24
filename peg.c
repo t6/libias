@@ -49,6 +49,7 @@ struct PEG {
 	const char *const buf;
 	const size_t len;
 	size_t pos;
+	size_t depth;
 
 	struct {
 		struct Queue *queue;
@@ -62,11 +63,14 @@ struct PEG {
 	struct Mempool *pool;
 };
 
+static const size_t PEG_MAX_DEPTH = 250000;
+
 #define MATCHER_INIT() \
 	size_t MATCHER_INIT_captures_queue_len = queue_len(peg->captures.queue); \
 	size_t MATCHER_INIT_rule_trace_len = queue_len(peg->rule_trace); \
 	do { \
-		if (peg->pos > peg->len) { \
+		peg->depth++; \
+		if (peg->depth > PEG_MAX_DEPTH || peg->pos > peg->len) { \
 			MATCHER_RETURN(0); \
 		} \
 		if (peg->debug) { \
@@ -96,6 +100,7 @@ int
 peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userdata)
 {
 	peg->captures.enabled = capture_machine != NULL;
+	peg->depth = 0;
 	int result = peg_match_rule(peg, ":main", rulefn);
 
 	if (capture_machine) {
