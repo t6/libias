@@ -27,25 +27,12 @@
  */
 #pragma once
 
-struct JSON;
+struct PEG;
 
-enum JSONType {
-	JSON_ARRAY,
-	JSON_FALSE,
-	JSON_NULL,
-	JSON_NUMBER,
-	JSON_OBJECT,
-	JSON_STRING,
-	JSON_TRUE,
+enum ObjgetCaptureState {
+	PEG_OBJGET_ACCEPT = 0,
+	PEG_OBJGET_INDEX,
+	PEG_OBJGET_KEY,
 };
 
-struct JSON *json_new(const char *, size_t);
-void json_free(struct JSON *);
-
-struct JSON *json_get(struct JSON *, const char *);
-enum JSONType json_type(struct JSON *);
-struct Array *json_unwrap_array(struct JSON *);
-const char *json_unwrap_number(struct JSON *);
-struct Map *json_unwrap_object(struct JSON *);
-const char *json_unwrap_string(struct JSON *);
-
+int peg_objget_decode(struct PEG *);

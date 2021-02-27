@@ -25,27 +25,79 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#pragma once
+#include "config.h"
 
-struct JSON;
+#include <ctype.h>
 
-enum JSONType {
-	JSON_ARRAY,
-	JSON_FALSE,
-	JSON_NULL,
-	JSON_NUMBER,
-	JSON_OBJECT,
-	JSON_STRING,
-	JSON_TRUE,
-};
+#include "peg.h"
+#include "peg/macros.h"
+#include "peg/objget.h"
 
-struct JSON *json_new(const char *, size_t);
-void json_free(struct JSON *);
+//
+static RULE(character);
+static RULE(digit);
+static RULE(escaped);
+static RULE(index_key);
+static RULE(key);
+static RULE(keys);
+static RULE(string_key);
 
-struct JSON *json_get(struct JSON *, const char *);
-enum JSONType json_type(struct JSON *);
-struct Array *json_unwrap_array(struct JSON *);
-const char *json_unwrap_number(struct JSON *);
-struct Map *json_unwrap_object(struct JSON *);
-const char *json_unwrap_string(struct JSON *);
+RULE(keys) {
+	if (CHAR('.'))
+	if (MATCH(key))
+	return 1;
+	return 0;
+}
 
+RULE(digit) {
+	if (CHARF(isdigit))
+	return 1;
+	return 0;
+}
+
+RULE(index_key) {
+	if (SOME(digit))
+	return 1;
+	return 0;
+}
+
+static int
+isany(int c)
+{
+	return c != '.';
+}
+
+RULE(escaped) {
+	if (CHAR('\\'))
+	if (SET('.', '\\'))
+	return 1;
+	return 0;
+}
+
+RULE(character) {
+	if (!MATCH(escaped))
+	if (!CHARF(isany))
+	return 0;
+	return 1;
+}
+
+RULE(string_key) {
+	if (SOME(character))
+	return 1;
+	return 0;
+}
+
+RULE(key) {
+	if (!CAPTURE(MATCH(index_key), 0, PEG_OBJGET_INDEX))
+	if (!CAPTURE(MATCH(string_key), 0, PEG_OBJGET_KEY))
+	return 0;
+	return 1;
+}
+
+RULE(peg_objget_decode) {
+	if (MATCH(key))
+	if (ANY(keys))
+	if (EOS())
+	return 1;
+	return 0;
+}

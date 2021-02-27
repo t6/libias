@@ -66,9 +66,13 @@ TESTS() {
 	TEST_IF(s) {
 	TEST_STREQ(s, "foo");
 	s = json_unwrap_string(array_get(array, 1));
-	TEST_IF(s) {
 	TEST_STREQ(s, "bar");
-	}}}}}
+	}}}
+	json = json_get(json, "0");
+	TEST_IF(json) {
+	s = json_unwrap_string(json);
+	TEST_STREQ(s, "foo");
+	}}
 
 	buf = "[[1e2],[2,[3,[4]]]]";
 	json = json_new(buf, strlen(buf));
@@ -92,4 +96,25 @@ TESTS() {
 	TEST(json_type(array_get(array, 1)) == JSON_NULL);
 	TEST(json_type(array_get(array, 2)) == JSON_FALSE);
 	}}}}}
+
+	buf = "[1,[2,[3,[4]]]]";
+	json = json_new(buf, strlen(buf));
+	json = json_get(json, "1.1.1.0");
+	TEST_IF(json && json_type(json) == JSON_NUMBER) {
+	TEST_STREQ(json_unwrap_number(json), "4");
+	}
+
+	buf = "{\"1\":[2,[3,[4]]]}";
+	json = json_new(buf, strlen(buf));
+	json = json_get(json, "1.1.1.0");
+	TEST_IF(json && json_type(json) == JSON_NUMBER) {
+	TEST_STREQ(json_unwrap_number(json), "4");
+	}
+
+	buf = "{\"\\\\\":[2,[3,[4]]]}";
+	json = json_new(buf, strlen(buf));
+	json = json_get(json, "\\\\\\\\.1.1.0");
+	TEST_IF(json && json_type(json) == JSON_NUMBER) {
+	TEST_STREQ(json_unwrap_number(json), "4");
+	}
 }

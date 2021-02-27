@@ -38,6 +38,7 @@
 #include "mempool.h"
 #include "peg.h"
 #include "peg/json.h"
+#include "peg/objget.h"
 #include "stack.h"
 #include "util.h"
 
@@ -66,6 +67,10 @@ struct JSONCaptureMachineData {
 	struct Stack *arrays;
 	struct Stack *objects;
 	struct Stack *values;
+};
+
+struct ObjgetCaptureMachineData {
+	struct JSON *json;
 };
 
 static enum PEGCaptureFlag
@@ -153,6 +158,67 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 	return PEG_CAPTURE_CONTINUE;
 }
 
+static enum PEGCaptureFlag
+objget_capture_machine(struct PEGCapture *capture, void *userdata)
+{
+	struct ObjgetCaptureMachineData *data = userdata;
+	switch ((enum ObjgetCaptureState)capture->state) {
+	case PEG_OBJGET_ACCEPT: {
+		break;
+	} case PEG_OBJGET_INDEX: {
+		if (json_type(data->json) == JSON_ARRAY) {
+			const char *error;
+			char *buf = xstrndup(capture->buf, capture->len);
+			size_t i = strtonum(buf, 0, INT64_MAX, &error);
+			free(buf);
+			if (error) {
+				data->json = NULL;
+			} else {
+				data->json = array_get(json_unwrap_array(data->json), i);
+			}
+		} else if (json_type(data->json) == JSON_OBJECT) {
+			char *key = xstrndup(capture->buf, capture->len);
+			data->json = map_get(json_unwrap_object(data->json), key);
+			free(key);
+		} else {
+			data->json = NULL;
+		}
+		break;
+	} case PEG_OBJGET_KEY: {
+		if (json_type(data->json) == JSON_OBJECT) {
+			char *key = xmalloc(capture->len + 1);
+			char *ptr = key;
+			int escape = 0;
+			for (size_t i = 0; i < capture->len; i++) {
+				char c = capture->buf[i];
+				if (escape) {
+					if (c == '.' || c == '\\') {
+						*ptr++ = c;
+					} else {
+						abort();
+					}
+					escape = 0;
+				} else if (c == '\\') {
+					escape = 1;
+				} else {
+					*ptr++ = c;
+				}
+			}
+			data->json = map_get(json_unwrap_object(data->json), key);
+			free(key);
+		} else {
+			data->json = NULL;
+		}
+		break;
+	} }
+
+	if (data->json) {
+		return PEG_CAPTURE_CONTINUE;
+	} else {
+		return PEG_CAPTURE_STOP;
+	}
+}
+
 struct JSON *
 json_new(const char *buf, size_t len)
 {
@@ -179,6 +245,21 @@ void
 json_free(struct JSON *json)
 {
 	mempool_free(json->pool);
+}
+
+struct JSON *
+json_get(struct JSON *json, const char *key)
+{
+	struct PEG *peg = peg_new(key, strlen(key));
+	struct ObjgetCaptureMachineData data;
+	data.json = json;
+	int status = peg_match(peg, peg_objget_decode, objget_capture_machine, &data);
+	peg_free(peg);
+	if (status) {
+		return data.json;
+	} else {
+		return NULL;
+	}
 }
 
 enum JSONType
