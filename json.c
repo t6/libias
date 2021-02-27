@@ -41,7 +41,6 @@
 #include "stack.h"
 #include "util.h"
 
-
 struct JSON {
 	struct Mempool *pool;
 	enum JSONType type;
@@ -148,7 +147,7 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		break;
 	} }
 
-	return PEG_CAPTURE_DISCARD;
+	return PEG_CAPTURE_CONTINUE;
 }
 
 struct JSON *
@@ -162,7 +161,7 @@ json_new(const char *buf, size_t len)
 	data.values = mempool_add(data.pool, stack_new(), stack_free);
 
 	struct PEG *peg = peg_new(buf, len);
-	int status =  peg_match(peg, peg_json_decode, json_capture_machine, &data);
+	int status = peg_match(peg, peg_json_decode, json_capture_machine, &data);
 	peg_free(peg);
 
 	if (status) {

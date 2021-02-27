@@ -43,8 +43,8 @@ struct PEGCapture {
 };
 
 enum PEGCaptureFlag {
-	PEG_CAPTURE_DISCARD,
-	PEG_CAPTURE_KEEP,
+	PEG_CAPTURE_CONTINUE,
+	PEG_CAPTURE_STOP,
 };
 
 typedef enum PEGCaptureFlag (*CaptureFn)(struct PEGCapture *, void *);

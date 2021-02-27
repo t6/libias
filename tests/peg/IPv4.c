@@ -89,7 +89,7 @@ capture_machine(struct PEGCapture *capture, void *userdata)
 		data->full = xstrndup(capture->buf, capture->len);
 		break;
 	}
-	return PEG_CAPTURE_KEEP;
+	return PEG_CAPTURE_CONTINUE;
 }
 
 RULE(dig) { return RANGE('0', '9'); }
@@ -131,7 +131,7 @@ captures_to_array(struct PEGCapture *capture, void *userdata)
 {
 	struct Array *captures = userdata;
 	array_append(captures, capture);
-	return PEG_CAPTURE_KEEP;
+	return PEG_CAPTURE_CONTINUE;
 }
 
 static char *

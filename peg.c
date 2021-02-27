@@ -104,19 +104,28 @@ peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userd
 	int result = peg_match_rule(peg, ":main", rulefn);
 
 	if (capture_machine) {
+		int stop = 0;
 		struct PEGCapture *capture;
-		while ((capture = queue_pop(peg->captures.queue))) {
+		while (!stop && (capture = queue_pop(peg->captures.queue))) {
 			mempool_add(peg->pool, capture, free);
+			switch (capture_machine(capture, userdata)) {
+			case PEG_CAPTURE_CONTINUE:
+				break;
+			case PEG_CAPTURE_STOP:
+				stop = 1;
+				break;
+			}
+		}
+		if (!stop) {
+			capture = mempool_add(peg->pool, xmalloc(sizeof(struct PEGCapture)), free);
+			capture->peg = peg;
+			capture->buf = peg->buf;
+			capture->pos = 0;
+			capture->len = peg->pos;
+			capture->tag = -1;
+			capture->state = 0; // Accept state
 			capture_machine(capture, userdata);
 		}
-		capture = mempool_add(peg->pool, xmalloc(sizeof(struct PEGCapture)), free);
-		capture->peg = peg;
-		capture->buf = peg->buf;
-		capture->pos = 0;
-		capture->len = peg->pos;
-		capture->tag = -1;
-		capture->state = 0; // Accept state
-		capture_machine(capture, userdata);
 	}
 
 	if (peg->debug && queue_len(peg->rule_trace) > 0) {
