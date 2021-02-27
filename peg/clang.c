@@ -28,6 +28,8 @@
 
 #include "config.h"
 
+#include <stdint.h>
+
 #include "peg.h"
 #include "peg/macros.h"
 

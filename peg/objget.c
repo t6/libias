@@ -28,6 +28,7 @@
 #include "config.h"
 
 #include <ctype.h>
+#include <stdint.h>
 
 #include "peg.h"
 #include "peg/macros.h"
