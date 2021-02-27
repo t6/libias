@@ -29,8 +29,8 @@
 
 struct PEG;
 
-enum TOMLCaptureState {
-	ACCEPT = 0,
+enum PEGTOMLCapture {
+	PEG_TOML_ACCEPT = 0,
 };
 
 int peg_toml_decode(struct PEG *);

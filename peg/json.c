@@ -110,12 +110,12 @@ RULE(digit) { return CHARF(isdigit); }
 RULE(hexdigit) { return CHARF(ishexdigit);}
 
 RULE(value) {
-	if (!CAPTURE(STRING("false"), 0, CAPTURE_FALSE))
-	if (!CAPTURE(STRING("null"), 0, CAPTURE_NULL))
-	if (!CAPTURE(STRING("true"), 0, CAPTURE_TRUE))
+	if (!CAPTURE(STRING("false"), 0, PEG_JSON_FALSE))
+	if (!CAPTURE(STRING("null"), 0, PEG_JSON_NULL))
+	if (!CAPTURE(STRING("true"), 0, PEG_JSON_TRUE))
 	if (!MATCH(object))
 	if (!MATCH(array))
-	if (!CAPTURE(MATCH(number), 0, CAPTURE_NUMBER))
+	if (!CAPTURE(MATCH(number), 0, PEG_JSON_NUMBER))
 	if (!MATCH(string))
 	return 0;
 	return 1;
@@ -140,20 +140,20 @@ RULE(object_members) {
 }
 
 RULE(object_0) {
-	if (CAPTURE(MATCH(begin_object), 0, CAPTURE_OBJECT_BEGIN))
+	if (CAPTURE(MATCH(begin_object), 0, PEG_JSON_OBJECT_BEGIN))
 	if (ANY(ws))
 	if (MATCH(member))
 	if (ANY(object_members))
 	if (ANY(ws))
-	if (CAPTURE(MATCH(end_object), 0, CAPTURE_OBJECT_END))
+	if (CAPTURE(MATCH(end_object), 0, PEG_JSON_OBJECT_END))
 	return 1;
 	return 0;
 }
 
 RULE(object_1) {
-	if (CAPTURE(MATCH(begin_object), 0, CAPTURE_OBJECT_BEGIN))
+	if (CAPTURE(MATCH(begin_object), 0, PEG_JSON_OBJECT_BEGIN))
 	if (ANY(ws))
-	if (CAPTURE(MATCH(end_object), 0, CAPTURE_OBJECT_END))
+	if (CAPTURE(MATCH(end_object), 0, PEG_JSON_OBJECT_END))
 	return 1;
 	return 0;
 }
@@ -170,7 +170,7 @@ RULE(member) {
 	if (ANY(ws))
 	if (MATCH(name_separator))
 	if (ANY(ws))
-	if (CAPTURE(MATCH(value), 0, CAPTURE_OBJECT_VALUE))
+	if (CAPTURE(MATCH(value), 0, PEG_JSON_OBJECT_VALUE))
 	return 1;
 	return 0;
 }
@@ -188,26 +188,26 @@ RULE(array_values) {
 	if (!LOOKAHEAD(array_values_0))
 	if (MATCH(value_separator))
 	if (ANY(ws))
-	if (CAPTURE(MATCH(value), 0, CAPTURE_ARRAY_VALUE))
+	if (CAPTURE(MATCH(value), 0, PEG_JSON_ARRAY_VALUE))
 	return 1;
 	return 0;
 }
 
 RULE(array_0) {
-	if (CAPTURE(MATCH(begin_array), 0, CAPTURE_ARRAY_BEGIN))
+	if (CAPTURE(MATCH(begin_array), 0, PEG_JSON_ARRAY_BEGIN))
 	if (ANY(ws))
-	if (CAPTURE(MATCH(value), 0, CAPTURE_ARRAY_VALUE))
+	if (CAPTURE(MATCH(value), 0, PEG_JSON_ARRAY_VALUE))
 	if (ANY(array_values))
 	if (ANY(ws))
-	if (CAPTURE(MATCH(end_array), 0, CAPTURE_ARRAY_END))
+	if (CAPTURE(MATCH(end_array), 0, PEG_JSON_ARRAY_END))
 	return 1;
 	return 0;
 }
 
 RULE(array_1) {
-	if (CAPTURE(MATCH(begin_array), 0, CAPTURE_ARRAY_BEGIN))
+	if (CAPTURE(MATCH(begin_array), 0, PEG_JSON_ARRAY_BEGIN))
 	if (ANY(ws))
-	if (CAPTURE(MATCH(end_array), 0, CAPTURE_ARRAY_END))
+	if (CAPTURE(MATCH(end_array), 0, PEG_JSON_ARRAY_END))
 	return 1;
 	return 0;
 }
@@ -304,7 +304,7 @@ RULE(character) {
 
 RULE(string) {
 	if (MATCH(quotation_mark))
-	if (CAPTURE(ANY(character), 0, CAPTURE_STRING))
+	if (CAPTURE(ANY(character), 0, PEG_JSON_STRING))
 	if (MATCH(quotation_mark))
 	return 1;
 	return 0;

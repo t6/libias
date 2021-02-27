@@ -72,17 +72,17 @@ static enum PEGCaptureFlag
 json_capture_machine(struct PEGCapture *capture, void *userdata)
 {
 	struct JSONCaptureMachineData *data = userdata;
-	switch ((enum JSONCaptureState)capture->state) {
-	case ACCEPT: {
+	switch ((enum PEGJSONCapture)capture->state) {
+	case PEG_JSON_ACCEPT: {
 		assert(stack_len(data->values) == 1);
 		assert(stack_len(data->objects) == 0);
 		assert(stack_len(data->arrays) == 0);
 		data->json = stack_pop(data->values);
 		break;
-	} case CAPTURE_ARRAY_BEGIN:
+	} case PEG_JSON_ARRAY_BEGIN:
 		stack_push(data->arrays, mempool_add(data->pool, array_new(), array_free));
 		break;
-	case CAPTURE_ARRAY_END: {
+	case PEG_JSON_ARRAY_END: {
 		struct Array *array = stack_pop(data->arrays);
 		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
@@ -90,15 +90,15 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		value->array = array;
 		stack_push(data->values, value);
 		break;
-	} case CAPTURE_ARRAY_VALUE: {
+	} case PEG_JSON_ARRAY_VALUE: {
 		struct JSON *value = stack_pop(data->values);
 		struct Array *array = stack_peek(data->arrays);
 		array_append(array, value);
 		break;
-	} case CAPTURE_OBJECT_BEGIN:
+	} case PEG_JSON_OBJECT_BEGIN:
 		stack_push(data->objects, mempool_add(data->pool, map_new(str_compare, NULL, NULL, NULL), map_free));
 		break;
-	case CAPTURE_OBJECT_END: {
+	case PEG_JSON_OBJECT_END: {
 		struct Map *object = stack_pop(data->objects);
 		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
@@ -106,25 +106,25 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		value->object = object;
 		stack_push(data->values, value);
 		break;
-	} case CAPTURE_OBJECT_VALUE: {
+	} case PEG_JSON_OBJECT_VALUE: {
 		struct JSON *value = stack_pop(data->values);
 		struct JSON *key = stack_pop(data->values);
 		struct Map *object = stack_peek(data->objects);
 		map_add(object, key->string, value);
 		break;
-	} case CAPTURE_FALSE: {
+	} case PEG_JSON_FALSE: {
 		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_FALSE;
 		stack_push(data->values, value);
 		break;
-	} case CAPTURE_NULL: {
+	} case PEG_JSON_NULL: {
 		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_NULL;
 		stack_push(data->values, value);
 		break;
-	} case CAPTURE_STRING: {
+	} case PEG_JSON_STRING: {
 		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_STRING;
@@ -132,13 +132,13 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		value->string = mempool_add(data->pool, xstrndup(capture->buf, capture->len), free);
 		stack_push(data->values, value);
 		break;
-	} case CAPTURE_TRUE: {
+	} case PEG_JSON_TRUE: {
 		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_TRUE;
 		stack_push(data->values, value);
 		break;
-	} case CAPTURE_NUMBER: {
+	} case PEG_JSON_NUMBER: {
 		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_NUMBER;
