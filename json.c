@@ -74,10 +74,13 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 	struct JSONCaptureMachineData *data = userdata;
 	switch ((enum PEGJSONCapture)capture->state) {
 	case PEG_JSON_ACCEPT: {
-		assert(stack_len(data->values) == 1);
-		assert(stack_len(data->objects) == 0);
-		assert(stack_len(data->arrays) == 0);
-		data->json = stack_pop(data->values);
+		if (stack_len(data->values) == 1 &&
+		    stack_len(data->objects) == 0 &&
+		    stack_len(data->arrays) == 0) {
+			data->json = stack_pop(data->values);
+		} else {
+			data->json = NULL;
+		}
 		break;
 	} case PEG_JSON_ARRAY_BEGIN:
 		stack_push(data->arrays, mempool_add(data->pool, array_new(), array_free));
@@ -164,7 +167,7 @@ json_new(const char *buf, size_t len)
 	int status = peg_match(peg, peg_json_decode, json_capture_machine, &data);
 	peg_free(peg);
 
-	if (status) {
+	if (status && data.json) {
 		return data.json;
 	} else {
 		mempool_free(data.pool);
