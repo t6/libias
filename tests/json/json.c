@@ -26,6 +26,8 @@
  * SUCH DAMAGE.
  */
 
+#include "config.h"
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>

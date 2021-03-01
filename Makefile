@@ -68,7 +68,7 @@ queue.o: config.h queue.h util.h
 set.o: config.h array.h map.h set.h util.h
 stack.o: config.h stack.h util.h
 tests/array/array.o: config.h array.h test.h util.h
-tests/json/json.o: array.h map.h json.h test.h util.h
+tests/json/json.o: config.h array.h map.h json.h test.h util.h
 tests/peg/IPv4.o: config.h array.h mempool.h peg.h peg/macros.h test.h util.h
 tests/peg/json.o: config.h json.h peg.h peg/json.h test.h util.h
 tests/peg/MOVED.o: config.h peg.h peg/macros.h test.h util.h
