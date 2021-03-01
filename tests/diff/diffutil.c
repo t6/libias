@@ -1,7 +1,7 @@
 /*-
  * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
  *
- * Copyright (c) 2019 Tobias Kortkamp <tobik@FreeBSD.org>
+ * Copyright (c) 2021 Tobias Kortkamp <tobik@FreeBSD.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,10 +25,41 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#pragma once
 
-struct diff;
+#include "config.h"
 
-typedef char *(*TostringFn)(const void *, void *);
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-char *diff_to_patch(struct diff *, TostringFn, void *, size_t, int);
+#include "array.h"
+#include "diff.h"
+#include "diffutil.h"
+#include "test.h"
+#include "util.h"
+
+TESTS() {
+	struct Array *a = array_new();
+	for (size_t i = 0; i < 16; i++) {
+		array_append(a, xstrdup("1"));
+	}
+	struct Array *b = array_new();
+	array_append(b, xstrdup("2"));
+	array_append(b, xstrdup("2"));
+	for (size_t i = 0; i < 8; i++) {
+		array_append(b, xstrdup("1"));
+	}
+	array_append(b, xstrdup("3"));
+	for (size_t i = 0; i < 7; i++) {
+		array_append(b, xstrdup("1"));
+	}
+
+	struct diff d;
+	TEST_IF(array_diff(a, b, &d, str_compare, NULL)) {
+		char *actual = diff_to_patch(&d, NULL, NULL, 3, 0);
+		int fd = open("tests/diff/0001.diff", O_RDONLY);
+		char *expected = slurp(fd);
+		TEST_STREQ(actual, expected);
+	}
+}
