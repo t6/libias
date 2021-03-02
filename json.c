@@ -52,18 +52,9 @@ struct JSON {
 	};
 };
 
-struct JSONNumberCapture {
-	struct PEGCapture *number;
-	int minus;
-	struct PEGCapture *integer;
-	struct PEGCapture *fraction;
-	struct PEGCapture *exponent;
-};
-
 struct JSONCaptureMachineData {
 	struct JSON *json;
 	struct Mempool *pool;
-	struct JSONNumberCapture num;
 	struct Stack *arrays;
 	struct Stack *objects;
 	struct Stack *values;
