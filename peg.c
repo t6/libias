@@ -37,10 +37,10 @@
 #include <string.h>
 
 #include "array.h"
-#include "map.h"
 #include "mempool.h"
 #include "peg.h"
 #include "queue.h"
+#include "set.h"
 #include "stack.h"
 #include "utf8.h"
 #include "util.h"
@@ -52,6 +52,7 @@ struct PEG {
 	size_t depth;
 
 	struct {
+		struct Set *set;
 		struct Queue *queue;
 		struct Stack *pos;
 		int enabled;
@@ -80,7 +81,9 @@ static const size_t PEG_MAX_DEPTH = 250000;
 #define MATCHER_POP(x) \
 do { \
 	for (size_t i = MATCHER_INIT_captures_queue_len; i < queue_len(peg->captures.queue); i++) { \
-		free(queue_dequeue(peg->captures.queue)); \
+		struct PEGCapture *capture = queue_dequeue(peg->captures.queue); \
+		set_remove(peg->captures.set, capture); \
+		free(capture); \
 	} \
 	if (peg->debug) { \
 		for (size_t i = MATCHER_INIT_rule_trace_len; i < queue_len(peg->rule_trace); i++) { \
@@ -95,6 +98,32 @@ do { \
 	} \
 	return (x); \
 } while (0)
+
+static int
+compare_capture(const void *ap, const void *bp, void *userdata)
+{
+	struct PEGCapture *a = *(struct PEGCapture **)ap;
+	struct PEGCapture *b = *(struct PEGCapture **)bp;
+	if (a->pos < b->pos) {
+		return -1;
+	} else if (a->pos > b->pos) {
+		return 1;
+	} else if (a->len < b->len) {
+		return -1;
+	} else if (a->len > b->len) {
+		return 1;
+	} else if (a->state < b->state) {
+		return -1;
+	} else if (a->state > b->state) {
+		return 1;
+	} else if (a->tag < b->tag) {
+		return -1;
+	} else if (a->tag > b->tag) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
 
 int
 peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userdata)
@@ -116,7 +145,11 @@ peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userd
 				break;
 			}
 		}
-		if (!stop) {
+		if (stop) {
+			while ((capture = queue_pop(peg->captures.queue))) {
+				free(capture);
+			}
+		} else {
 			capture = mempool_add(peg->pool, xmalloc(sizeof(struct PEGCapture)), free);
 			capture->peg = peg;
 			capture->buf = peg->buf;
@@ -126,6 +159,7 @@ peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userd
 			capture->state = 0; // Accept state
 			capture_machine(capture, userdata);
 		}
+		set_truncate(peg->captures.set);
 	}
 
 	if (peg->debug && queue_len(peg->rule_trace) > 0) {
@@ -192,15 +226,19 @@ peg_match_capture_end(struct PEG *peg, unsigned int tag, unsigned int state, int
 	if (peg->captures.enabled && stack_len(peg->captures.pos) > 0) {
 		size_t start = (size_t)stack_pop(peg->captures.pos);
 		if (retval) {
-			struct PEGCapture *capture = xmalloc(sizeof(struct PEGCapture));
 			size_t len = peg->pos - start;
-			capture->tag = tag;
-			capture->state = state;
-			capture->buf = peg->buf + start;
-			capture->pos = start;
-			capture->len = len;
-			capture->peg = peg;
-			queue_push(peg->captures.queue, capture);
+			struct PEGCapture c = { .tag = tag, .state = state, .pos = start, .len = len };
+			if (!set_contains(peg->captures.set, &c)) {
+				struct PEGCapture *capture = xmalloc(sizeof(struct PEGCapture));
+				capture->tag = tag;
+				capture->state = state;
+				capture->buf = peg->buf + start;
+				capture->pos = start;
+				capture->len = len;
+				capture->peg = peg;
+				queue_push(peg->captures.queue, capture);
+				set_add(peg->captures.set, capture);
+			}
 		}
 	}
 	return retval;
@@ -389,6 +427,7 @@ peg_new(const char *const buf, size_t len)
 	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;
 	peg->rule_trace = mempool_add(peg->pool, queue_new(), queue_free);
 
+	peg->captures.set = mempool_add(peg->pool, set_new(compare_capture, peg, NULL), set_free);
 	peg->captures.queue = mempool_add(peg->pool, queue_new(), queue_free);
 	peg->captures.pos = mempool_add(peg->pool, stack_new(), stack_free);
 
