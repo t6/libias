@@ -55,6 +55,10 @@ queue_new()
 void
 queue_free(struct Queue *queue)
 {
+	if (queue == NULL) {
+		return;
+	}
+
 	struct QueueNode *node = queue->head;
 	while (node) {
 		struct QueueNode *next = node->next;

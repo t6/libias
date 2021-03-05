@@ -58,7 +58,7 @@ diff.o: config.h diff.h
 diffutil.o: config.h array.h diff.h diffutil.h mempool.h util.h
 json.o: config.h array.h json.h map.h mempool.h peg.h peg/json.h peg/objget.h stack.h util.h
 map.o: config.h array.h map.h util.h
-mempool.o: config.h mempool.h stack.h util.h
+mempool.o: config.h map.h mempool.h stack.h util.h
 peg.o: config.h array.h mempool.h peg.h queue.h set.h stack.h utf8.h util.h
 peg/clang.o: config.h peg.h peg/macros.h
 peg/json.o: config.h peg.h peg/json.h peg/macros.h

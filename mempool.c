@@ -31,12 +31,14 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "map.h"
 #include "mempool.h"
 #include "stack.h"
 #include "util.h"
 
 struct Mempool {
 	struct Stack *stack;
+	struct Map *map;
 };
 
 struct Mempool *
@@ -47,6 +49,14 @@ mempool_new()
 	return pool;
 }
 
+struct Mempool *
+mempool_new_unique()
+{
+	struct Mempool *pool = xmalloc(sizeof(struct Mempool));
+	pool->map = map_new(NULL, NULL, NULL, NULL);
+	return pool;
+}
+
 void
 mempool_free(struct Mempool *pool)
 {
@@ -54,6 +64,7 @@ mempool_free(struct Mempool *pool)
 		return;
 	}
 	mempool_release(pool);
+	map_free(pool->map);
 	stack_free(pool->stack);
 	free(pool);
 }
@@ -70,20 +81,35 @@ mempool_cleanup(struct Mempool **pool)
 void *
 mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 {
-	if (ptr && !stack_contains(pool->stack, ptr)) {
-		assert(freefn != NULL);
+	assert(freefn != NULL);
+	if (!ptr) {
+		return NULL;
+	}
+
+	if (pool->map) {
+		map_add(pool->map, ptr, freefn);
+	} else {
 		stack_push(pool->stack, freefn);
 		stack_push(pool->stack, ptr);
 	}
+
 	return ptr;
 }
 
 void
 mempool_release(struct Mempool *pool)
 {
-	void *ptr;
-	while ((ptr = stack_pop(pool->stack))) {
-		void (*freefn)(void *) = stack_pop(pool->stack);
-		freefn(ptr);
+	if (pool->map) {
+		MAP_FOREACH(pool->map, void *, ptr, void *, f) {
+			void (*freefn)(void *) = f;
+			freefn(ptr);
+		}
+		map_truncate(pool->map);
+	} else {
+		void *ptr;
+		while ((ptr = stack_pop(pool->stack))) {
+			void (*freefn)(void *) = stack_pop(pool->stack);
+			freefn(ptr);
+		}
 	}
 }

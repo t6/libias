@@ -30,6 +30,7 @@
 struct Mempool;
 
 struct Mempool *mempool_new(void);
+struct Mempool *mempool_new_unique(void);
 void mempool_free(struct Mempool *);
 void mempool_cleanup(struct Mempool **);
 void *mempool_add(struct Mempool *, void *, void *);

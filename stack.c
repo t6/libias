@@ -53,6 +53,10 @@ stack_new()
 void
 stack_free(struct Stack *stack)
 {
+	if (stack == NULL) {
+		return;
+	}
+
 	struct StackNode *node = stack->head;
 	while (node) {
 		struct StackNode *next = node->next;
