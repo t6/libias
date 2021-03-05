@@ -64,7 +64,7 @@ struct PEG {
 	struct Mempool *pool;
 };
 
-static const size_t PEG_MAX_DEPTH = 250000;
+static const size_t PEG_MAX_DEPTH = 10000;
 
 #define MATCHER_INIT() \
 	size_t MATCHER_INIT_captures_queue_len = queue_len(peg->captures.queue); \
@@ -93,6 +93,7 @@ do { \
 } while(0)
 #define MATCHER_RETURN(x) \
 do { \
+	peg->depth--; \
 	if (!(x)) { \
 		MATCHER_POP(); \
 	} \
