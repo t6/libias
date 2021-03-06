@@ -48,12 +48,13 @@ struct JSON {
 	union {
 		struct Array *array;
 		struct Map *object;
-		char *string;
+		const char *string;
 	};
 };
 
 struct JSONCaptureMachineData {
 	struct JSON *json;
+	char *buf;
 	struct Mempool *pool;
 	struct Stack *arrays;
 	struct Stack *objects;
@@ -109,7 +110,7 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		struct JSON *value = stack_pop(data->values);
 		struct JSON *key = stack_pop(data->values);
 		struct Map *object = stack_peek(data->objects);
-		map_add(object, key->string, value);
+		map_add(object, (char *)key->string, value);
 		break;
 	} case PEG_JSON_FALSE: {
 		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
@@ -127,8 +128,12 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_STRING;
+		// Strings are always followed by ".  We can replace
+		// it with 0 to terminate the string without
+		// allocating more memory.
 		// XXX: deal with unicode escapes etc.
-		value->string = mempool_add(data->pool, xstrndup(capture->buf, capture->len), free);
+		data->buf[capture->pos + capture->len] = 0;
+		value->string = capture->buf;
 		stack_push(data->values, value);
 		break;
 	} case PEG_JSON_TRUE: {
@@ -141,7 +146,11 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
 		value->pool = data->pool;
 		value->type = JSON_NUMBER;
-		value->string = mempool_add(data->pool, xstrndup(capture->buf, capture->len), free);
+		// Strings are always followed by ".  We can replace
+		// it with 0 to terminate the string without
+		// allocating more memory.
+		data->buf[capture->pos + capture->len] = 0;
+		value->string = capture->buf;
 		stack_push(data->values, value);
 		break;
 	} }
@@ -219,8 +228,9 @@ json_new(const char *buf, size_t len)
 	data.arrays = mempool_add(data.pool, stack_new(), stack_free);
 	data.objects = mempool_add(data.pool, stack_new(), stack_free);
 	data.values = mempool_add(data.pool, stack_new(), stack_free);
+	data.buf = mempool_add(data.pool, xstrndup(buf, len), free);
 
-	struct PEG *peg = peg_new(buf, len);
+	struct PEG *peg = peg_new(data.buf, len);
 	int status = peg_match(peg, peg_json_decode, json_capture_machine, &data);
 	peg_free(peg);
 
