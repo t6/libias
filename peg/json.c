@@ -32,7 +32,7 @@
 
 #include "peg.h"
 #include "peg/json.h"
-#include "peg/macros.h"
+#include "peg/grammar.h"
 
 // See https://tools.ietf.org/html/rfc7159
 

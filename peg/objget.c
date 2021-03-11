@@ -31,7 +31,7 @@
 #include <stdint.h>
 
 #include "peg.h"
-#include "peg/macros.h"
+#include "peg/grammar.h"
 #include "peg/objget.h"
 
 //

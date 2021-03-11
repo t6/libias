@@ -60,19 +60,20 @@ json.o: config.h array.h json.h map.h mempool.h peg.h peg/json.h peg/objget.h st
 map.o: config.h array.h map.h util.h
 mempool.o: config.h map.h mempool.h stack.h util.h
 peg.o: config.h array.h mempool.h peg.h queue.h set.h stack.h utf8.h util.h
-peg/clang.o: config.h peg.h peg/macros.h
-peg/json.o: config.h peg.h peg/json.h peg/macros.h
-peg/objget.o: config.h peg.h peg/macros.h peg/objget.h
-peg/toml.o: config.h peg.h peg/toml.h peg/macros.h
+peg/clang.o: config.h peg.h peg/grammar.h
+peg/json.o: config.h peg.h peg/json.h peg/grammar.h
+peg/objget.o: config.h peg.h peg/grammar.h peg/objget.h
+peg/toml.o: config.h peg.h peg/toml.h peg/grammar.h
 queue.o: config.h queue.h util.h
 set.o: config.h array.h map.h set.h util.h
 stack.o: config.h stack.h util.h
 tests/array/array.o: config.h array.h test.h util.h
+tests/diff/diffutil.o: config.h array.h diff.h diffutil.h test.h util.h
 tests/json/json.o: config.h array.h map.h json.h test.h util.h
-tests/peg/IPv4.o: config.h array.h mempool.h peg.h peg/macros.h test.h util.h
-tests/peg/MOVED.o: config.h peg.h peg/macros.h test.h util.h
+tests/peg/IPv4.o: config.h array.h mempool.h peg.h peg/grammar.h test.h util.h
+tests/peg/MOVED.o: config.h peg.h peg/grammar.h test.h util.h
 tests/peg/json.o: config.h json.h peg.h peg/json.h test.h util.h
-tests/peg/range.o: config.h peg.h peg/macros.h test.h util.h
+tests/peg/range.o: config.h peg.h peg/grammar.h test.h util.h
 tests/peg/toml.o: config.h peg.h peg/toml.h test.h util.h
 tests/queue/queue.o: config.h queue.h test.h util.h
 tests/stack/stack.o: config.h stack.h test.h util.h

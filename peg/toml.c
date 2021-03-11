@@ -31,7 +31,7 @@
 
 #include "peg.h"
 #include "peg/toml.h"
-#include "peg/macros.h"
+#include "peg/grammar.h"
 
 // See RFC 5234 -- https://www.ietf.org/rfc/rfc5234.txt
 // See https://github.com/toml-lang/toml/blob/f7b5741dad165585dc38cec30df0634132aad422/toml.abnf
