@@ -23,6 +23,7 @@ OBJS=		array.o \
 		utf8.o \
 		util.o
 TESTS=		tests/array/array.test \
+		tests/diff/diffutil.test \
 		tests/json/json.test \
 		tests/peg/IPv4.test \
 		tests/peg/MOVED.test \
