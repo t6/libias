@@ -36,8 +36,7 @@ do { \
 #define TEST_FAIL_LOC(file, line, col, msg) \
 do { \
 	if (failureslen < nitems(failures)) { \
-		char *buf; \
-		xasprintf(&buf, "%s:%d:%d: FAIL: %s", file, line, col, msg); \
+		char *buf = str_printf("%s:%d:%d: FAIL: %s", file, line, col, msg); \
 		failures[failureslen++] = buf; \
 	} \
 	putchar('X'); \

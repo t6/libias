@@ -273,12 +273,13 @@ sort(void *base, size_t nmemb, size_t size, CompareFn compare, void *userdata)
 
 #endif
 
-int
-xasprintf(char **ret, const char *format, ...)
+char *
+str_printf(const char *format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
-	int retval = vasprintf(ret, format, ap);
+	char *buf = NULL;
+	int retval = vasprintf(&buf, format, ap);
 	va_end(ap);
 
 	if (retval < 0) {
@@ -286,7 +287,7 @@ xasprintf(char **ret, const char *format, ...)
 		abort();
 	}
 
-	return retval;
+	return buf;
 }
 
 void *

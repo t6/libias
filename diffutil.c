@@ -176,15 +176,15 @@ diff_to_patch(struct diff *p, TostringFn tostring, void *tostring_userdata, size
 		size_t target_start = p->ses[h->start].targetIdx;
 		char *buf;
 		if (origin_len > 1) {
-			xasprintf(&buf, "%s@@ -%zu,%zu", color_context, origin_start, origin_len);
+			buf = str_printf("%s@@ -%zu,%zu", color_context, origin_start, origin_len);
 		} else {
-			xasprintf(&buf, "%s@@ -%zu", color_context, origin_start);
+			buf = str_printf("%s@@ -%zu", color_context, origin_start);
 		}
 		array_append(result, mempool_add(pool, buf, free));
 		if (target_len > 1) {
-			xasprintf(&buf, " +%zu,%zu @@%s\n", target_start, target_len, color_reset);
+			buf = str_printf(" +%zu,%zu @@%s\n", target_start, target_len, color_reset);
 		} else {
-			xasprintf(&buf, " +%zu @@%s\n", target_start, color_reset);
+			buf = str_printf(" +%zu @@%s\n", target_start, color_reset);
 		}
 		array_append(result, mempool_add(pool, buf, free));
 		for (size_t i = h->start; i <= h->end; i++) {
@@ -196,13 +196,13 @@ diff_to_patch(struct diff *p, TostringFn tostring, void *tostring_userdata, size
 			}
 			switch (p->ses[i].type) {
 			case DIFF_ADD:
-				xasprintf(&buf, "%s+%s%s\n", color_add, line, color_reset);
+				buf = str_printf("%s+%s%s\n", color_add, line, color_reset);
 				break;
 			case DIFF_COMMON:
-				xasprintf(&buf, " %s\n", line);
+				buf = str_printf(" %s\n", line);
 				break;
 			case DIFF_DELETE:
-				xasprintf(&buf, "%s-%s%s\n", color_delete, line, color_reset);
+				buf = str_printf("%s-%s%s\n", color_delete, line, color_reset);
 				break;
 			}
 			array_append(result, mempool_add(pool, buf, free));

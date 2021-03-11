@@ -384,8 +384,7 @@ TESTS() {
 		int fd = open(name, O_RDONLY);
 		char *buf;
 		if (fd == -1) {
-			char *msg;
-			xasprintf(&msg, "%s: %s", name, strerror(errno));
+			char *msg = str_printf("%s: %s", name, strerror(errno));
 			TEST_FAIL(msg);
 			free(msg);
 			continue;
@@ -402,8 +401,7 @@ TESTS() {
 			} else {
 				reason = "not rejected";
 			}
-			char *filename;
-			xasprintf(&filename, "%s/%s", JSON_TEST_PATH, name);
+			char *filename = str_printf("%s/%s", JSON_TEST_PATH, name);
 			TEST_FAIL_LOC(filename, 1, 1, reason);
 			free(filename);
 		}

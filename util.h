@@ -58,6 +58,7 @@ char *str_common_prefix(const char *, const char *);
 int str_compare(const void *, const void *, void *);
 int str_endswith(const char *, const char *);
 char *str_join(struct Array *, const char *);
+char *str_printf(const char *, ...) __printflike(1, 2);
 char *str_repeat(const char *, const size_t);
 int str_startswith(const char *, const char *);
 char *str_substr(const char *, const size_t, const size_t);
@@ -66,7 +67,6 @@ char *str_triml(const char *);
 char *str_trimr(const char *);
 
 void sort(void *, size_t, size_t, CompareFn, void *);
-int xasprintf(char **, const char *, ...) __printflike(2, 3);
 void *xmalloc(size_t);
 void *xrecallocarray(void *, size_t, size_t, size_t);
 char *xstrdup(const char *);
