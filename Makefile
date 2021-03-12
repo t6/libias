@@ -25,6 +25,7 @@ OBJS=		array.o \
 TESTS=		tests/array/array.test \
 		tests/diff/diffutil.test \
 		tests/json/json.test \
+		tests/map/map.test \
 		tests/peg/IPv4.test \
 		tests/peg/MOVED.test \
 		tests/peg/json.test \
@@ -71,6 +72,7 @@ stack.o: config.h stack.h util.h
 tests/array/array.o: config.h array.h test.h util.h
 tests/diff/diffutil.o: config.h array.h diff.h diffutil.h test.h util.h
 tests/json/json.o: config.h array.h map.h json.h test.h util.h
+tests/map/map.o: config.h map.h test.h util.h
 tests/peg/IPv4.o: config.h array.h mempool.h peg.h peg/grammar.h test.h util.h
 tests/peg/MOVED.o: config.h peg.h peg/grammar.h test.h util.h
 tests/peg/json.o: config.h json.h peg.h peg/json.h test.h util.h

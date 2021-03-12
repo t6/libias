@@ -57,8 +57,24 @@ struct MapIterator {
 	struct MapNode *current;
 };
 
+static void map_node_free(struct MapNode *);
 static int nodecmp(struct MapNode *, struct MapNode *);
 SPLAY_PROTOTYPE(MapTree, MapNode, entry, nodecmp);
+
+void
+map_node_free(struct MapNode *node)
+{
+	if (node == NULL) {
+		return;
+	}
+	if (node->map->keyfree) {
+		node->map->keyfree(node->key);
+	}
+	if (node->map->valuefree) {
+		node->map->valuefree(node->value);
+	}
+	free(node);
+}
 
 struct Map *
 map_new(MapCompareFn compare, void *compare_userdata, void *keyfree, void *valuefree)
@@ -99,19 +115,11 @@ map_add(struct Map *map, void *key, void *value)
 void
 map_remove(struct Map *map, void *key)
 {
-	struct MapNode search;
-	search.key = key;
-	search.map = map;
+	struct MapNode search = { .key = key, .map = map };
 	struct MapNode *node = SPLAY_FIND(MapTree, &map->root, &search);
-	if (node != NULL) {
+	if (node) {
 		SPLAY_REMOVE(MapTree, &map->root, node);
-		if (map->keyfree != NULL) {
-			map->keyfree(node->key);
-		}
-		if (map->valuefree != NULL) {
-			map->valuefree(node->value);
-		}
-		free(node);
+		map_node_free(node);
 		map->len--;
 	}
 }
@@ -119,14 +127,13 @@ map_remove(struct Map *map, void *key)
 void *
 map_get(struct Map *map, void *key)
 {
-	struct MapNode search;
-	search.key = key;
-	search.map = map;
-	struct MapNode *result = SPLAY_FIND(MapTree, &map->root, &search);
-	if (result != NULL) {
-		return result->value;
+	struct MapNode search = { .key = key, .map = map };
+	struct MapNode *node = SPLAY_FIND(MapTree, &map->root, &search);
+	if (node) {
+		return node->value;
+	} else {
+		return NULL;
 	}
-	return NULL;
 }
 
 int
@@ -149,13 +156,7 @@ map_truncate(struct Map *map)
 	for (node = SPLAY_MIN(MapTree, &map->root); node != NULL; node = next) {
 		next = SPLAY_NEXT(MapTree, &map->root, node);
 		SPLAY_REMOVE(MapTree, &map->root, node);
-		if (map->keyfree != NULL) {
-			map->keyfree(node->key);
-		}
-		if (map->valuefree != NULL) {
-			map->valuefree(node->value);
-		}
-		free(node);
+		map_node_free(node);
 	}
 	SPLAY_INIT(&map->root);
 	map->len = 0;
@@ -164,16 +165,14 @@ map_truncate(struct Map *map)
 int
 nodecmp(struct MapNode *e1, struct MapNode *e2)
 {
-	if (e1->map->compare == NULL) {
-		if (e1->key == e2->key) {
-			return 0;
-		} else if (e1->key < e2->key) {
-			return -1;
-		} else {
-			return 1;
-		}
-	} else {
+	if (e1->map->compare) {
 		return e1->map->compare(&e1->key, &e2->key, e1->map->compare_userdata);
+	} else if (e1->key == e2->key) {
+		return 0;
+	} else if (e1->key < e2->key) {
+		return -1;
+	} else {
+		return 1;
 	}
 }
 
