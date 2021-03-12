@@ -58,7 +58,7 @@ set_free(struct Set *set)
 		return;
 	}
 
-	set_truncate(set);
+	map_free(set->map);
 	free(set);
 }
 
