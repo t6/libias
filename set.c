@@ -128,11 +128,11 @@ set_iterator_free(struct SetIterator **iter_)
 }
 
 void *
-set_iterator_next(struct SetIterator **iter_)
+set_iterator_next(struct SetIterator **iter_, size_t *index)
 {
 	void *element;
 	struct SetIterator *iter = *iter_;
-	void *next = map_iterator_next(&iter->iter, &element);
+	void *next = map_iterator_next(&iter->iter, &element, index);
 	if (next == NULL) {
 		set_iterator_free(iter_);
 		*iter_ = NULL;

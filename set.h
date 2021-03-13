@@ -44,8 +44,9 @@ void set_truncate(struct Set *);
 
 struct SetIterator *set_iterator(struct Set *);
 void set_iterator_free(struct SetIterator **);
-void *set_iterator_next(struct SetIterator **);
+void *set_iterator_next(struct SetIterator **, size_t *);
 
 #define SET_FOREACH(SET, TYPE, VAR) \
 	for (struct SetIterator *__##VAR##_iter __attribute__((cleanup(set_iterator_free))) = set_iterator(SET); __##VAR##_iter != NULL; set_iterator_free(&__##VAR##_iter)) \
-	for (TYPE VAR = set_iterator_next(&__##VAR##_iter); VAR != NULL; VAR = set_iterator_next(&__##VAR##_iter))
+	for (size_t VAR##_index = 0; __##VAR##_iter != NULL; set_iterator_free(&__##VAR##_iter)) \
+	for (TYPE VAR = set_iterator_next(&__##VAR##_iter, &VAR##_index); VAR != NULL; VAR = set_iterator_next(&__##VAR##_iter, &VAR##_index))

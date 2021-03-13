@@ -43,6 +43,7 @@ TESTS() {
 	array_append(array, xstrdup("3"));
 	size_t i = 0;
 	ARRAY_FOREACH(array, char *, s) {
+		TEST(i == s_index);
 		switch (i++) {
 		case 0: TEST_STREQ(s, "1"); break;
 		case 1: TEST_STREQ(s, "2"); break;
@@ -50,6 +51,12 @@ TESTS() {
 		}
 	}
 	TEST(i == 3);
+
+	i = 0;
+	ARRAY_FOREACH(array, char *, s) {
+		break;
+	}
+	TEST(i == 0);
 
 	// Check that ARRAY_FOREACH works with NULL values
 	array = array_new();

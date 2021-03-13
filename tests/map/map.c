@@ -45,6 +45,7 @@ TESTS() {
 
 	size_t i = 0;
 	MAP_FOREACH(map, char *, key, char *, value) {
+		TEST(i == key_index);
 		switch (i++) {
 		case 0:
 			TEST_STREQ(key, "1");
@@ -57,4 +58,18 @@ TESTS() {
 		}
 	}
 	TEST(i == 2);
+
+	i = 0;
+	MAP_FOREACH(map, char *, key, char *, value) {
+		i++;
+		break;
+	}
+	TEST(i == 1);
+
+	i = 0;
+	map = map_new(NULL, NULL, NULL, NULL);
+	MAP_FOREACH(map, char *, key, char *, value) {
+		i++;
+	}
+	TEST(i == 0);
 }

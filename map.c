@@ -55,6 +55,7 @@ struct Map {
 
 struct MapIterator {
 	struct MapNode *current;
+	size_t index;
 };
 
 static void map_node_free(struct MapNode *);
@@ -196,7 +197,7 @@ map_iterator_free(struct MapIterator **iter)
 }
 
 void *
-map_iterator_next(struct MapIterator **iter_, void **value)
+map_iterator_next(struct MapIterator **iter_, void **value, size_t *index)
 {
 	struct MapIterator *iter = *iter_;
 	if (iter->current == NULL) {
@@ -204,6 +205,7 @@ map_iterator_next(struct MapIterator **iter_, void **value)
 		return NULL;
 	}
 
+	*index = iter->index++;
 	void *key = iter->current->key;
 	*value = iter->current->value;
 	iter->current = SPLAY_NEXT(MapTree, &(iter->current->map->root), iter->current);

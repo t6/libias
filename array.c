@@ -201,14 +201,14 @@ array_iterator_free(struct ArrayIterator **iter_)
 }
 
 void *
-array_iterator_next(struct ArrayIterator **iter_, int *sentinel)
+array_iterator_next(struct ArrayIterator **iter_, size_t *index)
 {
 	struct ArrayIterator *iter = *iter_;
 	if (iter->i < iter->array->len) {
+		*index = iter->i;
 		return iter->array->buf[iter->i++];
 	} else {
 		array_iterator_free(iter_);
-		*sentinel = 0;
 		*iter_ = NULL;
 		return NULL;
 	}
