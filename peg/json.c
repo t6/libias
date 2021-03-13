@@ -89,26 +89,95 @@ RULE(JSON) {
 	if (ANY(ws))
 	if (MATCH(value))
 	if (ANY(ws))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(ws) { return SET(0x20, 0x09, 0x0A, 0x0D); }
 
-RULE(begin_array) { return CHAR('['); }
-RULE(begin_object) { return CHAR('{'); }
-RULE(end_array) { return CHAR(']'); }
-RULE(end_object) { return CHAR('}'); }
-RULE(name_separator) { return CHAR(':'); }
-RULE(value_separator) { return CHAR(','); }
-RULE(escape) { return CHAR('\\'); }
-RULE(quotation_mark) { return CHAR('"'); }
-RULE(decimal_point) { return CHAR('.'); }
-RULE(minus) { return CHAR('-'); }
-RULE(plus) { return CHAR('+'); }
-RULE(zero) { return CHAR('0'); }
-RULE(digit) { return CHARF(isdigit); }
-RULE(hexdigit) { return CHARF(ishexdigit);}
+RULE(begin_array) {
+	if (CHAR('['))
+	return ACCEPT;
+	return ERROR("expected beginning of array '['");
+}
+
+RULE(begin_object) {
+	if (CHAR('{'))
+	return ACCEPT;
+	return ERROR("expected beginning of object '{'");
+}
+
+RULE(end_array) {
+	if (CHAR(']'))
+	return ACCEPT;
+	return ERROR("expected end of array ']'");
+}
+
+RULE(end_object) {
+	if (CHAR('}'))
+	return ACCEPT;
+	return ERROR("expected end of object '}'");
+}
+
+RULE(name_separator) {
+	if (CHAR(':'))
+	return ACCEPT;
+	return ERROR("expected name separator ':'");
+}
+
+RULE(value_separator) {
+	if (CHAR(','))
+	return ACCEPT;
+	return ERROR("expected value separator ','");
+}
+
+RULE(escape) {
+	if (CHAR('\\'))
+	return ACCEPT;
+	return ERROR("expected escape '\\'");
+}
+
+RULE(quotation_mark) {
+	if (CHAR('"'))
+	return ACCEPT;
+	return ERROR("expected '\"'");
+}
+
+RULE(decimal_point) {
+	if (CHAR('.'))
+	return ACCEPT;
+	return ERROR("expected '.'");
+}
+
+RULE(minus) {
+	if (CHAR('-'))
+	return ACCEPT;
+	return ERROR("expected '-'");
+}
+
+RULE(plus) {
+	if (CHAR('+'))
+	return ACCEPT;
+	return ERROR("expected '+'");
+}
+
+RULE(zero) {
+	if (CHAR('0'))
+	return ACCEPT;
+	return ERROR("expected '0'");
+}
+
+RULE(digit) {
+	if (CHARF(isdigit))
+	return ACCEPT;
+	return ERROR("expected decimal digit");
+}
+
+RULE(hexdigit) {
+	if (CHARF(ishexdigit))
+	return ACCEPT;
+	return ERROR("expected hexadecimal digit");
+}
 
 RULE(value) {
 	if (!CAPTURE(STRING("false"), 0, PEG_JSON_FALSE))
@@ -118,16 +187,16 @@ RULE(value) {
 	if (!MATCH(array))
 	if (!CAPTURE(MATCH(number), 0, PEG_JSON_NUMBER))
 	if (!MATCH(string))
-	return 0;
-	return 1;
+	return ERROR("");
+	return ACCEPT;
 }
 
 RULE(object_members_0) {
 	if (MATCH(value_separator))
 	if (ANY(ws))
 	if (MATCH(end_object))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(object_members) {
@@ -136,8 +205,8 @@ RULE(object_members) {
 	if (MATCH(value_separator))
 	if (ANY(ws))
 	if (MATCH(member))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(object_0) {
@@ -147,23 +216,23 @@ RULE(object_0) {
 	if (ANY(object_members))
 	if (ANY(ws))
 	if (CAPTURE(MATCH(end_object), 0, PEG_JSON_OBJECT_END))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(object_1) {
 	if (CAPTURE(MATCH(begin_object), 0, PEG_JSON_OBJECT_BEGIN))
 	if (ANY(ws))
 	if (CAPTURE(MATCH(end_object), 0, PEG_JSON_OBJECT_END))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(object) {
 	if (!MATCH(object_0))
 	if (!MATCH(object_1))
-	return 0;
-	return 1;
+	return ERROR("");
+	return ACCEPT;
 }
 
 RULE(member) {
@@ -172,16 +241,16 @@ RULE(member) {
 	if (MATCH(name_separator))
 	if (ANY(ws))
 	if (CAPTURE(MATCH(value), 0, PEG_JSON_OBJECT_VALUE))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(array_values_0) {
 	if (MATCH(value_separator))
 	if (ANY(ws))
 	if (MATCH(end_array))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(array_values) {
@@ -190,8 +259,8 @@ RULE(array_values) {
 	if (MATCH(value_separator))
 	if (ANY(ws))
 	if (CAPTURE(MATCH(value), 0, PEG_JSON_ARRAY_VALUE))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(array_0) {
@@ -201,60 +270,60 @@ RULE(array_0) {
 	if (ANY(array_values))
 	if (ANY(ws))
 	if (CAPTURE(MATCH(end_array), 0, PEG_JSON_ARRAY_END))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(array_1) {
 	if (CAPTURE(MATCH(begin_array), 0, PEG_JSON_ARRAY_BEGIN))
 	if (ANY(ws))
 	if (CAPTURE(MATCH(end_array), 0, PEG_JSON_ARRAY_END))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(array) {
 	if (!MATCH(array_0))
 	if (!MATCH(array_1))
-	return 0;
-	return 1;
+	return ERROR("");
+	return ACCEPT;
 }
 
 RULE(integer) {
-	if (MATCH(zero)) return 1;
+	if (MATCH(zero)) return ACCEPT;
 	if (RANGE('1', '9'))
 	if (ANY(digit))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(e) {
 	if (!CHAR('e'))
 	if (!CHAR('E'))
-	return 0;
-	return 1;
+	return REJECT;
+	return ACCEPT;
 }
 
 RULE(minus_plus) {
 	if (!MATCH(minus))
 	if (!MATCH(plus))
-	return 0;
-	return 1;
+	return REJECT;
+	return ACCEPT;
 }
 
 RULE(exponent) {
 	if (MATCH(e))
 	if (OPT(MATCH(minus_plus)))
 	if (SOME(digit))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(fraction) {
 	if (MATCH(decimal_point))
 	if (SOME(digit))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(number) {
@@ -262,8 +331,8 @@ RULE(number) {
 	if (MATCH(integer))
 	if (OPT(MATCH(fraction)))
 	if (OPT(MATCH(exponent)))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return ERROR("");
 }
 
 RULE(unescaped) {
@@ -271,49 +340,49 @@ RULE(unescaped) {
 	if (!CHAR(0x21))
 	if (!RANGE(0x23, 0x5b))
 	if (!RANGE(0x5d, 0x10ffff))
-	return 0;
-	return 1;
+	return REJECT;
+	return ACCEPT;
 }
 
 RULE(escaped_1) {
 	if (CHAR(0x75))
 	if (REPEAT(hexdigit, 4))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return ERROR("invalid unicode escape");
 }
 
 RULE(escaped_0) {
 	if (!SET(0x22, 0x5c, 0x2f, 0x62, 0x66, 0x6e, 0x72, 0x74))
 	if (!MATCH(escaped_1))
-	return 0;
-	return 1;
+	return REJECT;
+	return ACCEPT;
 }
 
 RULE(escaped) {
 	if (MATCH(escape))
 	if (MATCH(escaped_0))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(character) {
 	if (!MATCH(unescaped))
 	if (!MATCH(escaped))
-	return 0;
-	return 1;
+	return REJECT;
+	return ACCEPT;
 }
 
 RULE(string) {
 	if (MATCH(quotation_mark))
 	if (CAPTURE(ANY(character), 0, PEG_JSON_STRING))
 	if (MATCH(quotation_mark))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return ERROR("invalid string");
 }
 
 RULE(peg_json_decode) {
 	if (MATCH(JSON))
 	if (EOS())
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }

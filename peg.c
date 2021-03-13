@@ -27,6 +27,7 @@
  */
 #include "config.h"
 
+#include <sys/param.h>
 #include <assert.h>
 #if HAVE_ERR
 # include <err.h>
@@ -45,6 +46,13 @@
 #include "utf8.h"
 #include "util.h"
 
+struct PEGError {
+	size_t index;
+	size_t pos;
+	const char *rule;
+	char *msg;
+};
+
 struct PEG {
 	const char *const buf;
 	const size_t len;
@@ -59,6 +67,7 @@ struct PEG {
 	} captures;
 
 	int debug;
+	struct Set *errors;
 	struct Queue *rule_trace;
 
 	struct Mempool *pool;
@@ -100,6 +109,8 @@ do { \
 	return (x); \
 } while (0)
 
+static void peg_error_free(struct PEGError *);
+
 static int
 compare_capture(const void *ap, const void *bp, void *userdata)
 {
@@ -123,6 +134,24 @@ compare_capture(const void *ap, const void *bp, void *userdata)
 		return 1;
 	} else {
 		return 0;
+	}
+}
+
+static int
+compare_error(const void *ap, const void *bp, void *userdata)
+{
+	struct PEGError *a = *(struct PEGError **)ap;
+	struct PEGError *b = *(struct PEGError **)bp;
+	if (a->pos < b->pos) {
+		return 1;
+	} else if (a->pos > b->pos) {
+		return -1;
+	} else if (a->index < b->index) {
+		return -1;
+	} else if (a->index > b->index) {
+		return 1;
+	} else {
+		return strcmp(a->msg, b->msg);
 	}
 }
 
@@ -305,6 +334,21 @@ peg_match_eos(struct PEG *peg, const char *rule)
 }
 
 int
+peg_match_error(struct PEG *peg, const char *rule, const char *msg)
+{
+	struct PEGError key = { .msg = (char *)msg, .pos = peg->pos };
+	if (!set_contains(peg->errors, &key)) {
+		struct PEGError *err = xmalloc(sizeof(struct PEGError));
+		err->index = set_len(peg->errors);
+		err->rule = rule;
+		err->msg = xstrdup(msg);
+		err->pos = peg->pos;
+		set_add(peg->errors, err);
+	}
+	return 0;
+}
+
+int
 peg_match_lookahead(struct PEG *peg, const char *rule, RuleFn rulefn)
 {
 	MATCHER_INIT();
@@ -412,6 +456,63 @@ peg_match_to(struct PEG *peg, const char *rule, const char *needle)
 	return peg_match_thruto(peg, rule, needle, 0);
 }
 
+static void
+peg_line_col_at_pos(struct PEG *peg, size_t pos, size_t *line, size_t *col)
+{
+	*line = 1;
+	*col = 1;
+	size_t len = MIN(pos, peg->len);
+	for (size_t i = 0; i < len;) {
+		uint32_t c;
+		size_t clen = utf8_decode(peg->buf + i, peg->len - i, &c);
+		if (UTF_INVALID == clen) {
+			*line = 1;
+			*col = i;
+			return;
+		}
+		if (c == '\n') {
+			(*line)++;
+			*col = 1;
+		} else {
+			(*col)++;
+		}
+		i += clen;
+	}
+}
+
+char *
+peg_print_errors(struct PEG *peg, const char *filename)
+{
+	if (set_len(peg->errors) == 0) {
+		return NULL;
+	}
+
+	if (filename == NULL) {
+		filename = "<stdin>";
+	}
+	SCOPE_MEMPOOL(pool);
+	struct Array *errors = mempool_add(pool, array_new(), array_free);
+	size_t limit = 6;
+	SET_FOREACH(peg->errors, struct PEGError *, err) {
+		if (err_index >= limit) {
+			break;
+		}
+		size_t line;
+		size_t col;
+		peg_line_col_at_pos(peg, err->pos, &line, &col);
+		char *buf;
+		if (!err->msg || strcmp(err->msg, "") == 0) {
+			buf = str_printf("%s:%zu:%zu: in %s\n", filename, line, col, err->rule);
+		} else {
+			buf = str_printf("%s:%zu:%zu: in %s: %s\n", filename, line, col, err->rule, err->msg);
+		}
+		mempool_add(pool, buf, free);
+		array_append(errors, buf);
+	}
+	set_truncate(peg->errors);
+	return str_join(errors, "");
+}
+
 struct PEG *
 peg_new(const char *const buf, size_t len)
 {
@@ -426,6 +527,7 @@ peg_new(const char *const buf, size_t len)
 	mempool_add(peg->pool, peg, free);
 
 	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;
+	peg->errors = mempool_add(peg->pool, set_new(compare_error, peg, peg_error_free), set_free);
 	peg->rule_trace = mempool_add(peg->pool, queue_new(), queue_free);
 
 	peg->captures.set = mempool_add(peg->pool, set_new(compare_capture, peg, NULL), set_free);
@@ -433,6 +535,15 @@ peg_new(const char *const buf, size_t len)
 	peg->captures.pos = mempool_add(peg->pool, stack_new(), stack_free);
 
 	return peg;
+}
+
+void
+peg_error_free(struct PEGError *error)
+{
+	if (error) {
+		free(error->msg);
+		free(error);
+	}
 }
 
 void

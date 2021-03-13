@@ -31,6 +31,10 @@
 #define	nitems(x)	(sizeof((x)) / sizeof((x)[0]))
 #endif
 
+#define ACCEPT			1
+#define ERROR(msg)		peg_match_error(peg, __func__, (msg))
+#define REJECT			0
+
 #define ANY(r)			ATLEAST((r), 0)
 #define ATLEAST(r, n)		peg_match_atleast(peg, __func__, (r), (n))
 #define ATMOST(r, n)		peg_match_between(peg, __func__, (r), 0, (n))

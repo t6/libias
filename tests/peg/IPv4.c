@@ -58,7 +58,7 @@ struct IPv4Capture {
 };
 
 enum IPv4CaptureState {
-	ACCEPT = 0,
+	IPV4_ACCEPT = 0,
 	BYTE1,
 	BYTE2,
 	BYTE3,
@@ -86,7 +86,7 @@ capture_machine(struct PEGCapture *capture, void *userdata)
 	case BYTE25:
 		data->bytes[4] = xstrndup(capture->buf, capture->len);
 		break;
-	case ACCEPT:
+	case IPV4_ACCEPT:
 		data->full = xstrndup(capture->buf, capture->len);
 		break;
 	}
@@ -96,16 +96,36 @@ capture_machine(struct PEGCapture *capture, void *userdata)
 RULE(dig) { return RANGE('0', '9'); }
 RULE(num0_4) { return RANGE('0', '4'); }
 RULE(num0_5) { return RANGE('0', '5'); }
-RULE(byte_1) { if (CAPTURE(STRING("25"), 2, BYTE25)) if (MATCH(num0_5)) return 1; return 0; }
-RULE(byte_2) { if (CHAR('2')) if (MATCH(num0_4)) if (MATCH(dig)) return 1; return 0; }
-RULE(byte_3) { if (CHAR('1')) if (MATCH(dig)) if (MATCH(dig)) return 1; return 0; }
+RULE(byte_1) {
+	if (CAPTURE(STRING("25"), 2, BYTE25))
+	if (MATCH(num0_5))
+	return ACCEPT;
+	return ERROR("expected 25[0-5]");
+}
+
+RULE(byte_2) {
+	if (CHAR('2'))
+	if (MATCH(num0_4))
+	if (MATCH(dig))
+	return ACCEPT;
+	return ERROR("expected 2[0-4][0-9]");
+}
+
+RULE(byte_3) {
+	if (CHAR('1'))
+	if (MATCH(dig))
+	if (MATCH(dig))
+	return ACCEPT;
+	return ERROR("expected 1[0-9][0-9]");
+}
+
 RULE(byte) {
 	if (!MATCH(byte_1))
 	if (!MATCH(byte_2))
 	if (!MATCH(byte_3))
 	if (!BETWEEN(dig, 1, 2))
-	return 0;
-	return 1;
+	return ERROR("expected 1 or 2 digits");
+	return ACCEPT;
 }
 
 RULE(ipv4_address) {
@@ -116,15 +136,15 @@ RULE(ipv4_address) {
 	if (CAPTURE(MATCH(byte), 0, BYTE3))
 	if (CHAR('.'))
 	if (CAPTURE(MATCH(byte), 0, BYTE4))
-	return 1;
-	return 0;
+	return ACCEPT;
+	return REJECT;
 }
 
 RULE(ipv4) {
 	if (MATCH(ipv4_address))
 	if (EOS())
-	return 1;
-	return 0;
+	return ACCEPT;
+	return ERROR("expected end-of-string");
 }
 
 static enum PEGCaptureFlag

@@ -367,19 +367,13 @@ static const char *json_tests[] = {
 
 #define tests json_tests
 
-static int
-check_match(const char *s, int expected)
-{
-	struct PEG *peg = peg_new(s, strlen(s));
-	int result = peg_match(peg, peg_json_decode, NULL, NULL);
-	peg_free(peg);
-	return result == expected;
-}
+static int check_match(const char *, int);
+static const char *name;
 
 TESTS() {
 	chdir(JSON_TEST_PATH);
 	for (size_t i = 0; i < nitems(tests); i++) {
-		const char *name = tests[i];
+		name = tests[i];
 		int valid = *name == 'y' || *name == 'i';
 		int fd = open(name, O_RDONLY);
 		char *buf;
@@ -427,4 +421,20 @@ TESTS() {
 	TEST(check_match("{\"\":null,\"\":null}", 1));
 	TEST(check_match("{\"foo\":null}", 1));
 	TEST(check_match("[\"Да Му Еба Майката\"]", 1));
+}
+
+static int
+check_match(const char *s, int expected)
+{
+	struct PEG *peg = peg_new(s, strlen(s));
+	int result = peg_match(peg, peg_json_decode, NULL, NULL);
+	if (!result && expected) {
+		char *errors = peg_print_errors(peg, name);
+		if (errors) {
+			failures[failureslen++] = errors;
+		}
+	}
+	name = NULL;
+	peg_free(peg);
+	return result == expected;
 }

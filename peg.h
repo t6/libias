@@ -54,6 +54,7 @@ struct PEG *peg_new(const char *, size_t);
 void peg_free(struct PEG *);
 
 int peg_match(struct PEG *, RuleFn, CaptureFn, void *);
+char *peg_print_errors(struct PEG *, const char *);
 
 int peg_match_atleast(struct PEG *, const char *, RuleFn, int);
 int peg_match_between(struct PEG *, const char *, RuleFn, int, int);
@@ -63,6 +64,7 @@ int peg_match_char(struct PEG *, const char *, uint32_t);
 int peg_match_char_f(struct PEG *, const char *, int (*)(int));
 int peg_match_chars(struct PEG *, const char *, uint32_t[], size_t);
 int peg_match_eos(struct PEG *, const char *);
+int peg_match_error(struct PEG *, const char *, const char *);
 int peg_match_lookahead(struct PEG *, const char *, RuleFn);
 int peg_match_range(struct PEG *, const char *, uint32_t, uint32_t);
 int peg_match_repeat(struct PEG *, const char *, RuleFn, int);
