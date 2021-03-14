@@ -77,11 +77,7 @@ array_append(struct Array *array, void *v)
 	if (array->len >= array->cap) {
 		size_t new_cap = array->cap + INITIAL_ARRAY_CAP;
 		assert(new_cap > array->cap);
-		void **new_array = recallocarray(array->buf, array->cap, new_cap, array->value_size);
-		if (new_array == NULL) {
-			warn("recallocarray");
-			abort();
-		}
+		void **new_array = xrecallocarray(array->buf, array->cap, new_cap, array->value_size);
 		array->buf = new_array;
 		array->cap = new_cap;
 	}

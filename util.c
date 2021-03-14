@@ -78,10 +78,7 @@ slurp(int fd)
 			size_t oldsize = bufsize;
 			bufsize += SLURP_BUF_SIZE;
 			left = SLURP_BUF_SIZE;
-			buf = recallocarray(buf, oldsize, bufsize, 1);
-			if (buf == NULL) {
-				abort();
-			}
+			buf = xrecallocarray(buf, oldsize, bufsize, 1);
 		}
 	}
 
