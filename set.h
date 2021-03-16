@@ -39,8 +39,8 @@ void set_remove(struct Set *, void *);
 void *set_get(struct Set *, void *);
 int set_contains(struct Set *, void *);
 size_t set_len(struct Set *);
-struct Array *set_toarray(struct Set *);
 void set_truncate(struct Set *);
+struct Array *set_values(struct Set *);
 
 struct SetIterator *set_iterator(struct Set *);
 void set_iterator_free(struct SetIterator **);

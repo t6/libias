@@ -92,20 +92,16 @@ set_len(struct Set *set)
 	return map_len(set->map);
 }
 
-struct Array *
-set_toarray(struct Set *set)
-{
-	struct Array *array = array_new();
-	MAP_FOREACH (set->map, void *, key, void *, element) {
-		array_append(array, key);
-	}
-	return array;
-}
-
 void
 set_truncate(struct Set *set)
 {
 	map_truncate(set->map);
+}
+
+struct Array *
+set_values(struct Set *set)
+{
+	return map_values(set->map);
 }
 
 struct SetIterator *
