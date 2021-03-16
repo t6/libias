@@ -55,6 +55,7 @@ char *slurp(int);
 int update_symlink(int, const char *, const char *, char **);
 
 char *str_common_prefix(const char *, const char *);
+int str_casecompare(const void *, const void *, void *);
 int str_compare(const void *, const void *, void *);
 int str_endswith(const char *, const char *);
 char *str_join(struct Array *, const char *);

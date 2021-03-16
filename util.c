@@ -144,6 +144,14 @@ str_common_prefix(const char *a, const char *b)
 }
 
 int
+str_casecompare(const void *ap, const void *bp, void *userdata)
+{
+	const char *a = *(const char **)ap;
+	const char *b = *(const char **)bp;
+	return strcasecmp(a, b);
+}
+
+int
 str_compare(const void *ap, const void *bp, void *userdata)
 {
 	const char *a = *(const char **)ap;
