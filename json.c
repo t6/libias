@@ -272,7 +272,9 @@ json_type(struct JSON *json)
 struct Array *
 json_unwrap_array(struct JSON *json)
 {
-	if (json->type == JSON_ARRAY) {
+	if (json == NULL) {
+		return NULL;
+	} else if (json->type == JSON_ARRAY) {
 		return json->array;
 	} else {
 		return NULL;
@@ -282,7 +284,9 @@ json_unwrap_array(struct JSON *json)
 const char *
 json_unwrap_number(struct JSON *json)
 {
-	if (json->type == JSON_NUMBER) {
+	if (json == NULL) {
+		return NULL;
+	} else if (json->type == JSON_NUMBER) {
 		return json->string;
 	} else {
 		return 0;
@@ -292,7 +296,9 @@ json_unwrap_number(struct JSON *json)
 struct Map *
 json_unwrap_object(struct JSON *json)
 {
-	if (json->type == JSON_OBJECT) {
+	if (json == NULL) {
+		return NULL;
+	} else if (json->type == JSON_OBJECT) {
 		return json->object;
 	} else {
 		return NULL;
@@ -302,7 +308,9 @@ json_unwrap_object(struct JSON *json)
 const char *
 json_unwrap_string(struct JSON *json)
 {
-	if (json->type == JSON_STRING) {
+	if (json == NULL) {
+		return NULL;
+	} else if (json->type == JSON_STRING) {
 		return json->string;
 	} else {
 		return NULL;
