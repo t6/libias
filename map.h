@@ -39,6 +39,8 @@ void *map_get(struct Map *, void *);
 int map_contains(struct Map *, void *);
 size_t map_len(struct Map *);
 void map_truncate(struct Map *);
+struct Array *map_keys(struct Map *);
+struct Array *map_values(struct Map *);
 
 struct MapIterator *map_iterator(struct Map *);
 void map_iterator_free(struct MapIterator **);

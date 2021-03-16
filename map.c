@@ -163,6 +163,28 @@ map_truncate(struct Map *map)
 	map->len = 0;
 }
 
+struct Array *
+map_keys(struct Map *map)
+{
+	struct Array *array = array_new();
+	struct MapNode *node;
+	SPLAY_FOREACH(node, MapTree, &map->root) {
+		array_append(array, node->key);
+	}
+	return array;
+}
+
+struct Array *
+map_values(struct Map *map)
+{
+	struct Array *array = array_new();
+	struct MapNode *node;
+	SPLAY_FOREACH(node, MapTree, &map->root) {
+		array_append(array, node->value);
+	}
+	return array;
+}
+
 int
 nodecmp(struct MapNode *e1, struct MapNode *e2)
 {
