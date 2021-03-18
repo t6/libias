@@ -85,15 +85,10 @@ utf8.o: config.h utf8.h
 util.o: config.h array.h util.h
 
 deps:
-	@for f in $$(git ls-files | grep '.*\.c$$' | LC_ALL=C sort); do \
-	awk '/^#include "/ { \
-		if (!filename) { \
-			printf("%s.o:", substr(FILENAME, 1, length(FILENAME) - 2)); \
-			filename = 1; \
-		} \
-		printf(" %s", substr($$2, 2, length($$2) - 2)) \
-	} \
-	END { if (filename) { print "" } }' $$f; done > Makefile.deps
+	@for f in $$(git ls-files | grep '.*\.c$$' | grep -v '^tests\.c$$' | LC_ALL=C sort); do \
+		${CC} ${CFLAGS} -MM -MT "$${f%.c}.o" $${f} | sed 's/[\\ ]/\n/g' | grep -vF "$${f}" | tr -s '\n' ' ' | sed 's/ $$//'; \
+		echo; \
+	done > Makefile.deps
 	@mv Makefile Makefile.bak
 	@awk '/^#$$/ { print; deps = 1 } \
 	deps && /^$$/ { deps = 0; system("cat Makefile.deps") } \
