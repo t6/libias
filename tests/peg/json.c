@@ -371,6 +371,10 @@ static int check_match(const char *, int);
 static const char *name;
 
 TESTS() {
+	// int fd = open("pkg-status.json", O_RDONLY);
+	// char *buf = slurp(fd);
+	// TEST(check_match(buf, 1));
+
 	chdir(JSON_TEST_PATH);
 	for (size_t i = 0; i < nitems(tests); i++) {
 		name = tests[i];
@@ -402,10 +406,6 @@ TESTS() {
 		free(buf);
 		close(fd);
 	}
-
-	// int fd = open("pkg-status.json", O_RDONLY);
-	// char *buf = slurp(fd);
-	// TEST(check_match(peg_json_decode, buf, 1));
 
 	TEST(check_match("[null]", 1));
 	TEST(check_match("\"\\\"foo\"", 1));

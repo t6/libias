@@ -46,11 +46,14 @@
 #include "utf8.h"
 #include "util.h"
 
+static const size_t PEG_MAX_DEPTH = 10000;
+static const size_t PEG_MAX_ERRORS = 4;
+
 struct PEGError {
 	size_t index;
 	size_t pos;
 	const char *rule;
-	char *msg;
+	const char *msg;
 };
 
 struct PEG {
@@ -67,13 +70,13 @@ struct PEG {
 	} captures;
 
 	int debug;
-	struct Set *errors;
+	struct Array *errors;
+	size_t error_index;
 	struct Queue *rule_trace;
 
 	struct Mempool *pool;
 };
 
-static const size_t PEG_MAX_DEPTH = 10000;
 
 #define MATCHER_INIT() \
 	size_t MATCHER_INIT_captures_queue_len = queue_len(peg->captures.queue); \
@@ -108,8 +111,6 @@ do { \
 	} \
 	return (x); \
 } while (0)
-
-static void peg_error_free(struct PEGError *);
 
 static int
 compare_capture(const void *ap, const void *bp, void *userdata)
@@ -146,12 +147,18 @@ compare_error(const void *ap, const void *bp, void *userdata)
 		return 1;
 	} else if (a->pos > b->pos) {
 		return -1;
-	} else if (a->index < b->index) {
+	} else if (userdata != NULL && a->index < b->index) {
 		return -1;
-	} else if (a->index > b->index) {
+	} else if (userdata != NULL && a->index > b->index) {
 		return 1;
+	} else if (a->rule == NULL && b->rule == NULL) {
+		return 0;
+	} else if (a->rule == NULL) {
+		return 1;
+	} else if (b->rule == NULL) {
+		return -1;
 	} else {
-		return strcmp(a->msg, b->msg);
+		return strcmp(a->rule, b->rule);
 	}
 }
 
@@ -336,14 +343,14 @@ peg_match_eos(struct PEG *peg, const char *rule)
 int
 peg_match_error(struct PEG *peg, const char *rule, const char *msg)
 {
-	struct PEGError key = { .msg = (char *)msg, .pos = peg->pos };
-	if (!set_contains(peg->errors, &key)) {
-		struct PEGError *err = xmalloc(sizeof(struct PEGError));
-		err->index = set_len(peg->errors);
+	struct PEGError key = { .rule = rule, .msg = msg, .pos = peg->pos };
+	if (array_find(peg->errors, &key, compare_error, &key) == -1) {
+		struct PEGError *err = array_get(peg->errors, PEG_MAX_ERRORS - 1);
+		err->index = peg->error_index++;
 		err->rule = rule;
-		err->msg = xstrdup(msg);
+		err->msg = msg;
 		err->pos = peg->pos;
-		set_add(peg->errors, err);
+		array_sort(peg->errors, compare_error, NULL);
 	}
 	return 0;
 }
@@ -483,18 +490,13 @@ peg_line_col_at_pos(struct PEG *peg, size_t pos, size_t *line, size_t *col)
 char *
 peg_print_errors(struct PEG *peg, const char *filename)
 {
-	if (set_len(peg->errors) == 0) {
-		return NULL;
-	}
-
 	if (filename == NULL) {
 		filename = "<stdin>";
 	}
 	SCOPE_MEMPOOL(pool);
 	struct Array *errors = mempool_add(pool, array_new(), array_free);
-	size_t limit = 6;
-	SET_FOREACH(peg->errors, struct PEGError *, err) {
-		if (err_index >= limit) {
+	ARRAY_FOREACH(peg->errors, struct PEGError *, err) {
+		if (err->rule == NULL) {
 			break;
 		}
 		size_t line;
@@ -509,7 +511,6 @@ peg_print_errors(struct PEG *peg, const char *filename)
 		mempool_add(pool, buf, free);
 		array_append(errors, buf);
 	}
-	set_truncate(peg->errors);
 	return str_join(errors, "");
 }
 
@@ -526,8 +527,12 @@ peg_new(const char *const buf, size_t len)
 	peg->pool = mempool_new();
 	mempool_add(peg->pool, peg, free);
 
+	peg->errors = mempool_add(peg->pool, array_new(), array_free);
+	for (size_t i = 0; i < PEG_MAX_ERRORS; i++) {
+		array_append(peg->errors, mempool_add(peg->pool, xmalloc(sizeof(struct PEGError)), free));
+	}
+
 	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;
-	peg->errors = mempool_add(peg->pool, set_new(compare_error, peg, peg_error_free), set_free);
 	peg->rule_trace = mempool_add(peg->pool, queue_new(), queue_free);
 
 	peg->captures.set = mempool_add(peg->pool, set_new(compare_capture, peg, NULL), set_free);
@@ -535,15 +540,6 @@ peg_new(const char *const buf, size_t len)
 	peg->captures.pos = mempool_add(peg->pool, stack_new(), stack_free);
 
 	return peg;
-}
-
-void
-peg_error_free(struct PEGError *error)
-{
-	if (error) {
-		free(error->msg);
-		free(error);
-	}
 }
 
 void
