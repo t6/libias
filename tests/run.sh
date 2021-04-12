@@ -6,7 +6,12 @@ tests_failed=0
 tests_run=0
 
 cd "${ROOT}"
-for test in $(find tests -name '*.test' | sed 's,^tests/,,' | sort); do
+if [ $# -gt 0 ]; then
+	TESTS="$(echo "$@" | tr ' ' '\n' | sed 's,^tests/,,' | sort)"
+else
+	TESTS="$(find tests -name '*.test' | sed 's,^tests/,,' | sort)"
+fi
+for test in ${TESTS}; do
 	echo -n "${test%*.test}: "
 	if ! "tests/${test}"; then
 		tests_run=$((tests_run + 1))

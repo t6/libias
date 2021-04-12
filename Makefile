@@ -22,7 +22,7 @@ OBJS=		array.o \
 		stack.o \
 		utf8.o \
 		util.o
-TESTS=		tests/array/array.test \
+ALL_TESTS=	tests/array/array.test \
 		tests/diff/diffutil.test \
 		tests/json/json.test \
 		tests/map/map.test \
@@ -34,6 +34,7 @@ TESTS=		tests/array/array.test \
 		tests/queue/queue.test \
 		tests/stack/stack.test \
 		tests/util/str.test
+TESTS?=		${ALL_TESTS}
 
 all: libias.a
 
@@ -41,7 +42,7 @@ lint:
 	@/bin/sh tests/lint.sh
 
 test: ${TESTS}
-	@/bin/sh tests/run.sh
+	@/bin/sh tests/run.sh ${TESTS}
 
 .c.o:
 	${CC} ${CPPFLAGS} ${CFLAGS} -o $@ -c $<
@@ -97,4 +98,4 @@ deps:
 
 clean:
 	@find . -name '*.o' | xargs rm -f
-	@rm -f *.a ${TESTS} config.*.old
+	@rm -f *.a ${ALL_TESTS} config.*.old
