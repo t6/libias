@@ -195,6 +195,16 @@ str_join(struct Array *array, const char *sep)
 	return buf;
 }
 
+char *
+str_map(const char *s, size_t len, int (*f)(int))
+{
+	char *buf = xmalloc(len + 1);
+	for (size_t i = 0; i < len && s[i] != 0; i++) {
+		buf[i] = f(s[i]);
+	}
+	return buf;
+}
+
 int
 str_startswith(const char *s, const char *start)
 {

@@ -59,6 +59,7 @@ int str_casecompare(const void *, const void *, void *);
 int str_compare(const void *, const void *, void *);
 int str_endswith(const char *, const char *);
 char *str_join(struct Array *, const char *);
+char *str_map(const char *, size_t, int (*)(int));
 char *str_printf(const char *, ...) __printflike(1, 2);
 char *str_repeat(const char *, const size_t);
 int str_startswith(const char *, const char *);
