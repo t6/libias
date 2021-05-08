@@ -68,12 +68,12 @@ array_new(void)
 }
 
 void
-array_append(struct Array *array, void *v)
+array_append(struct Array *array, const void *v)
 {
 	assert(array->cap > 0);
 	assert(array->cap > array->len);
 
-	array->buf[array->len++] = v;
+	array->buf[array->len++] = (void *)v;
 	if (array->len >= array->cap) {
 		size_t new_cap = array->cap + INITIAL_ARRAY_CAP;
 		assert(new_cap > array->cap);
@@ -105,11 +105,11 @@ array_free(struct Array *array)
 }
 
 ssize_t
-array_find(struct Array *array, void *k, ArrayCompareFn compar, void *userdata)
+array_find(struct Array *array, const void *k, ArrayCompareFn compar, void *userdata)
 {
 	if (compar) {
 		for (size_t i = 0; i < array_len(array); i++) {
-			void *v = array_get(array, i);
+			const void *v = array_get(array, i);
 			if (compar(&v, &k, userdata) == 0) {
 				return i;
 			}
@@ -150,10 +150,10 @@ array_pop(struct Array *array)
 }
 
 void
-array_set(struct Array *array, size_t i, void *v)
+array_set(struct Array *array, size_t i, const void *v)
 {
 	if (i < array->len) {
-		array->buf[i] = v;
+		array->buf[i] = (void *)v;
 	}
 }
 

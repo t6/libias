@@ -75,7 +75,7 @@ queue_len(struct Queue *queue)
 }
 
 int
-queue_contains(struct Queue *queue, void *value)
+queue_contains(struct Queue *queue, const void *value)
 {
 	for (struct QueueNode *node = queue->head; node; node = node->next) {
 		if (value == node->value) {
@@ -119,10 +119,10 @@ queue_pop(struct Queue *queue)
 }
 
 void
-queue_push(struct Queue *queue, void *value)
+queue_push(struct Queue *queue, const void *value)
 {
 	struct QueueNode *node = xmalloc(sizeof(struct QueueNode));
-	node->value = value;
+	node->value = (void *)value;
 	if (queue->tail) {
 		queue->tail->next = node;
 		node->prev = queue->tail;

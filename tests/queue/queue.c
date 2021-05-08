@@ -38,9 +38,9 @@
 
 TESTS() {
 	struct Queue *queue = queue_new();
-	queue_push(queue, xstrdup("1"));
-	queue_push(queue, xstrdup("2"));
-	queue_push(queue, xstrdup("3"));
+	queue_push(queue, "1");
+	queue_push(queue, "2");
+	queue_push(queue, "3");
 	TEST(queue_len(queue) == 3);
 	TEST_STREQ(queue_peek(queue), "1");
 	TEST_STREQ(queue_pop(queue), "1");
@@ -51,10 +51,10 @@ TESTS() {
 	TEST(queue_len(queue) == 0);
 	TEST(queue_pop(queue) == NULL);
 
-	queue_push(queue, xstrdup("1"));
-	queue_push(queue, xstrdup("2"));
-	queue_push(queue, xstrdup("3"));
-	queue_push(queue, xstrdup("4"));
+	queue_push(queue, "1");
+	queue_push(queue, "2");
+	queue_push(queue, "3");
+	queue_push(queue, "4");
 	TEST(queue_len(queue) == 4);
 	queue_dequeue(queue);
 	queue_dequeue(queue);

@@ -101,12 +101,12 @@ map_free(struct Map *map)
 }
 
 void
-map_add(struct Map *map, void *key, void *value)
+map_add(struct Map *map, const void *key, const void *value)
 {
-	if (!map_contains(map, key)) {
+	if (!map_get(map, key)) {
 		struct MapNode *node = xmalloc(sizeof(struct MapNode));
-		node->key = key;
-		node->value = value;
+		node->key = (void *)key;
+		node->value = (void *)value;
 		node->map = map;
 		SPLAY_INSERT(MapTree, &map->root, node);
 		map->len++;
@@ -114,9 +114,9 @@ map_add(struct Map *map, void *key, void *value)
 }
 
 void
-map_remove(struct Map *map, void *key)
+map_remove(struct Map *map, const void *key)
 {
-	struct MapNode search = { .key = key, .map = map };
+	struct MapNode search = { .key = (void *)key, .map = map };
 	struct MapNode *node = SPLAY_FIND(MapTree, &map->root, &search);
 	if (node) {
 		SPLAY_REMOVE(MapTree, &map->root, node);
@@ -126,9 +126,9 @@ map_remove(struct Map *map, void *key)
 }
 
 void *
-map_get(struct Map *map, void *key)
+map_get(struct Map *map, const void *key)
 {
-	struct MapNode search = { .key = key, .map = map };
+	struct MapNode search = { .key = (void *)key, .map = map };
 	struct MapNode *node = SPLAY_FIND(MapTree, &map->root, &search);
 	if (node) {
 		return node->value;
@@ -138,7 +138,7 @@ map_get(struct Map *map, void *key)
 }
 
 int
-map_contains(struct Map *map, void *key)
+map_contains(struct Map *map, const void *key)
 {
 	return map_get(map, key) != NULL;
 }

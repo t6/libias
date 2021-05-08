@@ -38,8 +38,8 @@
 
 TESTS() {
 	struct Map *map = map_new(str_compare, NULL, NULL, NULL);
-	map_add(map, (char *)"1", (char *)"foo");
-	map_add(map, (char *)"2", (char *)"bar");
+	map_add(map, "1", "foo");
+	map_add(map, "2", "bar");
 
 	TEST(map_len(map) == 2);
 

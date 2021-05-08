@@ -73,7 +73,7 @@ stack_len(struct Stack *stack)
 }
 
 int
-stack_contains(struct Stack *stack, void *value)
+stack_contains(struct Stack *stack, const void *value)
 {
 	for (struct StackNode *node = stack->head; node; node = node->next) {
 		if (value == node->value) {
@@ -109,10 +109,10 @@ stack_pop(struct Stack *stack)
 }
 
 void
-stack_push(struct Stack *stack, void *value)
+stack_push(struct Stack *stack, const void *value)
 {
 	struct StackNode *node = xmalloc(sizeof(struct StackNode));
-	node->value = value;
+	node->value = (void *)value;
 	node->next = stack->head;
 	stack->head = node;
 	stack->len++;

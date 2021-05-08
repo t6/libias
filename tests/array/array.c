@@ -38,9 +38,9 @@
 
 TESTS() {
 	struct Array *array = array_new();
-	array_append(array, xstrdup("1"));
-	array_append(array, xstrdup("2"));
-	array_append(array, xstrdup("3"));
+	array_append(array, "1");
+	array_append(array, "2");
+	array_append(array, "3");
 	size_t i = 0;
 	ARRAY_FOREACH(array, char *, s) {
 		TEST(i == s_index);

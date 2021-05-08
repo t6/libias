@@ -63,25 +63,25 @@ set_free(struct Set *set)
 }
 
 void
-set_add(struct Set *set, void *element)
+set_add(struct Set *set, const void *element)
 {
 	map_add(set->map, element, element);
 }
 
 void
-set_remove(struct Set *set, void *element)
+set_remove(struct Set *set, const void *element)
 {
 	map_remove(set->map, element);
 }
 
 void *
-set_get(struct Set *set, void *element)
+set_get(struct Set *set, const void *element)
 {
 	return map_get(set->map, element);
 }
 
 int
-set_contains(struct Set *set, void *element)
+set_contains(struct Set *set, const void *element)
 {
 	return map_get(set->map, element) != NULL;
 }

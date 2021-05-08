@@ -265,7 +265,7 @@ peg_match_capture_end(struct PEG *peg, unsigned int tag, unsigned int state, int
 		if (retval) {
 			size_t len = peg->pos - start;
 			struct PEGCapture c = { .tag = tag, .state = state, .pos = start, .len = len };
-			if (!set_contains(peg->captures.set, &c)) {
+			if (!set_get(peg->captures.set, &c)) {
 				struct PEGCapture *capture = xmalloc(sizeof(struct PEGCapture));
 				capture->tag = tag;
 				capture->state = state;

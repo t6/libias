@@ -38,9 +38,9 @@
 
 TESTS() {
 	struct Stack *stack = stack_new();
-	stack_push(stack, xstrdup("1"));
-	stack_push(stack, xstrdup("2"));
-	stack_push(stack, xstrdup("3"));
+	stack_push(stack, "1");
+	stack_push(stack, "2");
+	stack_push(stack, "3");
 	TEST(stack_len(stack) == 3);
 	TEST_STREQ(stack_peek(stack), "3");
 	TEST_STREQ(stack_pop(stack), "3");

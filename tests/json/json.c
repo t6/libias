@@ -89,8 +89,8 @@ TESTS() {
 	json = json_new(buf, strlen(buf));
 	TEST_IF(json && json_type(json) == JSON_OBJECT) {
 	object = json_unwrap_object(json);
-	TEST(map_contains(object, (char *)"1"));
-	json = map_get(object, (char *)"1");
+	TEST(map_get(object, "1"));
+	json = map_get(object, "1");
 	TEST_IF(json && json_type(json) == JSON_ARRAY) {
 	array = json_unwrap_array(json);
 	TEST(array_len(array) == 3);

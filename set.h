@@ -34,10 +34,10 @@ typedef int (*SetCompareFn)(const void *, const void *, void *);
 
 struct Set *set_new(SetCompareFn, void *, void *);
 void set_free(struct Set *);
-void set_add(struct Set *, void *);
-void set_remove(struct Set *, void *);
-void *set_get(struct Set *, void *);
-int set_contains(struct Set *, void *);
+void set_add(struct Set *, const void *);
+void set_remove(struct Set *, const void *);
+void *set_get(struct Set *, const void *);
+int set_contains(struct Set *, const void *);
 size_t set_len(struct Set *);
 void set_truncate(struct Set *);
 struct Array *set_values(struct Set *);

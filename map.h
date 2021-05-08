@@ -33,10 +33,10 @@ typedef int (*MapCompareFn)(const void *, const void *, void *);
 
 struct Map *map_new(MapCompareFn, void *, void *, void *);
 void map_free(struct Map *);
-void map_add(struct Map *, void *, void *);
-void map_remove(struct Map *, void *);
-void *map_get(struct Map *, void *);
-int map_contains(struct Map *, void *);
+void map_add(struct Map *, const void *, const void *);
+void map_remove(struct Map *, const void *);
+void *map_get(struct Map *, const void *);
+int map_contains(struct Map *, const void *);
 size_t map_len(struct Map *);
 void map_truncate(struct Map *);
 struct Array *map_keys(struct Map *);
