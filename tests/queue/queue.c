@@ -62,4 +62,9 @@ TESTS() {
 	TEST_STREQ(queue_peek(queue), "1");
 	queue_dequeue(queue);
 	TEST(queue_len(queue) == 0);
+
+	queue = queue_new();
+	queue_push(queue, "1");
+	TEST_STREQ(queue_dequeue(queue), "1");
+	TEST(queue_pop(queue) == NULL);
 }

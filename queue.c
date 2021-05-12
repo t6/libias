@@ -144,6 +144,9 @@ queue_dequeue(struct Queue *queue)
 		if (newtail) {
 			newtail->next = NULL;
 		}
+		if (queue->tail == queue->head) {
+			queue->head = newtail;
+		}
 		free(queue->tail);
 		queue->tail = newtail;
 		queue->len--;
