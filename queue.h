@@ -37,3 +37,4 @@ void *queue_peek(struct Queue *);
 void *queue_pop(struct Queue *);
 void *queue_dequeue(struct Queue *);
 void queue_push(struct Queue *, const void *);
+void queue_truncate(struct Queue *);

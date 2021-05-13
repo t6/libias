@@ -154,3 +154,16 @@ queue_dequeue(struct Queue *queue)
 	}
 }
 
+void
+queue_truncate(struct Queue *queue)
+{
+	struct QueueNode *node = queue->head;
+	while (node) {
+		struct QueueNode *next = node->next;
+		free(node);
+		node = next;
+	}
+	queue->head = NULL;
+	queue->tail = NULL;
+	queue->len = 0;
+}

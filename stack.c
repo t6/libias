@@ -117,3 +117,16 @@ stack_push(struct Stack *stack, const void *value)
 	stack->head = node;
 	stack->len++;
 }
+
+void
+stack_truncate(struct Stack *stack)
+{
+	struct StackNode *node = stack->head;
+	while (node) {
+		struct StackNode *next = node->next;
+		free(node);
+		node = next;
+	}
+	stack->head = NULL;
+	stack->len = 0;
+}

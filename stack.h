@@ -36,3 +36,4 @@ int stack_contains(struct Stack *, const void *);
 void *stack_peek(struct Stack *);
 void *stack_pop(struct Stack *);
 void stack_push(struct Stack *, const void *);
+void stack_truncate(struct Stack *);
