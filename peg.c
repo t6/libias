@@ -186,6 +186,7 @@ peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userd
 			while ((capture = queue_pop(peg->captures.queue))) {
 				free(capture);
 			}
+			result = 0;
 		} else {
 			capture = mempool_add(peg->pool, xmalloc(sizeof(struct PEGCapture)), free);
 			capture->peg = peg;
