@@ -97,6 +97,24 @@ mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 }
 
 void
+mempool_inherit(struct Mempool *pool, struct Mempool *other)
+{
+	if (other->map) {
+		MAP_FOREACH(other->map, void *, ptr, void *, freefn) {
+			mempool_add(pool, ptr, freefn);
+		}
+		map_truncate(other->map);
+	} else {
+		void *ptr;
+		while ((ptr = stack_pop(other->stack))) {
+			void (*freefn)(void *) = stack_pop(other->stack);
+			mempool_add(pool, ptr, freefn);
+		}
+		stack_truncate(other->stack);
+	}
+}
+
+void
 mempool_release(struct Mempool *pool)
 {
 	if (pool->map) {
