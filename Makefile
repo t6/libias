@@ -19,6 +19,7 @@ OBJS=		array.o \
 		peg/toml.o \
 		queue.o \
 		set.o \
+		str.o \
 		stack.o \
 		utf8.o \
 		util.o
@@ -33,7 +34,7 @@ ALL_TESTS=	tests/array/array.test \
 		tests/peg/toml.test \
 		tests/queue/queue.test \
 		tests/stack/stack.test \
-		tests/util/str.test
+		tests/str/str.test
 TESTS?=		${ALL_TESTS}
 
 all: libias.a
@@ -58,11 +59,11 @@ libias.a: ${OBJS}
 array.o: config.h array.h diff.h util.h
 compats.o: config.h
 diff.o: config.h diff.h
-diffutil.o: config.h array.h diff.h diffutil.h mempool.h util.h
-json.o: config.h array.h json.h map.h mempool.h peg.h peg/json.h peg/objget.h stack.h util.h
+diffutil.o: config.h array.h diff.h diffutil.h mempool.h str.h util.h
+json.o: config.h array.h json.h map.h mempool.h peg.h peg/json.h peg/objget.h stack.h str.h util.h
 map.o: config.h array.h map.h util.h
 mempool.o: config.h map.h mempool.h stack.h util.h
-peg.o: config.h array.h mempool.h peg.h queue.h set.h stack.h utf8.h util.h
+peg.o: config.h array.h mempool.h peg.h queue.h set.h stack.h str.h utf8.h util.h
 peg/clang.o: config.h peg.h peg/grammar.h
 peg/json.o: config.h peg.h peg/json.h peg/grammar.h
 peg/objget.o: config.h peg.h peg/grammar.h peg/objget.h
@@ -70,18 +71,19 @@ peg/toml.o: config.h peg.h peg/toml.h peg/grammar.h
 queue.o: config.h queue.h util.h
 set.o: config.h array.h map.h set.h util.h
 stack.o: config.h stack.h util.h
-tests/array/array.o: config.h array.h test.h util.h
-tests/diff/diffutil.o: config.h array.h diff.h diffutil.h test.h util.h
-tests/json/json.o: config.h array.h map.h json.h test.h util.h
-tests/map/map.o: config.h map.h test.h util.h
-tests/peg/IPv4.o: config.h array.h mempool.h peg.h peg/grammar.h test.h util.h
-tests/peg/MOVED.o: config.h peg.h peg/grammar.h test.h util.h
-tests/peg/json.o: config.h json.h peg.h peg/json.h test.h util.h
-tests/peg/range.o: config.h peg.h peg/grammar.h test.h util.h
-tests/peg/toml.o: config.h peg.h peg/toml.h test.h util.h
-tests/queue/queue.o: config.h queue.h test.h util.h
-tests/stack/stack.o: config.h stack.h test.h util.h
-tests/util/str.o: config.h array.h test.h util.h
+str.o: config.h array.h str.h util.h
+tests/array/array.o: config.h array.h str.h test.h util.h
+tests/diff/diffutil.o: config.h array.h diff.h diffutil.h str.h test.h util.h
+tests/json/json.o: config.h array.h map.h json.h str.h test.h util.h
+tests/map/map.o: config.h map.h test.h str.h util.h
+tests/peg/IPv4.o: config.h array.h mempool.h peg.h peg/grammar.h str.h test.h util.h
+tests/peg/MOVED.o: config.h peg.h peg/grammar.h str.h test.h util.h
+tests/peg/json.o: config.h json.h peg.h peg/json.h str.h test.h util.h
+tests/peg/range.o: config.h peg.h peg/grammar.h str.h test.h util.h
+tests/peg/toml.o: config.h peg.h peg/toml.h str.h test.h util.h
+tests/queue/queue.o: config.h queue.h str.h test.h util.h
+tests/stack/stack.o: config.h stack.h str.h test.h util.h
+tests/str/str.o: config.h array.h str.h test.h util.h
 utf8.o: config.h utf8.h
 util.o: config.h array.h util.h
 

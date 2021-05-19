@@ -31,10 +31,6 @@
 #define	nitems(x)	(sizeof((x)) / sizeof((x)[0]))
 #endif
 
-#ifndef __printflike
-#define __printflike(x, y)	__attribute__((__format__(__printf__, x, y)))
-#endif
-
 #ifndef __unused
 #define __unused __attribute__((__unused__))
 #endif
@@ -47,31 +43,12 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-struct Array;
 typedef int (*CompareFn)(const void *, const void *, void *);
 
 char *read_symlink(int, const char *);
 char *slurp(int);
 int update_symlink(int, const char *, const char *, char **);
 
-char *str_common_prefix(const char *, const char *);
-int str_casecompare(const void *, const void *, void *);
-int str_compare(const void *, const void *, void *);
-int str_endswith(const char *, const char *);
-char *str_join(struct Array *, const char *);
-char *str_map(const char *, size_t, int (*)(int));
-char *str_printf(const char *, ...) __printflike(1, 2);
-char *str_repeat(const char *, const size_t);
-int str_startswith(const char *, const char *);
-char *str_substr(const char *, const size_t, const size_t);
-char *str_trim(const char *);
-char *str_triml(const char *);
-char *str_trimr(const char *);
-
 void sort(void *, size_t, size_t, CompareFn, void *);
 void *xmalloc(size_t);
 void *xrecallocarray(void *, size_t, size_t, size_t);
-char *xstrdup(const char *);
-char *xstrndup(const char *, size_t);
-size_t xstrlcat(char *, const char *, size_t);
-size_t xstrlcpy(char *, const char *, size_t);

@@ -36,6 +36,7 @@
 
 #include "peg.h"
 #include "peg/grammar.h"
+#include "str.h"
 #include "test.h"
 #include "util.h"
 

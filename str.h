@@ -1,7 +1,7 @@
 /*-
  * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
  *
- * Copyright (c) 2021 Tobias Kortkamp <tobik@FreeBSD.org>
+ * Copyright (c) 2019 Tobias Kortkamp <tobik@FreeBSD.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,42 +25,27 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+#pragma once
 
-#include "config.h"
+#ifndef __printflike
+#define __printflike(x, y)	__attribute__((__format__(__printf__, x, y)))
+#endif
 
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+struct Array;
 
-#include "array.h"
-#include "diff.h"
-#include "diffutil.h"
-#include "str.h"
-#include "test.h"
-#include "util.h"
+char *str_common_prefix(const char *, const char *);
+int str_casecompare(const void *, const void *, void *);
+int str_compare(const void *, const void *, void *);
+int str_endswith(const char *, const char *);
+char *str_join(struct Array *, const char *);
+char *str_map(const char *, size_t, int (*)(int));
+char *str_printf(const char *, ...) __printflike(1, 2);
+char *str_repeat(const char *, const size_t);
+int str_startswith(const char *, const char *);
+char *str_substr(const char *, const size_t, const size_t);
+char *str_trim(const char *);
+char *str_triml(const char *);
+char *str_trimr(const char *);
 
-TESTS() {
-	struct Array *a = array_new();
-	for (size_t i = 0; i < 16; i++) {
-		array_append(a, xstrdup("1"));
-	}
-	struct Array *b = array_new();
-	array_append(b, xstrdup("2"));
-	array_append(b, xstrdup("2"));
-	for (size_t i = 0; i < 8; i++) {
-		array_append(b, xstrdup("1"));
-	}
-	array_append(b, xstrdup("3"));
-	for (size_t i = 0; i < 7; i++) {
-		array_append(b, xstrdup("1"));
-	}
-
-	struct diff d;
-	TEST_IF(array_diff(a, b, &d, str_compare, NULL)) {
-		char *actual = diff_to_patch(&d, NULL, NULL, 3, 0);
-		int fd = open("tests/diff/0001.diff", O_RDONLY);
-		char *expected = slurp(fd);
-		TEST_STREQ(actual, expected);
-	}
-}
+char *xstrdup(const char *);
+char *xstrndup(const char *, size_t);

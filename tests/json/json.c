@@ -36,6 +36,7 @@
 #include "array.h"
 #include "map.h"
 #include "json.h"
+#include "str.h"
 #include "test.h"
 #include "util.h"
 

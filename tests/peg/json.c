@@ -39,6 +39,7 @@
 #include "json.h"
 #include "peg.h"
 #include "peg/json.h"
+#include "str.h"
 #include "test.h"
 #include "util.h"
 

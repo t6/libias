@@ -40,6 +40,7 @@
 #include "peg/json.h"
 #include "peg/objget.h"
 #include "stack.h"
+#include "str.h"
 #include "util.h"
 
 struct JSON {

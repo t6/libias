@@ -33,6 +33,7 @@
 #include <string.h>
 
 #include "stack.h"
+#include "str.h"
 #include "test.h"
 #include "util.h"
 

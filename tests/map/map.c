@@ -34,6 +34,7 @@
 
 #include "map.h"
 #include "test.h"
+#include "str.h"
 #include "util.h"
 
 TESTS() {

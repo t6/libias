@@ -37,6 +37,7 @@
 #include "diff.h"
 #include "diffutil.h"
 #include "mempool.h"
+#include "str.h"
 #include "util.h"
 
 struct Hunk {
