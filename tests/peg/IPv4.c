@@ -160,7 +160,7 @@ static char *
 check_captures(RuleFn rule, const char *s, unsigned int tag, const char *sep)
 {
 	SCOPE_MEMPOOL(pool);
-	struct PEG *peg = mempool_add(pool, peg_new(s, strlen(s)), free);
+	struct PEG *peg = mempool_add(pool, peg_new(s, strlen(s)), peg_free);
 	struct Array *captures = mempool_array(pool);
 	int result = peg_match(peg, rule, captures_to_array, captures);
 	if (result) {
