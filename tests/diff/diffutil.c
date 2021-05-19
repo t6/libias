@@ -43,17 +43,17 @@
 TESTS() {
 	struct Array *a = array_new();
 	for (size_t i = 0; i < 16; i++) {
-		array_append(a, xstrdup("1"));
+		array_append(a, "1");
 	}
 	struct Array *b = array_new();
-	array_append(b, xstrdup("2"));
-	array_append(b, xstrdup("2"));
+	array_append(b, "2");
+	array_append(b, "2");
 	for (size_t i = 0; i < 8; i++) {
-		array_append(b, xstrdup("1"));
+		array_append(b, "1");
 	}
-	array_append(b, xstrdup("3"));
+	array_append(b, "3");
 	for (size_t i = 0; i < 7; i++) {
-		array_append(b, xstrdup("1"));
+		array_append(b, "1");
 	}
 
 	struct diff d;

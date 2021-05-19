@@ -48,10 +48,10 @@ TESTS() {
 
 	struct Array *array = array_new();
 	TEST_STREQ(str_join(array, ","), "");
-	array_append(array, xstrdup("1"));
+	array_append(array, "1");
 	TEST_STREQ(str_join(array, ","), "1");
-	array_append(array, xstrdup("2"));
-	array_append(array, xstrdup("3"));
+	array_append(array, "2");
+	array_append(array, "3");
 	TEST_STREQ(str_join(array, ","), "1,2,3");
 	TEST_STREQ(str_join(array, "foobar"), "1foobar2foobar3");
 
