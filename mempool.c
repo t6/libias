@@ -135,6 +135,12 @@ mempool_release(struct Mempool *pool)
 	}
 }
 
+void *
+mempool_alloc(struct Mempool *pool, size_t sz)
+{
+	return mempool_add(pool, xmalloc(sz), free);
+}
+
 struct Array *
 mempool_array(struct Mempool *pool)
 {

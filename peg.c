@@ -189,7 +189,7 @@ peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userd
 			}
 			result = 0;
 		} else {
-			capture = mempool_add(peg->pool, xmalloc(sizeof(struct PEGCapture)), free);
+			capture = mempool_alloc(peg->pool, sizeof(struct PEGCapture));
 			capture->peg = peg;
 			capture->buf = peg->buf;
 			capture->pos = 0;
@@ -531,7 +531,7 @@ peg_new(const char *const buf, size_t len)
 
 	peg->errors = mempool_array(peg->pool);
 	for (size_t i = 0; i < PEG_MAX_ERRORS; i++) {
-		array_append(peg->errors, mempool_add(peg->pool, xmalloc(sizeof(struct PEGError)), free));
+		array_append(peg->errors, mempool_alloc(peg->pool, sizeof(struct PEGError)));
 	}
 
 	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;

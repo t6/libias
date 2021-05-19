@@ -85,7 +85,7 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		break;
 	case PEG_JSON_ARRAY_END: {
 		struct Array *array = stack_pop(data->arrays);
-		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_alloc(data->pool, sizeof(struct JSON));
 		value->pool = data->pool;
 		value->type = JSON_ARRAY;
 		value->array = array;
@@ -101,7 +101,7 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		break;
 	case PEG_JSON_OBJECT_END: {
 		struct Map *object = stack_pop(data->objects);
-		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_alloc(data->pool, sizeof(struct JSON));
 		value->pool = data->pool;
 		value->type = JSON_OBJECT;
 		value->object = object;
@@ -114,19 +114,19 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		map_add(object, (char *)key->string, value);
 		break;
 	} case PEG_JSON_FALSE: {
-		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_alloc(data->pool, sizeof(struct JSON));
 		value->pool = data->pool;
 		value->type = JSON_FALSE;
 		stack_push(data->values, value);
 		break;
 	} case PEG_JSON_NULL: {
-		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_alloc(data->pool, sizeof(struct JSON));
 		value->pool = data->pool;
 		value->type = JSON_NULL;
 		stack_push(data->values, value);
 		break;
 	} case PEG_JSON_STRING: {
-		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_alloc(data->pool, sizeof(struct JSON));
 		value->pool = data->pool;
 		value->type = JSON_STRING;
 		// Strings are always followed by ".  We can replace
@@ -138,13 +138,13 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		stack_push(data->values, value);
 		break;
 	} case PEG_JSON_TRUE: {
-		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_alloc(data->pool, sizeof(struct JSON));
 		value->pool = data->pool;
 		value->type = JSON_TRUE;
 		stack_push(data->values, value);
 		break;
 	} case PEG_JSON_NUMBER: {
-		struct JSON *value = mempool_add(data->pool, xmalloc(sizeof(struct JSON)), free);
+		struct JSON *value = mempool_alloc(data->pool, sizeof(struct JSON));
 		value->pool = data->pool;
 		value->type = JSON_NUMBER;
 		// Strings are always followed by ".  We can replace

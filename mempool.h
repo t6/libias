@@ -39,6 +39,7 @@ void *mempool_add(struct Mempool *, void *, void *);
 void mempool_inherit(struct Mempool *, struct Mempool *);
 void mempool_release(struct Mempool *);
 
+void *mempool_alloc(struct Mempool *, size_t);
 struct Array *mempool_array(struct Mempool *);
 struct Map *mempool_map(struct Mempool *, MempoolCompareFn, void *, void *, void *);
 struct Queue *mempool_queue(struct Mempool *);
@@ -47,3 +48,4 @@ struct Stack *mempool_stack(struct Mempool *);
 
 #define SCOPE_MEMPOOL(x) \
 	struct Mempool __attribute__((cleanup(mempool_cleanup))) *x = mempool_new()
+

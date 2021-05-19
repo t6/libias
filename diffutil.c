@@ -65,7 +65,7 @@ get_hunks(struct Mempool *pool, struct diff *p, size_t context)
 	assert(p->sessz > 0);
 	if (context == 0) {
 		struct Array *hunks = mempool_array(pool);
-		struct Hunk *h = mempool_add(pool, xmalloc(sizeof(struct Hunk)), free);
+		struct Hunk *h = mempool_alloc(pool, sizeof(struct Hunk));
 		h->start = 0;
 		h->end = p->sessz - 1;
 		array_append(hunks, h);
@@ -73,7 +73,7 @@ get_hunks(struct Mempool *pool, struct diff *p, size_t context)
 	}
 
 	struct Array *edit_ranges = mempool_array(pool);
-	struct Hunk *h = mempool_add(pool, xmalloc(sizeof(struct Hunk)), free);
+	struct Hunk *h = mempool_alloc(pool, sizeof(struct Hunk));
 	int first = 1;
 	int last_common = 1;
 	for (size_t i = 0; i < p->sessz; i++) {
@@ -81,7 +81,7 @@ get_hunks(struct Mempool *pool, struct diff *p, size_t context)
 		case DIFF_COMMON:
 			if (!last_common) {
 				array_append(edit_ranges, h);
-				h = mempool_add(pool, xmalloc(sizeof(struct Hunk)), free);
+				h = mempool_alloc(pool, sizeof(struct Hunk));
 			}
 			last_common = 1;
 			first = 1;
