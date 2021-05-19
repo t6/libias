@@ -62,7 +62,7 @@ diff.o: config.h diff.h
 diffutil.o: config.h array.h diff.h diffutil.h mempool.h str.h util.h
 json.o: config.h array.h json.h map.h mempool.h peg.h peg/json.h peg/objget.h stack.h str.h util.h
 map.o: config.h array.h map.h util.h
-mempool.o: config.h map.h mempool.h stack.h util.h
+mempool.o: config.h array.h map.h mempool.h queue.h set.h stack.h util.h
 peg.o: config.h array.h mempool.h peg.h queue.h set.h stack.h str.h utf8.h util.h
 peg/clang.o: config.h peg.h peg/grammar.h
 peg/json.o: config.h peg.h peg/json.h peg/grammar.h
@@ -85,7 +85,7 @@ tests/queue/queue.o: config.h queue.h str.h test.h util.h
 tests/stack/stack.o: config.h stack.h str.h test.h util.h
 tests/str/str.o: config.h array.h str.h test.h util.h
 utf8.o: config.h utf8.h
-util.o: config.h array.h util.h
+util.o: config.h array.h str.h util.h
 
 deps:
 	@for f in $$(git ls-files | grep '.*\.c$$' | grep -v '^tests\.c$$' | LC_ALL=C sort); do \

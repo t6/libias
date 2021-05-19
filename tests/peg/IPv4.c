@@ -161,10 +161,10 @@ check_captures(RuleFn rule, const char *s, unsigned int tag, const char *sep)
 {
 	SCOPE_MEMPOOL(pool);
 	struct PEG *peg = mempool_add(pool, peg_new(s, strlen(s)), free);
-	struct Array *captures = mempool_add(pool, array_new(), array_free);
+	struct Array *captures = mempool_array(pool);
 	int result = peg_match(peg, rule, captures_to_array, captures);
 	if (result) {
-		struct Array *caps = mempool_add(pool, array_new(), array_free);
+		struct Array *caps = mempool_array(pool);
 		ARRAY_FOREACH(captures, struct PEGCapture *, cap) {
 			if (cap->tag == tag) {
 				array_append(caps, mempool_add(pool, xstrndup(cap->buf, cap->len), free));

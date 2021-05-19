@@ -496,7 +496,7 @@ peg_print_errors(struct PEG *peg, const char *filename)
 		filename = "<stdin>";
 	}
 	SCOPE_MEMPOOL(pool);
-	struct Array *errors = mempool_add(pool, array_new(), array_free);
+	struct Array *errors = mempool_array(pool);
 	ARRAY_FOREACH(peg->errors, struct PEGError *, err) {
 		if (err->rule == NULL) {
 			break;
@@ -529,17 +529,17 @@ peg_new(const char *const buf, size_t len)
 	peg->pool = mempool_new();
 	mempool_add(peg->pool, peg, free);
 
-	peg->errors = mempool_add(peg->pool, array_new(), array_free);
+	peg->errors = mempool_array(peg->pool);
 	for (size_t i = 0; i < PEG_MAX_ERRORS; i++) {
 		array_append(peg->errors, mempool_add(peg->pool, xmalloc(sizeof(struct PEGError)), free));
 	}
 
 	peg->debug = getenv("LIBIAS_PEG_DEBUG") != NULL;
-	peg->rule_trace = mempool_add(peg->pool, queue_new(), queue_free);
+	peg->rule_trace = mempool_queue(peg->pool);
 
-	peg->captures.set = mempool_add(peg->pool, set_new(compare_capture, peg, NULL), set_free);
-	peg->captures.queue = mempool_add(peg->pool, queue_new(), queue_free);
-	peg->captures.pos = mempool_add(peg->pool, stack_new(), stack_free);
+	peg->captures.set = mempool_set(peg->pool, compare_capture, peg, NULL);
+	peg->captures.queue = mempool_queue(peg->pool);
+	peg->captures.pos = mempool_stack(peg->pool);
 
 	return peg;
 }

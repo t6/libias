@@ -81,7 +81,7 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		}
 		break;
 	} case PEG_JSON_ARRAY_BEGIN:
-		stack_push(data->arrays, mempool_add(data->pool, array_new(), array_free));
+		stack_push(data->arrays, mempool_array(data->pool));
 		break;
 	case PEG_JSON_ARRAY_END: {
 		struct Array *array = stack_pop(data->arrays);
@@ -97,7 +97,7 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 		array_append(array, value);
 		break;
 	} case PEG_JSON_OBJECT_BEGIN:
-		stack_push(data->objects, mempool_add(data->pool, map_new(str_compare, NULL, NULL, NULL), map_free));
+		stack_push(data->objects, mempool_map(data->pool, str_compare, NULL, NULL, NULL));
 		break;
 	case PEG_JSON_OBJECT_END: {
 		struct Map *object = stack_pop(data->objects);
@@ -226,9 +226,9 @@ json_new(const char *buf, size_t len)
 	struct JSONCaptureMachineData data;
 	memset(&data, 0, sizeof(data));
 	data.pool = mempool_new();
-	data.arrays = mempool_add(data.pool, stack_new(), stack_free);
-	data.objects = mempool_add(data.pool, stack_new(), stack_free);
-	data.values = mempool_add(data.pool, stack_new(), stack_free);
+	data.arrays = mempool_stack(data.pool);
+	data.objects = mempool_stack(data.pool);
+	data.values = mempool_stack(data.pool);
 	data.buf = mempool_add(data.pool, xstrndup(buf, len), free);
 
 	struct PEG *peg = peg_new(data.buf, len);

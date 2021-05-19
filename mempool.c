@@ -31,8 +31,11 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "array.h"
 #include "map.h"
 #include "mempool.h"
+#include "queue.h"
+#include "set.h"
 #include "stack.h"
 #include "util.h"
 
@@ -130,4 +133,34 @@ mempool_release(struct Mempool *pool)
 			freefn(ptr);
 		}
 	}
+}
+
+struct Array *
+mempool_array(struct Mempool *pool)
+{
+	return mempool_add(pool, array_new(), array_free);
+}
+
+struct Map *
+mempool_map(struct Mempool *pool, MempoolCompareFn compare, void *compare_userdata, void *keyfree, void *valuefree)
+{
+	return mempool_add(pool, map_new(compare, compare_userdata, keyfree, valuefree), map_free);
+}
+
+struct Queue *
+mempool_queue(struct Mempool *pool)
+{
+	return mempool_add(pool, queue_new(), queue_free);
+}
+
+struct Set *
+mempool_set(struct Mempool *pool, MempoolCompareFn compare, void *compare_userdata, void *keyfree)
+{
+	return mempool_add(pool, set_new(compare, compare_userdata, keyfree), set_free);
+}
+
+struct Stack *
+mempool_stack(struct Mempool *pool)
+{
+	return mempool_add(pool, stack_new(), stack_free);
 }

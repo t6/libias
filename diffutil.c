@@ -64,7 +64,7 @@ get_hunks(struct Mempool *pool, struct diff *p, size_t context)
 {
 	assert(p->sessz > 0);
 	if (context == 0) {
-		struct Array *hunks = mempool_add(pool, array_new(), array_free);
+		struct Array *hunks = mempool_array(pool);
 		struct Hunk *h = mempool_add(pool, xmalloc(sizeof(struct Hunk)), free);
 		h->start = 0;
 		h->end = p->sessz - 1;
@@ -72,7 +72,7 @@ get_hunks(struct Mempool *pool, struct diff *p, size_t context)
 		return hunks;
 	}
 
-	struct Array *edit_ranges = mempool_add(pool, array_new(), array_free);
+	struct Array *edit_ranges = mempool_array(pool);
 	struct Hunk *h = mempool_add(pool, xmalloc(sizeof(struct Hunk)), free);
 	int first = 1;
 	int last_common = 1;
@@ -109,7 +109,7 @@ get_hunks(struct Mempool *pool, struct diff *p, size_t context)
 	}
 	array_sort(edit_ranges, by_start, NULL);
 
-	struct Array *hunks = mempool_add(pool, array_new(), array_free);
+	struct Array *hunks = mempool_array(pool);
 	struct Hunk *last = NULL;
 	ARRAY_FOREACH(edit_ranges, struct Hunk *, h) {
 		if (last == NULL) {
@@ -152,7 +152,7 @@ diff_to_patch(struct diff *p, TostringFn tostring, void *tostring_userdata, size
 	}
 
 	struct Array *hunks = get_hunks(pool, p, context);
-	struct Array *result = mempool_add(pool, array_new(), array_free);
+	struct Array *result = mempool_array(pool);
 	ARRAY_FOREACH(hunks, struct Hunk *, h) {
 		size_t origin_len = 0;
 		size_t target_len = 0;

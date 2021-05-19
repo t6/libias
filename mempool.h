@@ -29,6 +29,8 @@
 
 struct Mempool;
 
+typedef int (*MempoolCompareFn)(const void *, const void *, void *);
+
 struct Mempool *mempool_new(void);
 struct Mempool *mempool_new_unique(void);
 void mempool_free(struct Mempool *);
@@ -36,6 +38,12 @@ void mempool_cleanup(struct Mempool **);
 void *mempool_add(struct Mempool *, void *, void *);
 void mempool_inherit(struct Mempool *, struct Mempool *);
 void mempool_release(struct Mempool *);
+
+struct Array *mempool_array(struct Mempool *);
+struct Map *mempool_map(struct Mempool *, MempoolCompareFn, void *, void *, void *);
+struct Queue *mempool_queue(struct Mempool *);
+struct Set *mempool_set(struct Mempool *, MempoolCompareFn, void *, void *);
+struct Stack *mempool_stack(struct Mempool *);
 
 #define SCOPE_MEMPOOL(x) \
 	struct Mempool __attribute__((cleanup(mempool_cleanup))) *x = mempool_new()
