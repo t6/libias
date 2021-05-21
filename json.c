@@ -290,7 +290,7 @@ json_unwrap_number(struct JSON *json)
 	} else if (json->type == JSON_NUMBER) {
 		return json->string;
 	} else {
-		return 0;
+		return NULL;
 	}
 }
 
