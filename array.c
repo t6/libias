@@ -108,15 +108,15 @@ ssize_t
 array_find(struct Array *array, const void *k, ArrayCompareFn compar, void *userdata)
 {
 	if (compar) {
-		for (size_t i = 0; i < array_len(array); i++) {
-			const void *v = array_get(array, i);
+		for (size_t i = 0; i < array->len; i++) {
+			const void *v = array->buf[i];
 			if (compar(&v, &k, userdata) == 0) {
 				return i;
 			}
 		}
 	} else {
-		for (size_t i = 0; i < array_len(array); i++) {
-			if (array_get(array, i) == k) {
+		for (size_t i = 0; i < array->len; i++) {
+			if (array->buf[i] == k) {
 				return i;
 			}
 		}
