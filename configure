@@ -516,6 +516,26 @@ then
 fi
 
 cat << __HEREDOC__
+#ifndef nitems
+#define nitems(x) (sizeof((x)) / sizeof((x)[0]))
+#endif
+
+#ifndef __cleanup
+#define __cleanup(x) __attribute__((cleanup(x)))
+#endif
+
+#ifndef __noreturn
+#define __noreturn __attribute__((noreturn))
+#endif
+
+#ifndef __printflike
+#define __printflike(x, y) __attribute__((__format__(__printf__, x, y)))
+#endif
+
+#ifndef __unused
+#define __unused __attribute__((__unused__))
+#endif
+
 /*
  * Results of configuration feature-testing.
  */

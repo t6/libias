@@ -27,14 +27,6 @@
  */
 #pragma once
 
-#ifndef nitems
-#define	nitems(x)	(sizeof((x)) / sizeof((x)[0]))
-#endif
-
-#ifndef __unused
-#define __unused __attribute__((__unused__))
-#endif
-
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"

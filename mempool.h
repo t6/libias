@@ -47,5 +47,5 @@ struct Set *mempool_set(struct Mempool *, MempoolCompareFn, void *, void *);
 struct Stack *mempool_stack(struct Mempool *);
 
 #define SCOPE_MEMPOOL(x) \
-	struct Mempool __attribute__((cleanup(mempool_cleanup))) *x = mempool_new()
+	struct Mempool *x __cleanup(mempool_cleanup) = mempool_new()
 

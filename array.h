@@ -50,6 +50,6 @@ void array_iterator_free(struct ArrayIterator **);
 void *array_iterator_next(struct ArrayIterator **, size_t *);
 
 #define ARRAY_FOREACH(ARRAY, TYPE, VAR) \
-	for (struct ArrayIterator *__##VAR##_iter __attribute__((cleanup(array_iterator_free))) = array_iterator(ARRAY); __##VAR##_iter != NULL; array_iterator_free(&__##VAR##_iter)) \
+	for (struct ArrayIterator *__##VAR##_iter __cleanup(array_iterator_free) = array_iterator(ARRAY); __##VAR##_iter != NULL; array_iterator_free(&__##VAR##_iter)) \
 	for (size_t VAR##_index = 0; __##VAR##_iter != NULL; array_iterator_free(&__##VAR##_iter)) \
 	for (TYPE VAR = array_iterator_next(&__##VAR##_iter, &VAR##_index); __##VAR##_iter != NULL; VAR = array_iterator_next(&__##VAR##_iter, &VAR##_index))

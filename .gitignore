@@ -10,4 +10,6 @@ config.log
 config.log.old
 Makefile.configure
 /tests/*/*.test
+tests/peg/json/JSONTestSuite
+tests/peg/toml/toml-test
 TODO

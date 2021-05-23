@@ -27,10 +27,6 @@
  */
 #pragma once
 
-#ifndef __printflike
-#define __printflike(x, y)	__attribute__((__format__(__printf__, x, y)))
-#endif
-
 struct Array;
 
 char *str_common_prefix(const char *, const char *);
