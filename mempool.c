@@ -42,6 +42,7 @@
 struct Mempool {
 	struct Stack *stack;
 	struct Map *map;
+	struct Mempool *owner;
 };
 
 struct Mempool *
@@ -49,6 +50,7 @@ mempool_new()
 {
 	struct Mempool *pool = xmalloc(sizeof(struct Mempool));
 	pool->stack = stack_new();
+	pool->owner = pool;
 	return pool;
 }
 
@@ -57,6 +59,7 @@ mempool_new_unique()
 {
 	struct Mempool *pool = xmalloc(sizeof(struct Mempool));
 	pool->map = map_new(NULL, NULL, NULL, NULL);
+	pool->owner = pool;
 	return pool;
 }
 
@@ -66,10 +69,20 @@ mempool_free(struct Mempool *pool)
 	if (pool == NULL) {
 		return;
 	}
+	if (pool->owner != pool) {
+		abort();
+	}
 	mempool_release(pool);
 	map_free(pool->map);
 	stack_free(pool->stack);
 	free(pool);
+}
+
+static void
+mempool_free_owned(struct Mempool *pool)
+{
+	pool->owner = pool;
+	mempool_free(pool);
 }
 
 void
@@ -102,25 +115,18 @@ mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 void
 mempool_inherit(struct Mempool *pool, struct Mempool *other)
 {
-	if (other->map) {
-		MAP_FOREACH(other->map, void *, ptr, void *, freefn) {
-			mempool_add(pool, ptr, freefn);
-		}
-		map_truncate(other->map);
-	} else {
-		void *ptr;
-		while ((ptr = stack_pop(other->stack))) {
-			void (*freefn)(void *) = stack_pop(other->stack);
-			mempool_add(pool, ptr, freefn);
-		}
-		stack_truncate(other->stack);
+	if (other && pool != other && pool->owner != other && other->owner != pool) {
+		mempool_add(pool, other, mempool_free_owned);
+		other->owner = pool;
 	}
 }
 
 void
 mempool_release(struct Mempool *pool)
 {
-	if (pool->map) {
+	if (pool->owner != pool) {
+		abort();
+	} else if (pool->map) {
 		MAP_FOREACH(pool->map, void *, ptr, void *, f) {
 			void (*freefn)(void *) = f;
 			freefn(ptr);
