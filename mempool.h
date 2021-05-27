@@ -40,6 +40,7 @@ void mempool_inherit(struct Mempool *, struct Mempool *);
 void mempool_release(struct Mempool *);
 
 void *mempool_alloc(struct Mempool *, size_t);
+void *mempool_forget(struct Mempool *, void *);
 void *mempool_take(struct Mempool *, void *);
 struct Array *mempool_array(struct Mempool *);
 struct Map *mempool_map(struct Mempool *, MempoolCompareFn, void *, void *, void *);

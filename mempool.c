@@ -45,6 +45,11 @@ struct Mempool {
 	struct Mempool *owner;
 };
 
+struct MempoolNode {
+	void *ptr;
+	void (*freefn)(void *);
+};
+
 struct Mempool *
 mempool_new()
 {
@@ -104,10 +109,28 @@ mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 	if (pool->map) {
 		map_add(pool->map, ptr, freefn);
 	} else {
-		stack_push(pool->stack, freefn);
-		stack_push(pool->stack, ptr);
+		struct MempoolNode *node = xmalloc(sizeof(struct MempoolNode));
+		node->ptr = ptr;
+		node->freefn = freefn;
+		stack_push(pool->stack, node);
 	}
 
+	return ptr;
+}
+
+void *
+mempool_forget(struct Mempool *pool, void *ptr)
+{
+	if (pool->map) {
+		map_remove(pool->map, ptr);
+	} else {
+		STACK_FOREACH(pool->stack, struct MempoolNode *, node) {
+			if (node->ptr == ptr) {
+				node->ptr = NULL;
+				break;
+			}
+		}
+	}
 	return ptr;
 }
 
@@ -132,10 +155,12 @@ mempool_release(struct Mempool *pool)
 		}
 		map_truncate(pool->map);
 	} else {
-		void *ptr;
-		while ((ptr = stack_pop(pool->stack))) {
-			void (*freefn)(void *) = stack_pop(pool->stack);
-			freefn(ptr);
+		struct MempoolNode *node;
+		while ((node = stack_pop(pool->stack))) {
+			if (node->ptr) {
+				node->freefn(node->ptr);
+				free(node);
+			}
 		}
 	}
 }
