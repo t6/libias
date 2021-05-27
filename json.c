@@ -229,7 +229,7 @@ json_new(const char *buf, size_t len)
 	data.arrays = mempool_stack(data.pool);
 	data.objects = mempool_stack(data.pool);
 	data.values = mempool_stack(data.pool);
-	data.buf = mempool_add(data.pool, xstrndup(buf, len), free);
+	data.buf = mempool_take(data.pool, xstrndup(buf, len));
 
 	struct PEG *peg = peg_new(data.buf, len);
 	int status = peg_match(peg, peg_json_decode, json_capture_machine, &data);

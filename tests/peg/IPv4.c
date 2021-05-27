@@ -167,7 +167,7 @@ check_captures(RuleFn rule, const char *s, unsigned int tag, const char *sep)
 		struct Array *caps = mempool_array(pool);
 		ARRAY_FOREACH(captures, struct PEGCapture *, cap) {
 			if (cap->tag == tag) {
-				array_append(caps, mempool_add(pool, xstrndup(cap->buf, cap->len), free));
+				array_append(caps, mempool_take(pool, xstrndup(cap->buf, cap->len)));
 			}
 		}
 		return str_join(caps, sep);

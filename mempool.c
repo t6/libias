@@ -97,8 +97,7 @@ mempool_cleanup(struct Mempool **pool)
 void *
 mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 {
-	assert(freefn != NULL);
-	if (!ptr) {
+	if (!ptr || !freefn) {
 		return NULL;
 	}
 
@@ -145,6 +144,12 @@ void *
 mempool_alloc(struct Mempool *pool, size_t sz)
 {
 	return mempool_add(pool, xmalloc(sz), free);
+}
+
+void *
+mempool_take(struct Mempool *pool, void *ptr)
+{
+	return mempool_add(pool, ptr, free);
 }
 
 struct Array *

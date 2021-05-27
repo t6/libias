@@ -181,17 +181,17 @@ diff_to_patch(struct diff *p, TostringFn tostring, void *tostring_userdata, size
 		} else {
 			buf = str_printf("%s@@ -%zu", color_context, origin_start);
 		}
-		array_append(result, mempool_add(pool, buf, free));
+		array_append(result, mempool_take(pool, buf));
 		if (target_len > 1) {
 			buf = str_printf(" +%zu,%zu @@%s\n", target_start, target_len, color_reset);
 		} else {
 			buf = str_printf(" +%zu @@%s\n", target_start, color_reset);
 		}
-		array_append(result, mempool_add(pool, buf, free));
+		array_append(result, mempool_take(pool, buf));
 		for (size_t i = h->start; i <= h->end; i++) {
 			char *line;
 			if (tostring) {
-				line = mempool_add(pool, tostring(*(void **)p->ses[i].e, tostring_userdata), free);
+				line = mempool_take(pool, tostring(*(void **)p->ses[i].e, tostring_userdata));
 			} else {
 				line = *(void **)p->ses[i].e;
 			}
@@ -206,7 +206,7 @@ diff_to_patch(struct diff *p, TostringFn tostring, void *tostring_userdata, size
 				buf = str_printf("%s-%s%s\n", color_delete, line, color_reset);
 				break;
 			}
-			array_append(result, mempool_add(pool, buf, free));
+			array_append(result, mempool_take(pool, buf));
 		}
 	}
 

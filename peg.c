@@ -174,7 +174,7 @@ peg_match(struct PEG *peg, RuleFn rulefn, CaptureFn capture_machine, void *userd
 		int stop = 0;
 		struct PEGCapture *capture;
 		while (!stop && (capture = queue_pop(peg->captures.queue))) {
-			mempool_add(peg->pool, capture, free);
+			mempool_take(peg->pool, capture);
 			switch (capture_machine(capture, userdata)) {
 			case PEG_CAPTURE_CONTINUE:
 				break;
@@ -510,7 +510,7 @@ peg_print_errors(struct PEG *peg, const char *filename)
 		} else {
 			buf = str_printf("%s:%zu:%zu: in %s: %s\n", filename, line, col, err->rule, err->msg);
 		}
-		mempool_add(pool, buf, free);
+		mempool_take(pool, buf);
 		array_append(errors, buf);
 	}
 	return str_join(errors, "");
@@ -527,7 +527,7 @@ peg_new(const char *const buf, size_t len)
 	memcpy(peg, &proto, sizeof(*peg));
 
 	peg->pool = mempool_new();
-	mempool_add(peg->pool, peg, free);
+	mempool_take(peg->pool, peg);
 
 	peg->errors = mempool_array(peg->pool);
 	for (size_t i = 0; i < PEG_MAX_ERRORS; i++) {
