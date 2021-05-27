@@ -51,4 +51,19 @@ TESTS() {
 	TEST_STREQ(stack_pop(stack), "1");
 	TEST(stack_len(stack) == 0);
 	TEST(stack_pop(stack) == NULL);
+
+	stack_push(stack, "1");
+	stack_push(stack, "2");
+	stack_push(stack, "3");
+	size_t i = 0;
+	STACK_FOREACH(stack, const char *, s) {
+		switch(s_index) {
+		case 0: TEST_STREQ(s, "3"); break;
+		case 1: TEST_STREQ(s, "2"); break;
+		case 2: TEST_STREQ(s, "1"); break;
+		default: TEST(0); break;
+		}
+		i++;
+	}
+	TEST(i == 3);
 }

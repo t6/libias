@@ -28,6 +28,7 @@
 #pragma once
 
 struct Stack;
+struct StackIterator;
 
 struct Stack *stack_new(void);
 void stack_free(struct Stack *);
@@ -37,3 +38,12 @@ void *stack_peek(struct Stack *);
 void *stack_pop(struct Stack *);
 void stack_push(struct Stack *, const void *);
 void stack_truncate(struct Stack *);
+
+struct StackIterator *stack_iterator(struct Stack *);
+void stack_iterator_free(struct StackIterator **);
+void *stack_iterator_next(struct StackIterator **, size_t *);
+
+#define STACK_FOREACH(STACK, TYPE, VAR) \
+	for (struct StackIterator *__##VAR##_iter __cleanup(stack_iterator_free) = stack_iterator(STACK); __##VAR##_iter != NULL; stack_iterator_free(&__##VAR##_iter)) \
+	for (size_t VAR##_index = 0; __##VAR##_iter != NULL; stack_iterator_free(&__##VAR##_iter)) \
+	for (TYPE VAR = stack_iterator_next(&__##VAR##_iter, &VAR##_index); __##VAR##_iter != NULL; VAR = stack_iterator_next(&__##VAR##_iter, &VAR##_index))

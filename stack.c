@@ -43,6 +43,12 @@ struct Stack {
 	struct StackNode *head;
 };
 
+struct StackIterator {
+	size_t i;
+	struct Stack *stack;
+	struct StackNode *node;
+};
+
 struct Stack *
 stack_new()
 {
@@ -129,4 +135,40 @@ stack_truncate(struct Stack *stack)
 	}
 	stack->head = NULL;
 	stack->len = 0;
+}
+
+struct StackIterator *
+stack_iterator(struct Stack *stack)
+{
+	struct StackIterator *iter = xmalloc(sizeof(struct StackIterator));
+	iter->node = stack->head;
+	iter->stack = stack;
+	return iter;
+}
+
+void
+stack_iterator_free(struct StackIterator **iter_)
+{
+	struct StackIterator *iter = *iter_;
+	if (iter != NULL) {
+		free(iter);
+		*iter_ = NULL;
+	}
+}
+
+void *
+stack_iterator_next(struct StackIterator **iter_, size_t *index)
+{
+	struct StackIterator *iter = *iter_;
+	if (iter->node) {
+		*index = iter->i;
+		void *value = iter->node->value;
+		iter->node = iter->node->next;
+		iter->i++;
+		return value;
+	} else {
+		stack_iterator_free(iter_);
+		*iter_ = NULL;
+		return NULL;
+	}
 }
