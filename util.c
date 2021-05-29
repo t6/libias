@@ -39,6 +39,7 @@
 #include <unistd.h>
 
 #include "array.h"
+#include "mempool.h"
 #include "str.h"
 #include "util.h"
 
@@ -84,7 +85,7 @@ slurp(int fd)
 }
 
 int
-update_symlink(int dir, const char *path1, const char *path2, char **prev)
+update_symlink(int dir, const char *path1, const char *path2, struct Mempool *pool, char **prev)
 {
 	if (prev != NULL) {
 		*prev = NULL;
@@ -92,18 +93,16 @@ update_symlink(int dir, const char *path1, const char *path2, char **prev)
 	while (symlinkat(path1, dir, path2) == -1) {
 		if (errno == EEXIST) {
 			if (prev != NULL) {
-				*prev = read_symlink(dir, path2);
+				*prev = mempool_take(pool, read_symlink(dir, path2));
 			}
 			if (unlinkat(dir, path2, 0) == -1) {
 				if (prev != NULL) {
-					free(*prev);
 					*prev = NULL;
 				}
 				return 0;
 			}
 		} else {
 			if (prev != NULL) {
-				free(*prev);
 				*prev = NULL;
 			}
 			return 0;

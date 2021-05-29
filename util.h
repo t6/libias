@@ -35,11 +35,13 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
+struct Mempool;
+
 typedef int (*CompareFn)(const void *, const void *, void *);
 
 char *read_symlink(int, const char *);
 char *slurp(int);
-int update_symlink(int, const char *, const char *, char **);
+int update_symlink(int, const char *, const char *, struct Mempool *, char **);
 
 void sort(void *, size_t, size_t, CompareFn, void *);
 void *xmalloc(size_t);
