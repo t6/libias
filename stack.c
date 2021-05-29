@@ -28,31 +28,32 @@
 
 #include "config.h"
 
+#include <assert.h>
 #include <stdlib.h>
 
 #include "stack.h"
 #include "util.h"
 
-struct StackNode {
-	struct StackNode *next;
-	void *value;
-};
-
 struct Stack {
+	void **buf;
+	size_t cap;
 	size_t len;
-	struct StackNode *head;
 };
 
 struct StackIterator {
-	size_t i;
 	struct Stack *stack;
-	struct StackNode *node;
+	size_t i;
 };
+
+static const size_t INITIAL_STACK_CAP = 16;
 
 struct Stack *
 stack_new()
 {
 	struct Stack *stack = xmalloc(sizeof(struct Stack));
+	stack->cap = INITIAL_STACK_CAP;
+	stack->len = 0;
+	stack->buf = xrecallocarray(NULL, 0, stack->cap, sizeof(void *));
 	return stack;
 }
 
@@ -63,12 +64,7 @@ stack_free(struct Stack *stack)
 		return;
 	}
 
-	struct StackNode *node = stack->head;
-	while (node) {
-		struct StackNode *next = node->next;
-		free(node);
-		node = next;
-	}
+	free(stack->buf);
 	free(stack);
 }
 
@@ -81,9 +77,14 @@ stack_len(struct Stack *stack)
 int
 stack_contains(struct Stack *stack, const void *value)
 {
-	for (struct StackNode *node = stack->head; node; node = node->next) {
-		if (value == node->value) {
-			return 1;
+	if (stack->len > 0) {
+		for (size_t i = stack->len - 1; ; i--) {
+			if (value == stack->buf[i]) {
+				return 1;
+			}
+			if (i == 0) {
+				break;
+			}
 		}
 	}
 	return 0;
@@ -92,8 +93,8 @@ stack_contains(struct Stack *stack, const void *value)
 void *
 stack_peek(struct Stack *stack)
 {
-	if (stack->head) {
-		return stack->head->value;
+	if (stack->len > 0) {
+		return stack->buf[stack->len - 1];
 	} else {
 		return NULL;
 	}
@@ -102,13 +103,10 @@ stack_peek(struct Stack *stack)
 void *
 stack_pop(struct Stack *stack)
 {
-	if (stack->head) {
-		struct StackNode *next = stack->head->next;
-		void *value = stack->head->value;
-		free(stack->head);
-		stack->head = next;
+	if (stack->len > 0) {
+		void *v = stack->buf[stack->len - 1];
 		stack->len--;
-		return value;
+		return v;
 	} else {
 		return NULL;
 	}
@@ -117,23 +115,22 @@ stack_pop(struct Stack *stack)
 void
 stack_push(struct Stack *stack, const void *value)
 {
-	struct StackNode *node = xmalloc(sizeof(struct StackNode));
-	node->value = (void *)value;
-	node->next = stack->head;
-	stack->head = node;
-	stack->len++;
+	assert(stack->cap > 0);
+	assert(stack->cap > stack->len);
+
+	stack->buf[stack->len++] = (void *)value;
+	if (stack->len >= stack->cap) {
+		size_t new_cap = stack->cap + INITIAL_STACK_CAP;
+		assert(new_cap > stack->cap);
+		void **new_buf = xrecallocarray(stack->buf, stack->cap, new_cap, sizeof(void *));
+		stack->buf = new_buf;
+		stack->cap = new_cap;
+	}
 }
 
 void
 stack_truncate(struct Stack *stack)
 {
-	struct StackNode *node = stack->head;
-	while (node) {
-		struct StackNode *next = node->next;
-		free(node);
-		node = next;
-	}
-	stack->head = NULL;
 	stack->len = 0;
 }
 
@@ -141,7 +138,7 @@ struct StackIterator *
 stack_iterator(struct Stack *stack)
 {
 	struct StackIterator *iter = xmalloc(sizeof(struct StackIterator));
-	iter->node = stack->head;
+	iter->i = 0;
 	iter->stack = stack;
 	return iter;
 }
@@ -160,12 +157,9 @@ void *
 stack_iterator_next(struct StackIterator **iter_, size_t *index)
 {
 	struct StackIterator *iter = *iter_;
-	if (iter->node) {
+	if (iter->i < iter->stack->len) {
 		*index = iter->i;
-		void *value = iter->node->value;
-		iter->node = iter->node->next;
-		iter->i++;
-		return value;
+		return iter->stack->buf[iter->stack->len - iter->i++ - 1];
 	} else {
 		stack_iterator_free(iter_);
 		*iter_ = NULL;
