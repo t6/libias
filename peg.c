@@ -490,7 +490,7 @@ peg_line_col_at_pos(struct PEG *peg, size_t pos, size_t *line, size_t *col)
 }
 
 char *
-peg_print_errors(struct PEG *peg, const char *filename)
+peg_print_errors(struct PEG *peg, struct Mempool *extpool, const char *filename)
 {
 	if (filename == NULL) {
 		filename = "<stdin>";
@@ -506,14 +506,13 @@ peg_print_errors(struct PEG *peg, const char *filename)
 		peg_line_col_at_pos(peg, err->pos, &line, &col);
 		char *buf;
 		if (!err->msg || strcmp(err->msg, "") == 0) {
-			buf = str_printf("%s:%zu:%zu: in %s\n", filename, line, col, err->rule);
+			buf = str_printf(pool, "%s:%zu:%zu: in %s\n", filename, line, col, err->rule);
 		} else {
-			buf = str_printf("%s:%zu:%zu: in %s: %s\n", filename, line, col, err->rule, err->msg);
+			buf = str_printf(pool, "%s:%zu:%zu: in %s: %s\n", filename, line, col, err->rule, err->msg);
 		}
-		mempool_take(pool, buf);
 		array_append(errors, buf);
 	}
-	return str_join(errors, "");
+	return str_join(extpool, errors, "");
 }
 
 struct PEG *

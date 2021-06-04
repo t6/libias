@@ -33,6 +33,7 @@
 #include <string.h>
 
 #include "array.h"
+#include "mempool.h"
 #include "str.h"
 #include "test.h"
 #include "util.h"
@@ -47,37 +48,37 @@ TESTS() {
 	TEST(str_endswith("", ""));
 
 	struct Array *array = array_new();
-	TEST_STREQ(str_join(array, ","), "");
+	TEST_STREQ(str_join(pool, array, ","), "");
 	array_append(array, "1");
-	TEST_STREQ(str_join(array, ","), "1");
+	TEST_STREQ(str_join(pool, array, ","), "1");
 	array_append(array, "2");
 	array_append(array, "3");
-	TEST_STREQ(str_join(array, ","), "1,2,3");
-	TEST_STREQ(str_join(array, "foobar"), "1foobar2foobar3");
+	TEST_STREQ(str_join(pool, array, ","), "1,2,3");
+	TEST_STREQ(str_join(pool, array, "foobar"), "1foobar2foobar3");
 
-	TEST_STREQ(str_repeat("foo", 0), "");
-	TEST_STREQ(str_repeat("foo", 1), "foo");
-	TEST_STREQ(str_repeat("foo", 3), "foofoofoo");
-	TEST_STREQ(str_repeat("a", 10), "aaaaaaaaaa");
+	TEST_STREQ(str_repeat(pool, "foo", 0), "");
+	TEST_STREQ(str_repeat(pool, "foo", 1), "foo");
+	TEST_STREQ(str_repeat(pool, "foo", 3), "foofoofoo");
+	TEST_STREQ(str_repeat(pool, "a", 10), "aaaaaaaaaa");
 
-	TEST_STREQ(str_substr("a", 0, 1), "a");
-	TEST_STREQ(str_substr("a", 0, 2), "a");
-	TEST_STREQ(str_substr("foo", 0, 2), "fo");
-	TEST_STREQ(str_substr("foo", 1, 2), "o");
-	TEST_STREQ(str_substr("foo", 2, 1), "");
-	TEST_STREQ(str_substr("foo", 1, 3), "oo");
-	TEST_STREQ(str_substr("foo", 1, 1000), "oo");
-	TEST_STREQ(str_substr("foo", 1000, 1000), "");
+	TEST_STREQ(str_substr(pool, "a", 0, 1), "a");
+	TEST_STREQ(str_substr(pool, "a", 0, 2), "a");
+	TEST_STREQ(str_substr(pool, "foo", 0, 2), "fo");
+	TEST_STREQ(str_substr(pool, "foo", 1, 2), "o");
+	TEST_STREQ(str_substr(pool, "foo", 2, 1), "");
+	TEST_STREQ(str_substr(pool, "foo", 1, 3), "oo");
+	TEST_STREQ(str_substr(pool, "foo", 1, 1000), "oo");
+	TEST_STREQ(str_substr(pool, "foo", 1000, 1000), "");
 
-	TEST_STREQ(str_trim("foo"), "foo");
-	TEST_STREQ(str_trim("   foo  "), "foo");
-	TEST_STREQ(str_trim(" \tfoo  "), "foo");
+	TEST_STREQ(str_trim(pool, "foo"), "foo");
+	TEST_STREQ(str_trim(pool, "   foo  "), "foo");
+	TEST_STREQ(str_trim(pool, " \tfoo  "), "foo");
 
-	TEST_STREQ(str_triml("foo"), "foo");
-	TEST_STREQ(str_triml("   foo  "), "foo  ");
-	TEST_STREQ(str_triml(" \tfoo  "), "foo  ");
+	TEST_STREQ(str_triml(pool, "foo"), "foo");
+	TEST_STREQ(str_triml(pool, "   foo  "), "foo  ");
+	TEST_STREQ(str_triml(pool, " \tfoo  "), "foo  ");
 
-	TEST_STREQ(str_trimr("foo"), "foo");
-	TEST_STREQ(str_trimr("   foo  "), "   foo");
-	TEST_STREQ(str_trimr(" \tfoo  "), " \tfoo");
+	TEST_STREQ(str_trimr(pool, "foo"), "foo");
+	TEST_STREQ(str_trimr(pool, "   foo  "), "   foo");
+	TEST_STREQ(str_trimr(pool, " \tfoo  "), " \tfoo");
 }

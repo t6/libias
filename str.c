@@ -39,6 +39,7 @@
 #include <string.h>
 
 #include "array.h"
+#include "mempool.h"
 #include "str.h"
 #include "util.h"
 
@@ -61,14 +62,14 @@ str_compare(const void *ap, const void *bp, void *userdata)
 }
 
 char *
-str_common_prefix(const char *a, const char *b)
+str_common_prefix(struct Mempool *pool, const char *a, const char *b)
 {
 	const char *ap = a;
 	const char *bp = b;
 	size_t i;
 	for (i = 0; *ap != 0 && *bp != 0 && *ap++ == *bp++; i++);
 	if (i > 0) {
-		return xstrndup(a, i);
+		return mempool_take(pool, xstrndup(a, i));
 	} else {
 		return NULL;
 	}
@@ -85,7 +86,7 @@ str_endswith(const char *s, const char *end)
 }
 
 char *
-str_join(struct Array *array, const char *sep)
+str_join(struct Mempool *pool, struct Array *array, const char *sep)
 {
 	size_t seplen = strlen(sep);
 	size_t lastindex = array_len(array) - 1;
@@ -99,7 +100,7 @@ str_join(struct Array *array, const char *sep)
 		}
 	}
 
-	char *buf = xmalloc(sz);
+	char *buf = mempool_alloc(pool, sz);
 	i = 0;
 	ARRAY_FOREACH(array, const char *, s) {
 		xstrlcat(buf, s, sz);
@@ -111,9 +112,9 @@ str_join(struct Array *array, const char *sep)
 }
 
 char *
-str_map(const char *s, size_t len, int (*f)(int))
+str_map(struct Mempool *pool, const char *s, size_t len, int (*f)(int))
 {
-	char *buf = xmalloc(len + 1);
+	char *buf = mempool_alloc(pool, len + 1);
 	for (size_t i = 0; i < len && s[i] != 0; i++) {
 		buf[i] = f(s[i]);
 	}
@@ -121,12 +122,13 @@ str_map(const char *s, size_t len, int (*f)(int))
 }
 
 char *
-str_printf(const char *format, ...)
+str_printf(struct Mempool *pool, const char *format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
 	char *buf = NULL;
 	int retval = vasprintf(&buf, format, ap);
+	mempool_take(pool, buf);
 	va_end(ap);
 
 	if (retval < 0) {
@@ -138,10 +140,10 @@ str_printf(const char *format, ...)
 }
 
 char *
-str_repeat(const char *s, const size_t n)
+str_repeat(struct Mempool *pool, const char *s, const size_t n)
 {
 	const size_t sz = strlen(s) * n + 1;
-	char *buf = xmalloc(sz);
+	char *buf = mempool_alloc(pool, sz);
 	if (n > 0) {
 		for (size_t i = 0; i < n; i++) {
 			xstrlcat(buf, s, sz);
@@ -161,42 +163,42 @@ str_startswith(const char *s, const char *start)
 }
 
 char *
-str_substr(const char *s, const size_t a, const size_t b)
+str_substr(struct Mempool *pool, const char *s, const size_t a, const size_t b)
 {
 	if (a > b) {
-		return xstrdup("");
+		return mempool_take(pool, xstrdup(""));
 	} else {
 		size_t len = strlen(s);
 		size_t start = MIN(len, a);
 		size_t end = MIN(len, b);
-		return xstrndup(s + start, end - start);
+		return mempool_take(pool, xstrndup(s + start, end - start));
 	}
 }
 
 char *
-str_trim(const char *s)
+str_trim(struct Mempool *pool, const char *s)
 {
 	const char *sp = s;
 	for (; *sp && isspace(*sp); ++sp);
-	return str_trimr(sp);
+	return str_trimr(pool, sp);
 }
 
 char *
-str_triml(const char *s)
+str_triml(struct Mempool *pool, const char *s)
 {
 	const char *sp = s;
 	for (; *sp && isspace(*sp); ++sp);
-	return xstrdup(sp);
+	return mempool_take(pool, xstrdup(sp));
 }
 
 char *
-str_trimr(const char *s)
+str_trimr(struct Mempool *pool, const char *s)
 {
 	size_t len = strlen(s);
 	while (len > 0 && isspace(s[len - 1])) {
 		len--;
 	}
-	return xstrndup(s, len);
+	return mempool_take(pool, xstrndup(s, len));
 }
 
 char *

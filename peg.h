@@ -29,7 +29,7 @@
 
 struct PEG;
 struct Array;
-struct MemoryPool;
+struct Mempool;
 
 struct PEGCapture {
 	const char *buf;
@@ -54,7 +54,7 @@ struct PEG *peg_new(const char *, size_t);
 void peg_free(struct PEG *);
 
 int peg_match(struct PEG *, RuleFn, CaptureFn, void *);
-char *peg_print_errors(struct PEG *, const char *);
+char *peg_print_errors(struct PEG *, struct Mempool *, const char *);
 
 int peg_match_atleast(struct PEG *, const char *, RuleFn, int);
 int peg_match_between(struct PEG *, const char *, RuleFn, int, int);

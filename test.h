@@ -36,7 +36,7 @@ do { \
 #define TEST_FAIL_LOC(file, line, col, msg) \
 do { \
 	if (failureslen < nitems(failures)) { \
-		char *buf = str_printf("%s:%d:%d: FAIL: %s", file, line, col, msg); \
+		char *buf = str_printf(pool, "%s:%d:%d: FAIL: %s", file, line, col, msg); \
 		failures[failureslen++] = buf; \
 	} \
 	putchar('X'); \
@@ -74,13 +74,14 @@ do { \
 #define TESTS() \
 static char *failures[512]; \
 static size_t failureslen; \
-static void run_tests(void); \
+static void run_tests(struct Mempool *); \
 int main(int argc, char *argv[]) { \
-	run_tests(); \
+	SCOPE_MEMPOOL(pool); \
+	run_tests(pool); \
 	printf("\n"); \
 	for (size_t i = 0; i < failureslen; i++) { \
 		puts(failures[i]); \
 	} \
 	return failureslen != 0; \
 } \
-void run_tests()
+void run_tests(struct Mempool *pool)

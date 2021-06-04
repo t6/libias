@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "mempool.h"
 #include "stack.h"
 #include "str.h"
 #include "test.h"

@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "mempool.h"
 #include "peg.h"
 #include "peg/grammar.h"
 #include "str.h"

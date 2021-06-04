@@ -33,6 +33,7 @@
 #include <string.h>
 
 #include "array.h"
+#include "mempool.h"
 #include "str.h"
 #include "test.h"
 #include "util.h"

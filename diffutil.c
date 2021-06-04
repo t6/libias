@@ -136,7 +136,7 @@ get_hunks(struct Mempool *pool, struct diff *p, size_t context)
 
 
 char *
-diff_to_patch(struct diff *p, TostringFn tostring, void *tostring_userdata, size_t context, int color)
+diff_to_patch(struct diff *p, struct Mempool *extpool, TostringFn tostring, void *tostring_userdata, size_t context, int color)
 {
 	if (p->sessz == 0) {
 		return NULL;
@@ -177,17 +177,17 @@ diff_to_patch(struct diff *p, TostringFn tostring, void *tostring_userdata, size
 		size_t target_start = p->ses[h->start].targetIdx;
 		char *buf;
 		if (origin_len > 1) {
-			buf = str_printf("%s@@ -%zu,%zu", color_context, origin_start, origin_len);
+			buf = str_printf(pool, "%s@@ -%zu,%zu", color_context, origin_start, origin_len);
 		} else {
-			buf = str_printf("%s@@ -%zu", color_context, origin_start);
+			buf = str_printf(pool, "%s@@ -%zu", color_context, origin_start);
 		}
-		array_append(result, mempool_take(pool, buf));
+		array_append(result, buf);
 		if (target_len > 1) {
-			buf = str_printf(" +%zu,%zu @@%s\n", target_start, target_len, color_reset);
+			buf = str_printf(pool, " +%zu,%zu @@%s\n", target_start, target_len, color_reset);
 		} else {
-			buf = str_printf(" +%zu @@%s\n", target_start, color_reset);
+			buf = str_printf(pool, " +%zu @@%s\n", target_start, color_reset);
 		}
-		array_append(result, mempool_take(pool, buf));
+		array_append(result, buf);
 		for (size_t i = h->start; i <= h->end; i++) {
 			char *line;
 			if (tostring) {
@@ -197,18 +197,18 @@ diff_to_patch(struct diff *p, TostringFn tostring, void *tostring_userdata, size
 			}
 			switch (p->ses[i].type) {
 			case DIFF_ADD:
-				buf = str_printf("%s+%s%s\n", color_add, line, color_reset);
+				buf = str_printf(pool, "%s+%s%s\n", color_add, line, color_reset);
 				break;
 			case DIFF_COMMON:
-				buf = str_printf(" %s\n", line);
+				buf = str_printf(pool, " %s\n", line);
 				break;
 			case DIFF_DELETE:
-				buf = str_printf("%s-%s%s\n", color_delete, line, color_reset);
+				buf = str_printf(pool, "%s-%s%s\n", color_delete, line, color_reset);
 				break;
 			}
-			array_append(result, mempool_take(pool, buf));
+			array_append(result, buf);
 		}
 	}
 
-	return str_join(result, "");
+	return str_join(extpool, result, "");
 }

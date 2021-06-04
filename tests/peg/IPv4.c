@@ -170,7 +170,7 @@ check_captures(RuleFn rule, const char *s, unsigned int tag, const char *sep)
 				array_append(caps, mempool_take(pool, xstrndup(cap->buf, cap->len)));
 			}
 		}
-		return str_join(caps, sep);
+		return xstrdup(str_join(pool, caps, sep));
 	}
 	return NULL;
 }

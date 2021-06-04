@@ -44,22 +44,22 @@
 #include "util.h"
 
 char *
-read_symlink(int dir, const char *path)
+read_symlink(int dir, const char *path, struct Mempool *pool)
 {
 	char buf[PATH_MAX];
 	ssize_t len = readlinkat(dir, path, buf, sizeof(buf));
 	if (len != -1) {
-		return xstrndup(buf, len);
+		return mempool_take(pool, xstrndup(buf, len));
 	}
 	return NULL;
 }
 
 char *
-slurp(int fd)
+slurp(int fd, struct Mempool *pool)
 {
 #define SLURP_BUF_SIZE	(8*1024*1024)
 	size_t bufsize = SLURP_BUF_SIZE + 1;
-	char *buf = xmalloc(bufsize);
+	char *buf = xrecallocarray(NULL, 0, bufsize, 1);
 	size_t left = SLURP_BUF_SIZE;
 	ssize_t bytes;
 	size_t pos = 0;
@@ -81,7 +81,7 @@ slurp(int fd)
 		}
 	}
 
-	return buf;
+	return mempool_take(pool, buf);
 }
 
 int
@@ -93,7 +93,7 @@ update_symlink(int dir, const char *path1, const char *path2, struct Mempool *po
 	while (symlinkat(path1, dir, path2) == -1) {
 		if (errno == EEXIST) {
 			if (prev != NULL) {
-				*prev = mempool_take(pool, read_symlink(dir, path2));
+				*prev = read_symlink(dir, path2, pool);
 			}
 			if (unlinkat(dir, path2, 0) == -1) {
 				if (prev != NULL) {

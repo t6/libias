@@ -36,6 +36,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "mempool.h"
 #include "peg.h"
 #include "peg/toml.h"
 #include "str.h"
@@ -199,17 +200,17 @@ check_match(const char *s, int expected)
 TESTS() {
 	chdir(TOML_TEST_PATH);
 	for (size_t i = 0; i < nitems(tests); i++) {
+		SCOPE_MEMPOOL(pool);
 		const char *name = tests[i];
 		int valid = *name != 'i';
 		int fd = open(name, O_RDONLY);
 		char *buf;
 		if (fd == -1) {
-			char *msg = str_printf("%s: %s", name, strerror(errno));
+			char *msg = str_printf(pool, "%s: %s", name, strerror(errno));
 			TEST_FAIL(msg);
-			free(msg);
 			continue;
 		}
-		buf = slurp(fd);
+		buf = slurp(fd, pool);
 		if (buf == NULL) {
 			TEST_FAIL(strerror(errno));
 		} else if (check_match(buf, valid)) {
@@ -221,11 +222,9 @@ TESTS() {
 			} else {
 				reason = "not rejected";
 			}
-			char *filename = str_printf("%s/%s", TOML_TEST_PATH, name);
+			char *filename = str_printf(pool, "%s/%s", TOML_TEST_PATH, name);
 			TEST_FAIL_LOC(filename, 1, 1, reason);
-			free(filename);
 		}
-		free(buf);
 		close(fd);
 	}
 }

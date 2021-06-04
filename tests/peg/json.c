@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include "json.h"
+#include "mempool.h"
 #include "peg.h"
 #include "peg/json.h"
 #include "str.h"
@@ -378,17 +379,17 @@ TESTS() {
 
 	chdir(JSON_TEST_PATH);
 	for (size_t i = 0; i < nitems(tests); i++) {
+		SCOPE_MEMPOOL(pool);
 		name = tests[i];
 		int valid = *name == 'y' || *name == 'i';
 		int fd = open(name, O_RDONLY);
 		char *buf;
 		if (fd == -1) {
-			char *msg = str_printf("%s: %s", name, strerror(errno));
+			char *msg = str_printf(pool, "%s: %s", name, strerror(errno));
 			TEST_FAIL(msg);
-			free(msg);
 			continue;
 		}
-		buf = slurp(fd);
+		buf = slurp(fd, pool);
 		if (buf == NULL) {
 			TEST_FAIL(strerror(errno));
 		} else if (check_match(buf, valid)) {
@@ -400,11 +401,9 @@ TESTS() {
 			} else {
 				reason = "not rejected";
 			}
-			char *filename = str_printf("%s/%s", JSON_TEST_PATH, name);
+			char *filename = str_printf(pool, "%s/%s", JSON_TEST_PATH, name);
 			TEST_FAIL_LOC(filename, 1, 1, reason);
-			free(filename);
 		}
-		free(buf);
 		close(fd);
 	}
 
@@ -427,12 +426,13 @@ TESTS() {
 static int
 check_match(const char *s, int expected)
 {
+	SCOPE_MEMPOOL(pool);
 	struct PEG *peg = peg_new(s, strlen(s));
 	int result = peg_match(peg, peg_json_decode, NULL, NULL);
 	if (!result && expected) {
-		char *errors = peg_print_errors(peg, name);
+		char *errors = peg_print_errors(peg, pool, name);
 		if (errors) {
-			failures[failureslen++] = errors;
+			failures[failureslen++] = xstrdup(errors);
 		}
 	}
 	name = NULL;

@@ -28,20 +28,21 @@
 #pragma once
 
 struct Array;
+struct Mempool;
 
-char *str_common_prefix(const char *, const char *);
+char *str_common_prefix(struct Mempool *, const char *, const char *);
 int str_casecompare(const void *, const void *, void *);
 int str_compare(const void *, const void *, void *);
 int str_endswith(const char *, const char *);
-char *str_join(struct Array *, const char *);
-char *str_map(const char *, size_t, int (*)(int));
-char *str_printf(const char *, ...) __printflike(1, 2);
-char *str_repeat(const char *, const size_t);
+char *str_join(struct Mempool *, struct Array *, const char *);
+char *str_map(struct Mempool *, const char *, size_t, int (*)(int));
+char *str_printf(struct Mempool *, const char *, ...) __printflike(2, 3);
+char *str_repeat(struct Mempool *, const char *, const size_t);
 int str_startswith(const char *, const char *);
-char *str_substr(const char *, const size_t, const size_t);
-char *str_trim(const char *);
-char *str_triml(const char *);
-char *str_trimr(const char *);
+char *str_substr(struct Mempool *, const char *, const size_t, const size_t);
+char *str_trim(struct Mempool *, const char *);
+char *str_triml(struct Mempool *, const char *);
+char *str_trimr(struct Mempool *, const char *);
 
 char *xstrdup(const char *);
 char *xstrndup(const char *, size_t);

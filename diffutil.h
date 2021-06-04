@@ -28,7 +28,8 @@
 #pragma once
 
 struct diff;
+struct Mempool;
 
 typedef char *(*TostringFn)(const void *, void *);
 
-char *diff_to_patch(struct diff *, TostringFn, void *, size_t, int);
+char *diff_to_patch(struct diff *, struct Mempool *, TostringFn, void *, size_t, int);
