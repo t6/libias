@@ -121,17 +121,7 @@ mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 void *
 mempool_forget(struct Mempool *pool, void *ptr)
 {
-	if (pool->map) {
-		map_remove(pool->map, ptr);
-	} else {
-		STACK_FOREACH(pool->stack, struct MempoolNode *, node) {
-			if (node->ptr == ptr) {
-				node->ptr = NULL;
-				break;
-			}
-		}
-	}
-	return ptr;
+	return mempool_move(pool, ptr, NULL);
 }
 
 void
@@ -141,6 +131,36 @@ mempool_inherit(struct Mempool *pool, struct Mempool *other)
 		mempool_add(pool, other, mempool_free_owned);
 		other->owner = pool;
 	}
+}
+
+void *
+mempool_move(struct Mempool *pool, void *ptr, struct Mempool *other)
+{
+	if (pool == other) {
+		return ptr;
+	}
+
+	void *freefn = NULL;
+	if (pool->map) {
+		freefn = map_get(pool->map, ptr);
+		if (freefn) {
+			map_remove(pool->map, ptr);
+		}
+	} else {
+		STACK_FOREACH(pool->stack, struct MempoolNode *, node) {
+			if (node->ptr == ptr) {
+				freefn = node->freefn;
+				node->ptr = NULL;
+				break;
+			}
+		}
+	}
+
+	if (other) {
+		mempool_add(other, ptr, freefn);
+	}
+
+	return ptr;
 }
 
 void
