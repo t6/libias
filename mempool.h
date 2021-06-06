@@ -43,6 +43,7 @@ void *mempool_alloc(struct Mempool *, size_t);
 void *mempool_forget(struct Mempool *, void *);
 void *mempool_move(struct Mempool *, void *, struct Mempool *);
 void *mempool_take(struct Mempool *, void *);
+int mempool_takefd(struct Mempool *, int);
 struct Array *mempool_array(struct Mempool *);
 struct Map *mempool_map(struct Mempool *, MempoolCompareFn, void *, void *, void *);
 struct Queue *mempool_queue(struct Mempool *);
