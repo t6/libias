@@ -103,7 +103,7 @@ void *
 mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 {
 	if (!ptr || !freefn) {
-		return NULL;
+		return ptr;
 	}
 
 	if (pool->map) {
