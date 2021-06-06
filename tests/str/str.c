@@ -47,7 +47,7 @@ TESTS() {
 	TEST(!str_endswith("", "verylong"));
 	TEST(str_endswith("", ""));
 
-	struct Array *array = array_new();
+	struct Array *array = mempool_array(pool);
 	TEST_STREQ(str_join(pool, array, ","), "");
 	array_append(array, "1");
 	TEST_STREQ(str_join(pool, array, ","), "1");

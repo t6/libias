@@ -39,7 +39,7 @@
 #include "util.h"
 
 TESTS() {
-	struct Stack *stack = stack_new();
+	struct Stack *stack = mempool_stack(pool);
 	stack_push(stack, "1");
 	stack_push(stack, "2");
 	stack_push(stack, "3");

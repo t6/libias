@@ -42,11 +42,11 @@
 #include "util.h"
 
 TESTS() {
-	struct Array *a = array_new();
+	struct Array *a = mempool_array(pool);
 	for (size_t i = 0; i < 16; i++) {
 		array_append(a, "1");
 	}
-	struct Array *b = array_new();
+	struct Array *b = mempool_array(pool);
 	array_append(b, "2");
 	array_append(b, "2");
 	for (size_t i = 0; i < 8; i++) {
@@ -60,7 +60,7 @@ TESTS() {
 	struct diff d;
 	TEST_IF(array_diff(a, b, &d, str_compare, NULL)) {
 		char *actual = diff_to_patch(&d, pool, NULL, NULL, 3, 0);
-		int fd = open("tests/diff/0001.diff", O_RDONLY);
+		int fd = mempool_takefd(pool, open("tests/diff/0001.diff", O_RDONLY));
 		char *expected = slurp(fd, pool);
 		TEST_STREQ(actual, expected);
 	}

@@ -203,7 +203,7 @@ TESTS() {
 		SCOPE_MEMPOOL(pool);
 		const char *name = tests[i];
 		int valid = *name != 'i';
-		int fd = open(name, O_RDONLY);
+		int fd = mempool_takefd(pool, open(name, O_RDONLY));
 		char *buf;
 		if (fd == -1) {
 			char *msg = str_printf(pool, "%s: %s", name, strerror(errno));
@@ -225,6 +225,5 @@ TESTS() {
 			char *filename = str_printf(pool, "%s/%s", TOML_TEST_PATH, name);
 			TEST_FAIL_LOC(filename, 1, 1, reason);
 		}
-		close(fd);
 	}
 }

@@ -39,7 +39,7 @@
 #include "util.h"
 
 TESTS() {
-	struct Map *map = map_new(str_compare, NULL, NULL, NULL);
+	struct Map *map = mempool_map(pool, str_compare, NULL, NULL, NULL);
 	map_add(map, "1", "foo");
 	map_add(map, "2", "bar");
 
@@ -69,7 +69,7 @@ TESTS() {
 	TEST(i == 1);
 
 	i = 0;
-	map = map_new(NULL, NULL, NULL, NULL);
+	map = mempool_map(pool, NULL, NULL, NULL, NULL);
 	MAP_FOREACH(map, char *, key, char *, value) {
 		i++;
 	}

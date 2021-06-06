@@ -39,7 +39,7 @@
 #include "util.h"
 
 TESTS() {
-	struct Array *array = array_new();
+	struct Array *array = mempool_array(pool);
 	array_append(array, "1");
 	array_append(array, "2");
 	array_append(array, "3");
@@ -61,7 +61,7 @@ TESTS() {
 	TEST(i == 0);
 
 	// Check that ARRAY_FOREACH works with NULL values
-	array = array_new();
+	array = mempool_array(pool);
 	array_append(array, NULL);
 	array_append(array, NULL);
 	i = 0;

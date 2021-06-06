@@ -39,7 +39,7 @@
 #include "util.h"
 
 TESTS() {
-	struct Queue *queue = queue_new();
+	struct Queue *queue = mempool_queue(pool);
 	queue_push(queue, "1");
 	queue_push(queue, "2");
 	queue_push(queue, "3");
@@ -65,7 +65,7 @@ TESTS() {
 	queue_dequeue(queue);
 	TEST(queue_len(queue) == 0);
 
-	queue = queue_new();
+	queue = mempool_queue(pool);
 	queue_push(queue, "1");
 	TEST_STREQ(queue_dequeue(queue), "1");
 	TEST(queue_pop(queue) == NULL);
