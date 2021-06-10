@@ -33,6 +33,8 @@ struct Mempool;
 char *str_common_prefix(struct Mempool *, const char *, const char *);
 int str_casecompare(const void *, const void *, void *);
 int str_compare(const void *, const void *, void *);
+char *str_dup(struct Mempool *, const char *);
+char *str_ndup(struct Mempool *, const char *, size_t);
 int str_endswith(const char *, const char *);
 char *str_join(struct Mempool *, struct Array *, const char *);
 char *str_map(struct Mempool *, const char *, size_t, int (*)(int));
@@ -43,6 +45,3 @@ char *str_substr(struct Mempool *, const char *, const size_t, const size_t);
 char *str_trim(struct Mempool *, const char *);
 char *str_triml(struct Mempool *, const char *);
 char *str_trimr(struct Mempool *, const char *);
-
-char *xstrdup(const char *);
-char *xstrndup(const char *, size_t);

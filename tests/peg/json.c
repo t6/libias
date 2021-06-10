@@ -431,7 +431,7 @@ check_match(const char *s, int expected)
 	if (!result && expected) {
 		char *errors = peg_print_errors(peg, pool, name);
 		if (errors) {
-			failures[failureslen++] = xstrdup(errors);
+			failures[failureslen++] = str_dup(NULL, errors);
 		}
 	}
 	name = NULL;

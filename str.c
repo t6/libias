@@ -44,6 +44,8 @@
 #include "util.h"
 
 static size_t xstrlcat(char *, const char *, size_t);
+static char *xstrdup(const char *);
+static char *xstrndup(const char *, size_t);
 
 int
 str_casecompare(const void *ap, const void *bp, void *userdata)
@@ -73,6 +75,18 @@ str_common_prefix(struct Mempool *pool, const char *a, const char *b)
 	} else {
 		return NULL;
 	}
+}
+
+char *
+str_dup(struct Mempool *pool, const char *s)
+{
+	return mempool_take(pool, xstrdup(s));
+}
+
+char *
+str_ndup(struct Mempool *pool, const char *s, size_t n)
+{
+	return mempool_take(pool, xstrndup(s, n));
 }
 
 int

@@ -49,7 +49,7 @@ read_symlink(int dir, const char *path, struct Mempool *pool)
 	char buf[PATH_MAX];
 	ssize_t len = readlinkat(dir, path, buf, sizeof(buf));
 	if (len != -1) {
-		return mempool_take(pool, xstrndup(buf, len));
+		return str_ndup(pool, buf, len);
 	}
 	return NULL;
 }

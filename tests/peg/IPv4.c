@@ -54,6 +54,7 @@ static RULE(num0_4);
 static RULE(num0_5);
 
 struct IPv4Capture {
+	struct Mempool *pool;
 	char *bytes[5];
 	char *full;
 };
@@ -73,22 +74,22 @@ capture_machine(struct PEGCapture *capture, void *userdata)
 	struct IPv4Capture *data = userdata;
 	switch ((enum IPv4CaptureState)capture->state) {
 	case BYTE1:
-		data->bytes[0] = xstrndup(capture->buf, capture->len);
+		data->bytes[0] = str_ndup(data->pool, capture->buf, capture->len);
 		break;
 	case BYTE2:
-		data->bytes[1] = xstrndup(capture->buf, capture->len);
+		data->bytes[1] = str_ndup(data->pool, capture->buf, capture->len);
 		break;
 	case BYTE3:
-		data->bytes[2] = xstrndup(capture->buf, capture->len);
+		data->bytes[2] = str_ndup(data->pool, capture->buf, capture->len);
 		break;
 	case BYTE4:
-		data->bytes[3] = xstrndup(capture->buf, capture->len);
+		data->bytes[3] = str_ndup(data->pool, capture->buf, capture->len);
 		break;
 	case BYTE25:
-		data->bytes[4] = xstrndup(capture->buf, capture->len);
+		data->bytes[4] = str_ndup(data->pool, capture->buf, capture->len);
 		break;
 	case IPV4_ACCEPT:
-		data->full = xstrndup(capture->buf, capture->len);
+		data->full = str_ndup(data->pool, capture->buf, capture->len);
 		break;
 	}
 	return PEG_CAPTURE_CONTINUE;
@@ -167,10 +168,10 @@ check_captures(RuleFn rule, const char *s, unsigned int tag, const char *sep)
 		struct Array *caps = mempool_array(pool);
 		ARRAY_FOREACH(captures, struct PEGCapture *, cap) {
 			if (cap->tag == tag) {
-				array_append(caps, mempool_take(pool, xstrndup(cap->buf, cap->len)));
+				array_append(caps, str_ndup(pool, cap->buf, cap->len));
 			}
 		}
-		return xstrdup(str_join(pool, caps, sep));
+		return str_join(NULL, caps, sep);
 	}
 	return NULL;
 }
@@ -197,6 +198,7 @@ TESTS() {
 
 	struct IPv4Capture capture;
 	memset(&capture, 0, sizeof(capture));
+	capture.pool = pool;
 	TEST_IF(check_match(ipv4, "1.2.3.4", 1, &capture)) {
 		TEST_STREQ(capture.full, "1.2.3.4");
 		TEST_STREQ(capture.bytes[0], "1");

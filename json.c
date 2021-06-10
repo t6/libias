@@ -162,6 +162,7 @@ json_capture_machine(struct PEGCapture *capture, void *userdata)
 static enum PEGCaptureFlag
 objget_capture_machine(struct PEGCapture *capture, void *userdata)
 {
+	SCOPE_MEMPOOL(pool);
 	struct ObjgetCaptureMachineData *data = userdata;
 	switch ((enum ObjgetCaptureState)capture->state) {
 	case PEG_OBJGET_ACCEPT: {
@@ -169,18 +170,16 @@ objget_capture_machine(struct PEGCapture *capture, void *userdata)
 	} case PEG_OBJGET_INDEX: {
 		if (json_type(data->json) == JSON_ARRAY) {
 			const char *error;
-			char *buf = xstrndup(capture->buf, capture->len);
+			char *buf = str_ndup(pool, capture->buf, capture->len);
 			size_t i = strtonum(buf, 0, INT64_MAX, &error);
-			free(buf);
 			if (error) {
 				data->json = NULL;
 			} else {
 				data->json = array_get(json_unwrap_array(data->json), i);
 			}
 		} else if (json_type(data->json) == JSON_OBJECT) {
-			char *key = xstrndup(capture->buf, capture->len);
+			char *key = str_ndup(pool, capture->buf, capture->len);
 			data->json = map_get(json_unwrap_object(data->json), key);
-			free(key);
 		} else {
 			data->json = NULL;
 		}
@@ -229,7 +228,7 @@ json_new(const char *buf, size_t len)
 	data.arrays = mempool_stack(data.pool);
 	data.objects = mempool_stack(data.pool);
 	data.values = mempool_stack(data.pool);
-	data.buf = mempool_take(data.pool, xstrndup(buf, len));
+	data.buf = str_ndup(data.pool, buf, len);
 
 	struct PEG *peg = peg_new(data.buf, len);
 	int status = peg_match(peg, peg_json_decode, json_capture_machine, &data);
