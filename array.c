@@ -38,6 +38,7 @@
 
 #include "array.h"
 #include "diff.h"
+#include "mempool.h"
 #include "util.h"
 
 struct Array {
@@ -83,15 +84,24 @@ array_append(struct Array *array, const void *v)
 	}
 }
 
-int
-array_diff(struct Array *base1, struct Array *base2, struct diff *d, ArrayCompareFn cmp, void *userdata)
+struct diff *
+array_diff(struct Array *base1, struct Array *base2, struct Mempool *pool, ArrayCompareFn cmp, void *userdata)
 {
 	assert(base1->value_size == base2->value_size);
-
+	struct diff *d = xmalloc(sizeof(struct diff));
 	int retval = diff(d, cmp, userdata, base1->value_size,
 			  base1->buf, base1->len, base2->buf, base2->len);
-
-	return retval;
+	if (retval < 0) { // memory allocation failure
+		abort();
+	} else if (retval == 0) { // sequence too complicated to generate
+		free(d);
+		return NULL;
+	} else {
+		mempool_take(pool, d);
+		mempool_take(pool, d->lcs);
+		mempool_take(pool, d->ses);
+		return d;
+	}
 }
 
 void

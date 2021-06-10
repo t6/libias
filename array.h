@@ -30,11 +30,12 @@
 struct Array;
 struct ArrayIterator;
 struct diff;
+struct Mempool;
 typedef int (*ArrayCompareFn)(const void *, const void *, void *);
 
 struct Array *array_new(void);
 void array_append(struct Array *, const void *);
-int array_diff(struct Array *, struct Array *, struct diff *, ArrayCompareFn, void *);
+struct diff *array_diff(struct Array *, struct Array *, struct Mempool *, ArrayCompareFn, void *);
 void array_free(struct Array *);
 void *array_get(struct Array *, size_t);
 ssize_t array_find(struct Array *, const void *, ArrayCompareFn, void *);

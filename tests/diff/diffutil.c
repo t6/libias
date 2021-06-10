@@ -57,9 +57,9 @@ TESTS() {
 		array_append(b, "1");
 	}
 
-	struct diff d;
-	TEST_IF(array_diff(a, b, &d, str_compare, NULL)) {
-		char *actual = diff_to_patch(&d, pool, NULL, NULL, 3, 0);
+	struct diff *d;
+	TEST_IF((d = array_diff(a, b, pool, str_compare, NULL))) {
+		char *actual = diff_to_patch(d, pool, NULL, NULL, 3, 0);
 		int fd = mempool_takefd(pool, open("tests/diff/0001.diff", O_RDONLY));
 		char *expected = slurp(fd, pool);
 		TEST_STREQ(actual, expected);

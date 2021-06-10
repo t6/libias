@@ -56,7 +56,7 @@ libias.a: ${OBJS}
 	${AR} rcs libias.a ${OBJS}
 
 #
-array.o: config.h array.h diff.h util.h
+array.o: config.h array.h diff.h mempool.h util.h
 compats.o: config.h
 diff.o: config.h diff.h
 diffutil.o: config.h array.h diff.h diffutil.h mempool.h str.h util.h
