@@ -371,6 +371,7 @@ diff(struct diff *d, diff_cmp cmp, void *cmp_userdata, size_t size,
 
 	if (0 == rc) {
 		free(d->ses);
+		free(d->lcs);
 		return -1;
 	}
 
