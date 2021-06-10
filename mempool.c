@@ -103,7 +103,7 @@ mempool_cleanup(struct Mempool **pool)
 void *
 mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 {
-	if (!ptr || !freefn) {
+	if (!pool || !ptr || !freefn) {
 		return ptr;
 	}
 
@@ -128,7 +128,7 @@ mempool_forget(struct Mempool *pool, void *ptr)
 void
 mempool_inherit(struct Mempool *pool, struct Mempool *other)
 {
-	if (other && pool != other && pool->owner != other && other->owner != pool) {
+	if (pool && other && pool != other && pool->owner != other && other->owner != pool) {
 		mempool_add(pool, other, mempool_free_owned);
 		other->owner = pool;
 	}
@@ -137,7 +137,7 @@ mempool_inherit(struct Mempool *pool, struct Mempool *other)
 void *
 mempool_move(struct Mempool *pool, void *ptr, struct Mempool *other)
 {
-	if (pool == other) {
+	if (!pool || pool == other) {
 		return ptr;
 	}
 
@@ -167,7 +167,9 @@ mempool_move(struct Mempool *pool, void *ptr, struct Mempool *other)
 void
 mempool_release(struct Mempool *pool)
 {
-	if (pool->owner != pool) {
+	if (!pool) {
+		return;
+	} else if (pool->owner != pool) {
 		abort();
 	} else if (pool->map) {
 		MAP_FOREACH(pool->map, void *, ptr, void *, f) {
@@ -208,7 +210,7 @@ mempool_freefd(int *fd)
 int
 mempool_takefd(struct Mempool *pool, int fd)
 {
-	if (fd > -1) {
+	if (pool && fd > -1) {
 		int *memfd = xmalloc(sizeof(int));
 		*memfd = fd;
 		mempool_add(pool, memfd, mempool_freefd);
