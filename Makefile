@@ -61,7 +61,7 @@ compats.o: config.h
 diff.o: config.h diff.h
 diffutil.o: config.h array.h diff.h diffutil.h mempool.h str.h util.h
 json.o: config.h array.h json.h map.h mempool.h peg.h peg/json.h peg/objget.h stack.h str.h util.h
-map.o: config.h array.h map.h util.h
+map.o: config.h array.h map.h stack.h util.h
 mempool.o: config.h array.h map.h mempool.h queue.h set.h stack.h util.h
 peg.o: config.h array.h mempool.h peg.h queue.h set.h stack.h str.h utf8.h util.h
 peg/clang.o: config.h peg.h peg/grammar.h

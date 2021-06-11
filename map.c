@@ -35,6 +35,7 @@
 
 #include "array.h"
 #include "map.h"
+#include "stack.h"
 #include "util.h"
 
 struct MapNode {
@@ -152,13 +153,18 @@ map_len(struct Map *map)
 void
 map_truncate(struct Map *map)
 {
+	struct Stack *stack = stack_new();
 	struct MapNode *node;
 	struct MapNode *next;
 	for (node = SPLAY_MIN(MapTree, &map->root); node != NULL; node = next) {
 		next = SPLAY_NEXT(MapTree, &map->root, node);
-		SPLAY_REMOVE(MapTree, &map->root, node);
+		stack_push(stack, node);
+	}
+	while ((node = stack_pop(stack))) {
 		map_node_free(node);
 	}
+	stack_free(stack);
+
 	SPLAY_INIT(&map->root);
 	map->len = 0;
 }
