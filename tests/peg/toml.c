@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include "mempool.h"
+#include "mempool/file.h"
 #include "peg.h"
 #include "peg/toml.h"
 #include "str.h"
@@ -203,7 +204,7 @@ TESTS() {
 		SCOPE_MEMPOOL(pool);
 		const char *name = tests[i];
 		int valid = *name != 'i';
-		int fd = mempool_takefd(pool, open(name, O_RDONLY));
+		int fd = mempool_openat(pool, AT_FDCWD, name, O_RDONLY, 0);
 		char *buf;
 		if (fd == -1) {
 			char *msg = str_printf(pool, "%s: %s", name, strerror(errno));

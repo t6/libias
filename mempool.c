@@ -200,24 +200,6 @@ mempool_take(struct Mempool *pool, void *ptr)
 	return mempool_add(pool, ptr, free);
 }
 
-static void
-mempool_freefd(int *fd)
-{
-	close(*fd);
-	free(fd);
-}
-
-int
-mempool_takefd(struct Mempool *pool, int fd)
-{
-	if (pool && fd > -1) {
-		int *memfd = xmalloc(sizeof(int));
-		*memfd = fd;
-		mempool_add(pool, memfd, mempool_freefd);
-	}
-	return fd;
-}
-
 struct Array *
 mempool_array(struct Mempool *pool)
 {

@@ -25,30 +25,31 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#pragma once
 
-struct Mempool;
+#include "config.h"
 
-typedef int (*MempoolCompareFn)(const void *, const void *, void *);
+#include <dirent.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
-struct Mempool *mempool_new(void);
-struct Mempool *mempool_new_unique(void);
-void mempool_free(struct Mempool *);
-void mempool_cleanup(struct Mempool **);
-void *mempool_add(struct Mempool *, void *, void *);
-void mempool_inherit(struct Mempool *, struct Mempool *);
-void mempool_release(struct Mempool *);
+#include "mempool.h"
+#include "mempool/dir.h"
 
-void *mempool_alloc(struct Mempool *, size_t);
-void *mempool_forget(struct Mempool *, void *);
-void *mempool_move(struct Mempool *, void *, struct Mempool *);
-void *mempool_take(struct Mempool *, void *);
-struct Array *mempool_array(struct Mempool *);
-struct Map *mempool_map(struct Mempool *, MempoolCompareFn, void *, void *, void *);
-struct Queue *mempool_queue(struct Mempool *);
-struct Set *mempool_set(struct Mempool *, MempoolCompareFn, void *, void *);
-struct Stack *mempool_stack(struct Mempool *);
+DIR *
+mempool_opendirat(struct Mempool *pool, int root, const char *path)
+{
+	int fd = openat(root, path, O_RDONLY | O_DIRECTORY);
+	if (fd == -1) {
+		return NULL;
+	}
 
-#define SCOPE_MEMPOOL(x) \
-	struct Mempool *x __cleanup(mempool_cleanup) = mempool_new()
-
+	DIR *dir = fdopendir(fd);
+	if (dir == NULL) {
+		close(fd);
+		return NULL;
+	}
+	return mempool_add(pool, dir, closedir);
+}

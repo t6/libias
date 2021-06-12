@@ -29,26 +29,6 @@
 
 struct Mempool;
 
-typedef int (*MempoolCompareFn)(const void *, const void *, void *);
-
-struct Mempool *mempool_new(void);
-struct Mempool *mempool_new_unique(void);
-void mempool_free(struct Mempool *);
-void mempool_cleanup(struct Mempool **);
-void *mempool_add(struct Mempool *, void *, void *);
-void mempool_inherit(struct Mempool *, struct Mempool *);
-void mempool_release(struct Mempool *);
-
-void *mempool_alloc(struct Mempool *, size_t);
-void *mempool_forget(struct Mempool *, void *);
-void *mempool_move(struct Mempool *, void *, struct Mempool *);
-void *mempool_take(struct Mempool *, void *);
-struct Array *mempool_array(struct Mempool *);
-struct Map *mempool_map(struct Mempool *, MempoolCompareFn, void *, void *, void *);
-struct Queue *mempool_queue(struct Mempool *);
-struct Set *mempool_set(struct Mempool *, MempoolCompareFn, void *, void *);
-struct Stack *mempool_stack(struct Mempool *);
-
-#define SCOPE_MEMPOOL(x) \
-	struct Mempool *x __cleanup(mempool_cleanup) = mempool_new()
-
+FILE *mempool_fopenat(struct Mempool *, int, const char *, const char *, mode_t);
+int mempool_openat(struct Mempool *, int, const char *, int, mode_t);
+int mempool_takefd(struct Mempool *, int);

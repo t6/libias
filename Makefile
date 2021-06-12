@@ -12,6 +12,8 @@ OBJS=		array.o \
 		json.o \
 		map.o \
 		mempool.o \
+		mempool/dir.o \
+		mempool/file.o \
 		peg.o \
 		peg/clang.o \
 		peg/json.o \
@@ -63,6 +65,8 @@ diffutil.o: config.h array.h diff.h diffutil.h mempool.h str.h util.h
 json.o: config.h array.h json.h map.h mempool.h peg.h peg/json.h peg/objget.h stack.h str.h util.h
 map.o: config.h array.h map.h stack.h util.h
 mempool.o: config.h array.h map.h mempool.h queue.h set.h stack.h util.h
+mempool/dir.o: config.h mempool.h mempool/dir.h
+mempool/file.o: config.h mempool.h mempool/file.h mempool/fileflags.h util.h
 peg.o: config.h array.h mempool.h peg.h queue.h set.h stack.h str.h utf8.h util.h
 peg/clang.o: config.h peg.h peg/grammar.h
 peg/json.o: config.h peg.h peg/json.h peg/grammar.h
@@ -73,14 +77,14 @@ set.o: config.h array.h map.h set.h util.h
 stack.o: config.h stack.h util.h
 str.o: config.h array.h mempool.h str.h util.h
 tests/array/array.o: config.h array.h mempool.h str.h test.h util.h
-tests/diff/diffutil.o: config.h array.h diff.h diffutil.h mempool.h str.h test.h util.h
+tests/diff/diffutil.o: config.h array.h diff.h diffutil.h mempool.h mempool/file.h str.h test.h util.h
 tests/json/json.o: config.h array.h map.h json.h mempool.h str.h test.h util.h
 tests/map/map.o: config.h map.h mempool.h test.h str.h util.h
 tests/peg/IPv4.o: config.h array.h mempool.h peg.h peg/grammar.h str.h test.h util.h
 tests/peg/MOVED.o: config.h mempool.h peg.h peg/grammar.h str.h test.h util.h
-tests/peg/json.o: config.h json.h mempool.h peg.h peg/json.h str.h test.h util.h
+tests/peg/json.o: config.h json.h mempool.h mempool/file.h peg.h peg/json.h str.h test.h util.h
 tests/peg/range.o: config.h mempool.h peg.h peg/grammar.h str.h test.h util.h
-tests/peg/toml.o: config.h mempool.h peg.h peg/toml.h str.h test.h util.h
+tests/peg/toml.o: config.h mempool.h mempool/file.h peg.h peg/toml.h str.h test.h util.h
 tests/queue/queue.o: config.h mempool.h queue.h str.h test.h util.h
 tests/stack/stack.o: config.h mempool.h stack.h str.h test.h util.h
 tests/str/str.o: config.h array.h mempool.h str.h test.h util.h

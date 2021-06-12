@@ -37,6 +37,7 @@
 #include "diff.h"
 #include "diffutil.h"
 #include "mempool.h"
+#include "mempool/file.h"
 #include "str.h"
 #include "test.h"
 #include "util.h"
@@ -60,7 +61,7 @@ TESTS() {
 	struct diff *d;
 	TEST_IF((d = array_diff(a, b, pool, str_compare, NULL))) {
 		char *actual = diff_to_patch(d, pool, NULL, NULL, 3, 0);
-		int fd = mempool_takefd(pool, open("tests/diff/0001.diff", O_RDONLY));
+		int fd = mempool_openat(pool, AT_FDCWD, "tests/diff/0001.diff", O_RDONLY, 0);
 		char *expected = slurp(fd, pool);
 		TEST_STREQ(actual, expected);
 	}
