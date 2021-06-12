@@ -35,6 +35,11 @@ void line_iterator_free(struct LineIterator **);
 char *line_iterator_next(struct LineIterator **, size_t *, size_t *);
 char *slurp(FILE *, struct Mempool *);
 
+#define DIR_FOREACH(DIR_, VAR) \
+	for (DIR *__##VAR##_dir = (DIR_); __##VAR##_dir != NULL; __##VAR##_dir = NULL) \
+	for (struct dirent *VAR = readdir(__##VAR##_dir); VAR != NULL; VAR = NULL) \
+	for (size_t VAR##_index = 0; VAR != NULL; VAR = readdir(__##VAR##_dir), VAR##_index++)
+
 #define LINE_FOREACH(FILE, VAR) \
 	for (struct LineIterator *__##VAR##_iter __cleanup(line_iterator_free) = line_iterator(FILE); __##VAR##_iter != NULL; line_iterator_free(&__##VAR##_iter)) \
 	for (size_t VAR##_index = 0, VAR##_len = 0; __##VAR##_iter != NULL; line_iterator_free(&__##VAR##_iter)) \
