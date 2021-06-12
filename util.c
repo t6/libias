@@ -54,36 +54,6 @@ read_symlink(int dir, const char *path, struct Mempool *pool)
 	return NULL;
 }
 
-char *
-slurp(int fd, struct Mempool *pool)
-{
-#define SLURP_BUF_SIZE	(8*1024*1024)
-	size_t bufsize = SLURP_BUF_SIZE + 1;
-	char *buf = xrecallocarray(NULL, 0, bufsize, 1);
-	size_t left = SLURP_BUF_SIZE;
-	ssize_t bytes;
-	size_t pos = 0;
-	while ((bytes = read(fd, buf + pos, left)) != 0) {
-		if (bytes < 0) {
-			if (errno == EAGAIN) {
-				continue;
-			}
-			free(buf);
-			return NULL;
-		}
-		left -= bytes;
-		pos += bytes;
-		if (left == 0) {
-			size_t oldsize = bufsize;
-			bufsize += SLURP_BUF_SIZE;
-			left = SLURP_BUF_SIZE;
-			buf = xrecallocarray(buf, oldsize, bufsize, 1);
-		}
-	}
-
-	return mempool_take(pool, buf);
-}
-
 int
 update_symlink(int dir, const char *path1, const char *path2, struct Mempool *pool, char **prev)
 {

@@ -9,6 +9,7 @@ OBJS=		array.o \
 		compats.o \
 		diff.o \
 		diffutil.o \
+		io.o \
 		json.o \
 		map.o \
 		mempool.o \
@@ -62,6 +63,7 @@ array.o: config.h array.h diff.h mempool.h util.h
 compats.o: config.h
 diff.o: config.h diff.h
 diffutil.o: config.h array.h diff.h diffutil.h mempool.h str.h util.h
+io.o: config.h io.h mempool.h util.h
 json.o: config.h array.h json.h map.h mempool.h peg.h peg/json.h peg/objget.h stack.h str.h util.h
 map.o: config.h array.h map.h stack.h util.h
 mempool.o: config.h array.h map.h mempool.h queue.h set.h stack.h util.h
@@ -77,14 +79,14 @@ set.o: config.h array.h map.h set.h util.h
 stack.o: config.h stack.h util.h
 str.o: config.h array.h mempool.h str.h util.h
 tests/array/array.o: config.h array.h mempool.h str.h test.h util.h
-tests/diff/diffutil.o: config.h array.h diff.h diffutil.h mempool.h mempool/file.h str.h test.h util.h
+tests/diff/diffutil.o: config.h array.h diff.h diffutil.h io.h mempool.h mempool/file.h str.h test.h util.h
 tests/json/json.o: config.h array.h map.h json.h mempool.h str.h test.h util.h
 tests/map/map.o: config.h map.h mempool.h test.h str.h util.h
 tests/peg/IPv4.o: config.h array.h mempool.h peg.h peg/grammar.h str.h test.h util.h
 tests/peg/MOVED.o: config.h mempool.h peg.h peg/grammar.h str.h test.h util.h
-tests/peg/json.o: config.h json.h mempool.h mempool/file.h peg.h peg/json.h str.h test.h util.h
+tests/peg/json.o: config.h io.h json.h mempool.h mempool/file.h peg.h peg/json.h str.h test.h util.h
 tests/peg/range.o: config.h mempool.h peg.h peg/grammar.h str.h test.h util.h
-tests/peg/toml.o: config.h mempool.h mempool/file.h peg.h peg/toml.h str.h test.h util.h
+tests/peg/toml.o: config.h io.h mempool.h mempool/file.h peg.h peg/toml.h str.h test.h util.h
 tests/queue/queue.o: config.h mempool.h queue.h str.h test.h util.h
 tests/stack/stack.o: config.h mempool.h stack.h str.h test.h util.h
 tests/str/str.o: config.h array.h mempool.h str.h test.h util.h

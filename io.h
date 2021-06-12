@@ -1,7 +1,7 @@
 /*-
  * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
  *
- * Copyright (c) 2019 Tobias Kortkamp <tobik@FreeBSD.org>
+ * Copyright (c) 2021 Tobias Kortkamp <tobik@FreeBSD.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,21 +27,15 @@
  */
 #pragma once
 
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-#define ANSI_COLOR_YELLOW  "\x1b[33m"
-#define ANSI_COLOR_BLUE    "\x1b[34m"
-#define ANSI_COLOR_MAGENTA "\x1b[35m"
-#define ANSI_COLOR_CYAN    "\x1b[36m"
-#define ANSI_COLOR_RESET   "\x1b[0m"
-
+struct LineIterator;
 struct Mempool;
 
-typedef int (*CompareFn)(const void *, const void *, void *);
+struct LineIterator *line_iterator(FILE *);
+void line_iterator_free(struct LineIterator **);
+char *line_iterator_next(struct LineIterator **, size_t *, size_t *);
+char *slurp(FILE *, struct Mempool *);
 
-char *read_symlink(int, const char *, struct Mempool *);
-int update_symlink(int, const char *, const char *, struct Mempool *, char **);
-
-void sort(void *, size_t, size_t, CompareFn, void *);
-void *xmalloc(size_t);
-void *xrecallocarray(void *, size_t, size_t, size_t);
+#define LINE_FOREACH(FILE, VAR) \
+	for (struct LineIterator *__##VAR##_iter __cleanup(line_iterator_free) = line_iterator(FILE); __##VAR##_iter != NULL; line_iterator_free(&__##VAR##_iter)) \
+	for (size_t VAR##_index = 0, VAR##_len = 0; __##VAR##_iter != NULL; line_iterator_free(&__##VAR##_iter)) \
+	for (char *VAR = line_iterator_next(&__##VAR##_iter, &VAR##_index, &VAR##_len); __##VAR##_iter != NULL; VAR = line_iterator_next(&__##VAR##_iter, &VAR##_index, &VAR##_len))

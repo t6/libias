@@ -28,42 +28,88 @@
 
 #include "config.h"
 
-#include <fcntl.h>
+#include <errno.h>
+#define _WITH_GETLINE
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include "array.h"
-#include "diff.h"
-#include "diffutil.h"
 #include "io.h"
 #include "mempool.h"
-#include "mempool/file.h"
-#include "str.h"
-#include "test.h"
 #include "util.h"
 
-TESTS() {
-	struct Array *a = mempool_array(pool);
-	for (size_t i = 0; i < 16; i++) {
-		array_append(a, "1");
+struct LineIterator {
+	FILE *f;
+	char *line;
+	size_t linecap;
+	ssize_t linelen;
+	size_t i;
+};
+
+struct LineIterator *
+line_iterator(FILE *f)
+{
+	struct LineIterator *iter = xmalloc(sizeof(struct LineIterator));
+	iter->f = f;
+	return iter;
+}
+
+void
+line_iterator_free(struct LineIterator **iter_)
+{
+	struct LineIterator *iter = *iter_;
+	if (iter != NULL) {
+		free(iter->line);
+		free(iter);
+		*iter_ = NULL;
 	}
-	struct Array *b = mempool_array(pool);
-	array_append(b, "2");
-	array_append(b, "2");
-	for (size_t i = 0; i < 8; i++) {
-		array_append(b, "1");
+}
+
+char *
+line_iterator_next(struct LineIterator **iter_, size_t *index, size_t *linelen)
+{
+	struct LineIterator *iter = *iter_;
+	if ((iter->linelen = getline(&iter->line, &iter->linecap, iter->f)) > 0) {
+		if (iter->linelen > 0 && iter->line[iter->linelen - 1] == '\n') {
+			iter->line[iter->linelen - 1] = 0;
+			iter->linelen--;
+		}
+		*index = iter->i;
+		*linelen = iter->linelen;
+		iter->i++;
+		return iter->line;
+	} else {
+		line_iterator_free(iter_);
+		*iter_ = NULL;
+		return NULL;
 	}
-	array_append(b, "3");
-	for (size_t i = 0; i < 7; i++) {
-		array_append(b, "1");
+}
+
+char *
+slurp(FILE *f, struct Mempool *pool)
+{
+#define SLURP_BUF_SIZE	(8*1024*1024)
+	size_t bufsize = SLURP_BUF_SIZE + 1;
+	char *buf = xrecallocarray(NULL, 0, bufsize, 1);
+	size_t left = SLURP_BUF_SIZE;
+	ssize_t bytes;
+	size_t pos = 0;
+	while ((bytes = fread(buf + pos, left, 1, f)) != 0) {
+		if (bytes < 0) {
+			if (errno == EAGAIN) {
+				continue;
+			}
+			free(buf);
+			return NULL;
+		}
+		left -= bytes;
+		pos += bytes;
+		if (left == 0) {
+			size_t oldsize = bufsize;
+			bufsize += SLURP_BUF_SIZE;
+			left = SLURP_BUF_SIZE;
+			buf = xrecallocarray(buf, oldsize, bufsize, 1);
+		}
 	}
 
-	struct diff *d;
-	TEST_IF((d = array_diff(a, b, pool, str_compare, NULL))) {
-		char *actual = diff_to_patch(d, pool, NULL, NULL, 3, 0);
-		FILE *f = mempool_fopenat(pool, AT_FDCWD, "tests/diff/0001.diff", "r", 0);
-		char *expected = slurp(f, pool);
-		TEST_STREQ(actual, expected);
-	}
+	return mempool_take(pool, buf);
 }

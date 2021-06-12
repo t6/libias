@@ -36,6 +36,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "io.h"
 #include "mempool.h"
 #include "mempool/file.h"
 #include "peg.h"
@@ -204,14 +205,14 @@ TESTS() {
 		SCOPE_MEMPOOL(pool);
 		const char *name = tests[i];
 		int valid = *name != 'i';
-		int fd = mempool_openat(pool, AT_FDCWD, name, O_RDONLY, 0);
+		FILE *f = mempool_fopenat(pool, AT_FDCWD, name, "r", 0);
 		char *buf;
-		if (fd == -1) {
+		if (f == NULL) {
 			char *msg = str_printf(pool, "%s: %s", name, strerror(errno));
 			TEST_FAIL(msg);
 			continue;
 		}
-		buf = slurp(fd, pool);
+		buf = slurp(f, pool);
 		if (buf == NULL) {
 			TEST_FAIL(strerror(errno));
 		} else if (check_match(buf, valid)) {
