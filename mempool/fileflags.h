@@ -40,24 +40,21 @@
 static int
 __sflags(const char *mode, int *optr)
 {
-	int ret, m, o, known;
+	int m, o, known;
 
 	switch (*mode++) {
 
 	case 'r':	/* open for reading */
-		ret = __SRD;
 		m = O_RDONLY;
 		o = 0;
 		break;
 
 	case 'w':	/* open for writing */
-		ret = __SWR;
 		m = O_WRONLY;
 		o = O_CREAT | O_TRUNC;
 		break;
 
 	case 'a':	/* open for appending */
-		ret = __SWR;
 		m = O_WRONLY;
 		o = O_CREAT | O_APPEND;
 		break;
@@ -75,7 +72,6 @@ __sflags(const char *mode, int *optr)
 			break;
 		case '+':
 			/* [rwa][b]\+ means read and write */
-			ret = __SRW;
 			m = O_RDWR;
 			break;
 		case 'x':
@@ -86,10 +82,12 @@ __sflags(const char *mode, int *optr)
 			/* set close-on-exec */
 			o |= O_CLOEXEC;
 			break;
+#ifdef O_VERIFY
 		case 'v':
 			/* verify */
 			o |= O_VERIFY;
 			break;
+#endif
 		default:
 			known = 0;
 			break;
@@ -102,5 +100,5 @@ __sflags(const char *mode, int *optr)
 	}
 
 	*optr = m | o;
-	return (ret);
+	return (1);
 }
