@@ -30,6 +30,9 @@
 struct LineIterator;
 struct Mempool;
 
+char *symlink_read(int, const char *, struct Mempool *);
+int symlink_update(int, const char *, const char *, struct Mempool *, char **);
+
 struct LineIterator *line_iterator(FILE *);
 void line_iterator_free(struct LineIterator **);
 char *line_iterator_next(struct LineIterator **, size_t *, size_t *);

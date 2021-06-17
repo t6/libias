@@ -28,59 +28,16 @@
 
 #include "config.h"
 
-#include <sys/param.h>
 #if HAVE_ERR
 # include <err.h>
 #endif
-#include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include "array.h"
 #include "mempool.h"
 #include "str.h"
 #include "util.h"
-
-char *
-read_symlink(int dir, const char *path, struct Mempool *pool)
-{
-	char buf[PATH_MAX];
-	ssize_t len = readlinkat(dir, path, buf, sizeof(buf));
-	if (len != -1) {
-		return str_ndup(pool, buf, len);
-	}
-	return NULL;
-}
-
-int
-update_symlink(int dir, const char *path1, const char *path2, struct Mempool *pool, char **prev)
-{
-	if (prev != NULL) {
-		*prev = NULL;
-	}
-	while (symlinkat(path1, dir, path2) == -1) {
-		if (errno == EEXIST) {
-			if (prev != NULL) {
-				*prev = read_symlink(dir, path2, pool);
-			}
-			if (unlinkat(dir, path2, 0) == -1) {
-				if (prev != NULL) {
-					*prev = NULL;
-				}
-				return 0;
-			}
-		} else {
-			if (prev != NULL) {
-				*prev = NULL;
-			}
-			return 0;
-		}
-	}
-
-	return 1;
-}
 
 #if HAVE_GNU_QSORT_R
 

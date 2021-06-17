@@ -28,13 +28,16 @@
 
 #include "config.h"
 
+#include <sys/param.h>
 #include <errno.h>
 #define _WITH_GETLINE
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "io.h"
 #include "mempool.h"
+#include "str.h"
 #include "util.h"
 
 struct LineIterator {
@@ -112,4 +115,43 @@ slurp(FILE *f, struct Mempool *pool)
 	}
 
 	return mempool_take(pool, buf);
+}
+
+char *
+symlink_read(int dir, const char *path, struct Mempool *pool)
+{
+	char buf[PATH_MAX];
+	ssize_t len = readlinkat(dir, path, buf, sizeof(buf));
+	if (len != -1) {
+		return str_ndup(pool, buf, len);
+	}
+	return NULL;
+}
+
+int
+symlink_update(int dir, const char *path1, const char *path2, struct Mempool *pool, char **prev)
+{
+	if (prev != NULL) {
+		*prev = NULL;
+	}
+	while (symlinkat(path1, dir, path2) == -1) {
+		if (errno == EEXIST) {
+			if (prev != NULL) {
+				*prev = symlink_read(dir, path2, pool);
+			}
+			if (unlinkat(dir, path2, 0) == -1) {
+				if (prev != NULL) {
+					*prev = NULL;
+				}
+				return 0;
+			}
+		} else {
+			if (prev != NULL) {
+				*prev = NULL;
+			}
+			return 0;
+		}
+	}
+
+	return 1;
 }

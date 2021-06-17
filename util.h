@@ -39,9 +39,6 @@ struct Mempool;
 
 typedef int (*CompareFn)(const void *, const void *, void *);
 
-char *read_symlink(int, const char *, struct Mempool *);
-int update_symlink(int, const char *, const char *, struct Mempool *, char **);
-
 void sort(void *, size_t, size_t, CompareFn, void *);
 void *xmalloc(size_t);
 void *xrecallocarray(void *, size_t, size_t, size_t);
