@@ -99,9 +99,9 @@ set_truncate(struct Set *set)
 }
 
 struct Array *
-set_values(struct Set *set)
+set_values(struct Set *set, struct Mempool *pool)
 {
-	return map_values(set->map);
+	return map_values(set->map, pool);
 }
 
 struct SetIterator *

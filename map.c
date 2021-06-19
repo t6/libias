@@ -35,6 +35,7 @@
 
 #include "array.h"
 #include "map.h"
+#include "mempool.h"
 #include "stack.h"
 #include "util.h"
 
@@ -170,9 +171,9 @@ map_truncate(struct Map *map)
 }
 
 struct Array *
-map_keys(struct Map *map)
+map_keys(struct Map *map, struct Mempool *pool)
 {
-	struct Array *array = array_new();
+	struct Array *array = mempool_array(pool);
 	struct MapNode *node;
 	SPLAY_FOREACH(node, MapTree, &map->root) {
 		array_append(array, node->key);
@@ -181,9 +182,9 @@ map_keys(struct Map *map)
 }
 
 struct Array *
-map_values(struct Map *map)
+map_values(struct Map *map, struct Mempool *pool)
 {
-	struct Array *array = array_new();
+	struct Array *array = mempool_array(pool);
 	struct MapNode *node;
 	SPLAY_FOREACH(node, MapTree, &map->root) {
 		array_append(array, node->value);

@@ -63,9 +63,9 @@ array.o: config.h array.h diff.h mempool.h util.h
 compats.o: config.h
 diff.o: config.h diff.h
 diffutil.o: config.h array.h diff.h diffutil.h mempool.h str.h util.h
-io.o: config.h io.h mempool.h util.h
+io.o: config.h io.h mempool.h str.h util.h
 json.o: config.h array.h json.h map.h mempool.h peg.h peg/json.h peg/objget.h stack.h str.h util.h
-map.o: config.h array.h map.h stack.h util.h
+map.o: config.h array.h map.h mempool.h stack.h util.h
 mempool.o: config.h array.h map.h mempool.h queue.h set.h stack.h util.h
 mempool/dir.o: config.h mempool.h mempool/dir.h
 mempool/file.o: config.h mempool.h mempool/file.h mempool/fileflags.h util.h

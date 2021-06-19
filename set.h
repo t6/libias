@@ -28,6 +28,7 @@
 #pragma once
 
 struct Array;
+struct Mempool;
 struct Set;
 struct SetIterator;
 typedef int (*SetCompareFn)(const void *, const void *, void *);
@@ -40,7 +41,7 @@ void *set_get(struct Set *, const void *);
 int set_contains(struct Set *, const void *);
 size_t set_len(struct Set *);
 void set_truncate(struct Set *);
-struct Array *set_values(struct Set *);
+struct Array *set_values(struct Set *, struct Mempool *);
 
 struct SetIterator *set_iterator(struct Set *);
 void set_iterator_free(struct SetIterator **);

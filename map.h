@@ -28,6 +28,7 @@
 #pragma once
 
 struct Array;
+struct Mempool;
 struct Map;
 typedef int (*MapCompareFn)(const void *, const void *, void *);
 
@@ -39,8 +40,8 @@ void *map_get(struct Map *, const void *);
 int map_contains(struct Map *, const void *);
 size_t map_len(struct Map *);
 void map_truncate(struct Map *);
-struct Array *map_keys(struct Map *);
-struct Array *map_values(struct Map *);
+struct Array *map_keys(struct Map *, struct Mempool *);
+struct Array *map_values(struct Map *, struct Mempool *);
 
 struct MapIterator *map_iterator(struct Map *);
 void map_iterator_free(struct MapIterator **);
