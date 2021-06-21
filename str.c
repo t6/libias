@@ -166,6 +166,16 @@ str_repeat(struct Mempool *pool, const char *s, const size_t n)
 	return buf;
 }
 
+char *
+str_slice(struct Mempool *pool, const char *s, const ssize_t a, const ssize_t b)
+{
+	size_t len = strlen(s);
+	size_t start = 0;
+	size_t end = 0;
+	slice_to_range(len, a, b, &start, &end);
+	return str_ndup(pool, s + start, end - start);
+}
+
 int
 str_startswith(const char *s, const char *start)
 {
@@ -174,19 +184,6 @@ str_startswith(const char *s, const char *start)
 		return 0;
 	}
 	return strncmp(s, start, len) == 0;
-}
-
-char *
-str_substr(struct Mempool *pool, const char *s, const size_t a, const size_t b)
-{
-	if (a > b) {
-		return mempool_take(pool, xstrdup(""));
-	} else {
-		size_t len = strlen(s);
-		size_t start = MIN(len, a);
-		size_t end = MIN(len, b);
-		return mempool_take(pool, xstrndup(s + start, end - start));
-	}
 }
 
 char *
