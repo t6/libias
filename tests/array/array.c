@@ -55,6 +55,71 @@ TESTS() {
 	TEST(i == 3);
 
 	i = 0;
+	ARRAY_FOREACH_SLICE(array, 2, 2, char *, s) {
+		i++;
+	}
+	TEST(i == 0);
+
+	i = 0;
+	ARRAY_FOREACH_SLICE(array, 20, 0, char *, s) {
+		i++;
+	}
+	TEST(i == 0);
+
+	i = 0;
+	ARRAY_FOREACH_SLICE(array, 0, 1, char *, s) {
+		switch (i++) {
+		case 0: TEST_STREQ(s, "1"); break;
+		}
+	}
+	TEST(i == 1);
+
+	i = 0;
+	ARRAY_FOREACH_SLICE(array, 1, 3, char *, s) {
+		switch (i++) {
+		case 0: TEST_STREQ(s, "2"); TEST(s_index == 1); break;
+		case 1: TEST_STREQ(s, "3"); TEST(s_index == 2); break;
+		}
+	}
+	TEST(i == 2);
+
+	i = 0;
+	ARRAY_FOREACH_SLICE(array, 0, -1, char *, s) {
+		switch (i++) {
+		case 0: TEST_STREQ(s, "1"); TEST(s_index == 0); break;
+		case 1: TEST_STREQ(s, "2"); TEST(s_index == 1); break;
+		case 2: TEST_STREQ(s, "3"); TEST(s_index == 2); break;
+		}
+	}
+	TEST(i == 3);
+
+	i = 0;
+	ARRAY_FOREACH_SLICE(array, 0, -2, char *, s) {
+		switch (i++) {
+		case 0: TEST_STREQ(s, "1"); TEST(s_index == 0); break;
+		case 1: TEST_STREQ(s, "2"); TEST(s_index == 1); break;
+		}
+	}
+	TEST(i == 2);
+
+	i = 0;
+	ARRAY_FOREACH_SLICE(array, 0, -3, char *, s) {
+		switch (i++) {
+		case 0: TEST_STREQ(s, "1"); TEST(s_index == 0); break;
+		}
+	}
+	TEST(i == 1);
+
+	i = 0;
+	ARRAY_FOREACH_SLICE(array, 1, -1, char *, s) {
+		switch (i++) {
+		case 0: TEST_STREQ(s, "2"); break;
+		case 1: TEST_STREQ(s, "3"); break;
+		}
+	}
+	TEST(i == 2);
+
+	i = 0;
 	ARRAY_FOREACH(array, char *, s) {
 		break;
 	}

@@ -49,8 +49,9 @@ struct Array {
 };
 
 struct ArrayIterator {
-	struct Array *array;
+	void **buf;
 	size_t i;
+	size_t len;
 };
 
 static const size_t INITIAL_ARRAY_CAP = 16;
@@ -188,11 +189,11 @@ array_truncate_at(struct Array *array, size_t len)
 }
 
 struct ArrayIterator *
-array_iterator(struct Array *array)
+array_iterator(struct Array *array, ssize_t a, ssize_t b)
 {
 	struct ArrayIterator *iter = xmalloc(sizeof(struct ArrayIterator));
-	iter->i = 0;
-	iter->array = array;
+	iter->buf = array->buf;
+	slice_to_range(array->len, a, b, &iter->i, &iter->len);
 	return iter;
 }
 
@@ -210,9 +211,9 @@ void *
 array_iterator_next(struct ArrayIterator **iter_, size_t *index)
 {
 	struct ArrayIterator *iter = *iter_;
-	if (iter->i < iter->array->len) {
+	if (iter->i < iter->len) {
 		*index = iter->i;
-		return iter->array->buf[iter->i++];
+		return iter->buf[iter->i++];
 	} else {
 		array_iterator_free(iter_);
 		*iter_ = NULL;

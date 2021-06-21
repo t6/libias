@@ -28,6 +28,7 @@
 
 #include "config.h"
 
+#include <assert.h>
 #if HAVE_ERR
 # include <err.h>
 #endif
@@ -38,6 +39,41 @@
 #include "mempool.h"
 #include "str.h"
 #include "util.h"
+
+void
+slice_to_range(size_t len, ssize_t a_, ssize_t b_, size_t *start, size_t *end)
+{
+	size_t a;
+	if (a_ < 0) {
+		a_ = 0;
+	}
+	a = a_;
+	if (a >= len) {
+		a = len;
+	}
+
+	size_t b;
+	if (b_ < 0) {
+		b_ = len + b_ + 1;
+		if (b_ < 0) {
+			b_ = 0;
+		}
+	}
+	b = b_;
+	if (b > len) {
+		b = len;
+	}
+
+	if (a > b) {
+		*start = 0;
+		*end = 0;
+	} else {
+		assert(a <= len);
+		assert(b <= len);
+		*start = a;
+		*end = b;
+	}
+}
 
 #if HAVE_GNU_QSORT_R
 
