@@ -51,6 +51,8 @@ struct MempoolNode {
 	void (*freefn)(void *);
 };
 
+static void *mempool_move_helper(struct Mempool *, void *, struct Mempool *);
+
 struct Mempool *
 mempool_new()
 {
@@ -78,7 +80,7 @@ mempool_free(struct Mempool *pool)
 	if (pool->owner != pool) {
 		abort();
 	}
-	mempool_release(pool);
+	mempool_release_all(pool);
 	map_free(pool->map);
 	stack_free(pool->stack);
 	free(pool);
@@ -122,7 +124,8 @@ mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 void *
 mempool_forget(struct Mempool *pool, void *ptr)
 {
-	return mempool_move(pool, ptr, NULL);
+	mempool_move_helper(pool, ptr, NULL);
+	return ptr;
 }
 
 void
@@ -134,11 +137,11 @@ mempool_inherit(struct Mempool *pool, struct Mempool *other)
 	}
 }
 
-void *
-mempool_move(struct Mempool *pool, void *ptr, struct Mempool *other)
+static void *
+mempool_move_helper(struct Mempool *pool, void *ptr, struct Mempool *other)
 {
 	if (!pool || pool == other) {
-		return ptr;
+		return NULL;
 	}
 
 	void *freefn = NULL;
@@ -161,11 +164,28 @@ mempool_move(struct Mempool *pool, void *ptr, struct Mempool *other)
 		mempool_add(other, ptr, freefn);
 	}
 
+	return freefn;
+}
+
+void *
+mempool_move(struct Mempool *pool, void *ptr, struct Mempool *other)
+{
+	mempool_move_helper(pool, ptr, other);
+	return ptr;
+}
+
+void *
+mempool_release(struct Mempool *pool, void *ptr)
+{
+	void (*freefn)(void *) = mempool_move_helper(pool, ptr, NULL);
+	if (freefn) {
+		freefn(ptr);
+	}
 	return ptr;
 }
 
 void
-mempool_release(struct Mempool *pool)
+mempool_release_all(struct Mempool *pool)
 {
 	if (!pool) {
 		return;
