@@ -122,10 +122,12 @@ static RULE(minus);
 static RULE(ml_basic_body);
 static RULE(ml_basic_body_0);
 static RULE(ml_basic_string);
+static RULE(ml_basic_string_0);
 static RULE(ml_basic_string_delim);
 static RULE(ml_literal_body);
 static RULE(ml_literal_body_0);
 static RULE(ml_literal_string);
+static RULE(ml_literal_string_0);
 static RULE(ml_literal_string_delim);
 static RULE(mlb_char);
 static RULE(mlb_content);
@@ -279,9 +281,9 @@ RULE(comment) {
 // Key-Value pairs
 
 RULE(keyval) {
-	if (MATCH(key))
+	if (CAPTURE(MATCH(key), 0, PEG_TOML_TABLE_KEY))
 	if (MATCH(keyval_sep))
-	if (MATCH(val))
+	if (CAPTURE(MATCH(val), 0, PEG_TOML_TABLE_VALUE))
 	return 1;
 	return 0;
 }
@@ -294,8 +296,8 @@ RULE(key) {
 }
 
 RULE(simple_key) {
-	if (!MATCH(quoted_key))
-	if (!MATCH(unquoted_key))
+	if (!CAPTURE(MATCH(unquoted_key), 0, PEG_TOML_KEY_SIMPLE_UNQUOTED))
+	if (!CAPTURE(MATCH(quoted_key), 0, PEG_TOML_KEY_SIMPLE_QUOTED))
 	return 0;
 	return 1;
 }
@@ -352,9 +354,9 @@ RULE(val) {
 	if (!MATCH(boolean))
 	if (!MATCH(array))
 	if (!MATCH(inline_table))
-	if (!MATCH(date_time))
-	if (!MATCH(floating))
-	if (!MATCH(integer))
+	if (!CAPTURE(MATCH(date_time), 0, PEG_TOML_DATETIME))
+	if (!CAPTURE(MATCH(floating), 0, PEG_TOML_FLOAT))
+	if (!CAPTURE(MATCH(integer), 0, PEG_TOML_INTEGER))
 	return 0;
 	return 1;
 }
@@ -374,7 +376,7 @@ RULE(string) {
 
 RULE(basic_string) {
 	if (MATCH(quotation_mark))
-	if (ANY(basic_char))
+	if (CAPTURE(ANY(basic_char), 0, PEG_TOML_STRING_BASIC))
 	if (MATCH(quotation_mark))
 	return 1;
 	return 0;
@@ -443,10 +445,16 @@ RULE(escape_seq_char) {
 
 // Multiline Basic String
 
-RULE(ml_basic_string) {
-	if (MATCH(ml_basic_string_delim))
+RULE(ml_basic_string_0) {
 	if (OPT(MATCH(newline)))
 	if (MATCH(ml_basic_body))
+	return 1;
+	return 0;
+}
+
+RULE(ml_basic_string) {
+	if (MATCH(ml_basic_string_delim))
+	if (CAPTURE(MATCH(ml_basic_string_0), 0, PEG_TOML_STRING_MULTILINE_BASIC))
 	if (MATCH(ml_basic_string_delim))
 	return 1;
 	return 0;
@@ -520,7 +528,7 @@ RULE(mlb_escaped_nl) {
 
 RULE(literal_string) {
 	if (MATCH(apostrophe))
-	if (ANY(literal_char))
+	if (CAPTURE(ANY(literal_char), 0, PEG_TOML_STRING_LITERAL))
 	if (MATCH(apostrophe))
 	return 1;
 	return 0;
@@ -539,10 +547,16 @@ RULE(literal_char) {
 
 // Multiline Literal String
 
-RULE(ml_literal_string) {
-	if (MATCH(ml_literal_string_delim))
+RULE(ml_literal_string_0) {
 	if (OPT(MATCH(newline)))
 	if (MATCH(ml_literal_body))
+	return 1;
+	return 0;
+}
+
+RULE(ml_literal_string) {
+	if (MATCH(ml_literal_string_delim))
+	if (CAPTURE(MATCH(ml_literal_string_0), 0, PEG_TOML_STRING_MULTILINE_LITERAL))
 	if (MATCH(ml_literal_string_delim))
 	return 1;
 	return 0;
@@ -834,8 +848,8 @@ RULE(nan_) { return STRING("\x6e\x61\x6e"); } // nan
 // Boolean
 
 RULE(boolean) {
-	if (!MATCH(true_))
-	if (!MATCH(false_))
+	if (!CAPTURE(MATCH(true_), 0, PEG_TOML_BOOL_TRUE))
+	if (!CAPTURE(MATCH(false_), 0, PEG_TOML_BOOL_FALSE))
 	return 0;
 	return 1;
 }
@@ -947,10 +961,10 @@ RULE(local_time) { return MATCH(partial_time); }
 // Array
 
 RULE(array) {
-	if (MATCH(array_open))
+	if (CAPTURE(MATCH(array_open), 0, PEG_TOML_ARRAY_BEGIN))
 	if (OPT(MATCH(array_values)))
 	if (MATCH(ws_comment_newline))
-	if (MATCH(array_close))
+	if (CAPTURE(MATCH(array_close), 0, PEG_TOML_ARRAY_END))
 	return 1;
 	return 0;
 }
@@ -960,7 +974,7 @@ RULE(array_close) { return CHAR(0x5D); } // ]
 
 RULE(array_values_0) {
 	if (MATCH(ws_comment_newline))
-	if (MATCH(val))
+	if (CAPTURE(MATCH(val), 0, PEG_TOML_ARRAY_VALUE))
 	if (MATCH(ws_comment_newline))
 	if (MATCH(array_sep))
 	if (MATCH(array_values))
@@ -970,7 +984,7 @@ RULE(array_values_0) {
 
 RULE(array_values_1) {
 	if (MATCH(ws_comment_newline))
-	if (MATCH(val))
+	if (CAPTURE(MATCH(val), 0, PEG_TOML_ARRAY_VALUE))
 	if (MATCH(ws_comment_newline))
 	if (OPT(MATCH(array_sep)))
 	return 1;
@@ -1014,9 +1028,9 @@ RULE(table) {
 // Standard Table
 
 RULE(std_table) {
-	if (MATCH(std_table_open))
-	if (MATCH(key))
-	if (MATCH(std_table_close))
+	if (CAPTURE(MATCH(std_table_open), 0, PEG_TOML_TABLE_STD_BEGIN))
+	if (CAPTURE(MATCH(key), 0, PEG_TOML_TABLE_KEY))
+	if (CAPTURE(MATCH(std_table_close), 0, PEG_TOML_TABLE_STD_END))
 	return 1;
 	return 0;
 }
@@ -1038,9 +1052,9 @@ RULE(std_table_close) {
 // Inline Table
 
 RULE(inline_table) {
-	if (MATCH(inline_table_open))
+	if (CAPTURE(MATCH(inline_table_open), 0, PEG_TOML_TABLE_INLINE_BEGIN))
 	if (OPT(MATCH(inline_table_keyvals)))
-	if (MATCH(inline_table_close))
+	if (CAPTURE(MATCH(inline_table_close), 0, PEG_TOML_TABLE_INLINE_END))
 	return 1;
 	return 0;
 }
@@ -1083,9 +1097,9 @@ RULE(inline_table_keyvals) {
 // Array Table
 
 RULE(array_table) {
-	if (MATCH(array_table_open))
-	if (MATCH(key))
-	if (MATCH(array_table_close))
+	if (CAPTURE(MATCH(array_table_open), 0, PEG_TOML_TABLE_ARRAY_BEGIN))
+	if (CAPTURE(MATCH(key), 0, PEG_TOML_TABLE_KEY))
+	if (CAPTURE(MATCH(array_table_close), 0, PEG_TOML_TABLE_ARRAY_END))
 	return 1;
 	return 0;
 }
