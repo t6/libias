@@ -77,20 +77,14 @@ mempool_free(struct Mempool *pool)
 	if (pool == NULL) {
 		return;
 	}
-	if (pool->owner != pool) {
-		abort();
+	if (pool->owner == pool) {
+		mempool_release_all(pool);
+	} else {
+		mempool_forget(pool->owner, pool);
 	}
-	mempool_release_all(pool);
 	map_free(pool->map);
 	stack_free(pool->stack);
 	free(pool);
-}
-
-static void
-mempool_free_owned(struct Mempool *pool)
-{
-	pool->owner = pool;
-	mempool_free(pool);
 }
 
 void
@@ -109,6 +103,8 @@ mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 		return ptr;
 	}
 
+	pool = pool->owner;
+
 	if (pool->map) {
 		map_add(pool->map, ptr, freefn);
 	} else {
@@ -124,7 +120,7 @@ mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 void *
 mempool_forget(struct Mempool *pool, void *ptr)
 {
-	mempool_move_helper(pool, ptr, NULL);
+	mempool_move_helper(pool->owner, ptr, NULL);
 	return ptr;
 }
 
@@ -132,8 +128,24 @@ void
 mempool_inherit(struct Mempool *pool, struct Mempool *other)
 {
 	if (pool && other && pool != other && pool->owner != other && other->owner != pool) {
-		mempool_add(pool, other, mempool_free_owned);
+		mempool_add(pool, other, mempool_free);
 		other->owner = pool;
+		if (other->map) {
+			MAP_FOREACH(other->map, void *, ptr, void *, freefn) {
+				mempool_add(pool, ptr, freefn);
+			}
+			map_truncate(other->map);
+		} else {
+			struct MempoolNode *node;
+			while ((node = stack_pop(other->stack))) {
+				if (pool->map) {
+					mempool_add(pool, node->ptr, node->freefn);
+					free(node);
+				} else {
+					stack_push(pool->stack, node);
+				}
+			}
+		}
 	}
 }
 
@@ -170,14 +182,14 @@ mempool_move_helper(struct Mempool *pool, void *ptr, struct Mempool *other)
 void *
 mempool_move(struct Mempool *pool, void *ptr, struct Mempool *other)
 {
-	mempool_move_helper(pool, ptr, other);
+	mempool_move_helper(pool->owner, ptr, other);
 	return ptr;
 }
 
 void *
 mempool_release(struct Mempool *pool, void *ptr)
 {
-	void (*freefn)(void *) = mempool_move_helper(pool, ptr, NULL);
+	void (*freefn)(void *) = mempool_move_helper(pool->owner, ptr, NULL);
 	if (freefn) {
 		freefn(ptr);
 	}
@@ -189,9 +201,10 @@ mempool_release_all(struct Mempool *pool)
 {
 	if (!pool) {
 		return;
-	} else if (pool->owner != pool) {
-		abort();
-	} else if (pool->map) {
+	}
+	pool = pool->owner;
+
+	if (pool->map) {
 		MAP_FOREACH(pool->map, void *, ptr, void *, f) {
 			void (*freefn)(void *) = f;
 			freefn(ptr);
