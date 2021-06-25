@@ -120,7 +120,9 @@ mempool_add(struct Mempool *pool, void *ptr, void *freefn)
 void *
 mempool_forget(struct Mempool *pool, void *ptr)
 {
-	mempool_move_helper(pool->owner, ptr, NULL);
+	if (pool) {
+		mempool_move_helper(pool->owner, ptr, NULL);
+	}
 	return ptr;
 }
 
@@ -182,16 +184,20 @@ mempool_move_helper(struct Mempool *pool, void *ptr, struct Mempool *other)
 void *
 mempool_move(struct Mempool *pool, void *ptr, struct Mempool *other)
 {
-	mempool_move_helper(pool->owner, ptr, other);
+	if (pool) {
+		mempool_move_helper(pool->owner, ptr, other);
+	}
 	return ptr;
 }
 
 void *
 mempool_release(struct Mempool *pool, void *ptr)
 {
-	void (*freefn)(void *) = mempool_move_helper(pool->owner, ptr, NULL);
-	if (freefn) {
-		freefn(ptr);
+	if (pool) {
+		void (*freefn)(void *) = mempool_move_helper(pool->owner, ptr, NULL);
+		if (freefn) {
+			freefn(ptr);
+		}
 	}
 	return ptr;
 }
