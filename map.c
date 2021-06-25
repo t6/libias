@@ -40,14 +40,14 @@
 #include "util.h"
 
 struct MapNode {
-	SPLAY_ENTRY(MapNode) entry;
+	RB_ENTRY(MapNode) entry;
 	void *key;
 	void *value;
 	struct Map *map;
 };
 
 struct Map {
-	SPLAY_HEAD(MapTree, MapNode) root;
+	RB_HEAD(MapTree, MapNode) root;
 	MapCompareFn compare;
 	void *compare_userdata;
 	void (*keyfree)(void *);
@@ -62,7 +62,7 @@ struct MapIterator {
 
 static void map_node_free(struct MapNode *);
 static int nodecmp(struct MapNode *, struct MapNode *);
-SPLAY_PROTOTYPE(MapTree, MapNode, entry, nodecmp);
+RB_PROTOTYPE(MapTree, MapNode, entry, nodecmp);
 
 void
 map_node_free(struct MapNode *node)
@@ -83,7 +83,7 @@ struct Map *
 map_new(MapCompareFn compare, void *compare_userdata, void *keyfree, void *valuefree)
 {
 	struct Map *map = xmalloc(sizeof(struct Map));
-	SPLAY_INIT(&map->root);
+	RB_INIT(&map->root);
 	map->compare = compare;
 	map->compare_userdata = compare_userdata;
 	map->keyfree = keyfree;
@@ -110,7 +110,7 @@ map_add(struct Map *map, const void *key, const void *value)
 		node->key = (void *)key;
 		node->value = (void *)value;
 		node->map = map;
-		SPLAY_INSERT(MapTree, &map->root, node);
+		RB_INSERT(MapTree, &map->root, node);
 		map->len++;
 	}
 }
@@ -119,9 +119,9 @@ void
 map_remove(struct Map *map, const void *key)
 {
 	struct MapNode search = { .key = (void *)key, .map = map };
-	struct MapNode *node = SPLAY_FIND(MapTree, &map->root, &search);
+	struct MapNode *node = RB_FIND(MapTree, &map->root, &search);
 	if (node) {
-		SPLAY_REMOVE(MapTree, &map->root, node);
+		RB_REMOVE(MapTree, &map->root, node);
 		map_node_free(node);
 		map->len--;
 	}
@@ -131,7 +131,7 @@ void *
 map_get(struct Map *map, const void *key)
 {
 	struct MapNode search = { .key = (void *)key, .map = map };
-	struct MapNode *node = SPLAY_FIND(MapTree, &map->root, &search);
+	struct MapNode *node = RB_FIND(MapTree, &map->root, &search);
 	if (node) {
 		return node->value;
 	} else {
@@ -157,8 +157,8 @@ map_truncate(struct Map *map)
 	struct Stack *stack = stack_new();
 	struct MapNode *node;
 	struct MapNode *next;
-	for (node = SPLAY_MIN(MapTree, &map->root); node != NULL; node = next) {
-		next = SPLAY_NEXT(MapTree, &map->root, node);
+	for (node = RB_MIN(MapTree, &map->root); node != NULL; node = next) {
+		next = RB_NEXT(MapTree, &map->root, node);
 		stack_push(stack, node);
 	}
 	while ((node = stack_pop(stack))) {
@@ -166,7 +166,7 @@ map_truncate(struct Map *map)
 	}
 	stack_free(stack);
 
-	SPLAY_INIT(&map->root);
+	RB_INIT(&map->root);
 	map->len = 0;
 }
 
@@ -175,7 +175,7 @@ map_keys(struct Map *map, struct Mempool *pool)
 {
 	struct Array *array = mempool_array(pool);
 	struct MapNode *node;
-	SPLAY_FOREACH(node, MapTree, &map->root) {
+	RB_FOREACH(node, MapTree, &map->root) {
 		array_append(array, node->key);
 	}
 	return array;
@@ -186,7 +186,7 @@ map_values(struct Map *map, struct Mempool *pool)
 {
 	struct Array *array = mempool_array(pool);
 	struct MapNode *node;
-	SPLAY_FOREACH(node, MapTree, &map->root) {
+	RB_FOREACH(node, MapTree, &map->root) {
 		array_append(array, node->value);
 	}
 	return array;
@@ -206,13 +206,13 @@ nodecmp(struct MapNode *e1, struct MapNode *e2)
 	}
 }
 
-SPLAY_GENERATE(MapTree, MapNode, entry, nodecmp);
+RB_GENERATE(MapTree, MapNode, entry, nodecmp);
 
 struct MapIterator *
 map_iterator(struct Map *map)
 {
 	struct MapIterator *iter = xmalloc(sizeof(struct MapIterator));
-	iter->current = SPLAY_MIN(MapTree, &map->root);
+	iter->current = RB_MIN(MapTree, &map->root);
 	return iter;
 }
 
@@ -237,6 +237,6 @@ map_iterator_next(struct MapIterator **iter_, void **value, size_t *index)
 	*index = iter->index++;
 	void *key = iter->current->key;
 	*value = iter->current->value;
-	iter->current = SPLAY_NEXT(MapTree, &(iter->current->map->root), iter->current);
+	iter->current = RB_NEXT(MapTree, &(iter->current->map->root), iter->current);
 	return key;
 }
